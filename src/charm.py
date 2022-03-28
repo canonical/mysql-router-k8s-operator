@@ -13,13 +13,14 @@ from typing import Any, Dict
 from ops.charm import CharmBase
 from ops.main import main
 from ops.model import ActiveStatus, WaitingStatus
+from ops.pebble import Layer
 
 logger = logging.getLogger(__name__)
 DATABASE = "database"
 PEER = "mysql-router"
 
 
-class MysqlRouterOperatorCharm(CharmBase):
+class MySQLRouterOperatorCharm(CharmBase):
     """Charm the service."""
 
     def __init__(self, *args):
@@ -48,14 +49,14 @@ class MysqlRouterOperatorCharm(CharmBase):
         return self.model.get_relation(PEER)
 
     def set_peer_data(self, key: str, data: Any) -> None:
-        """Put information into the peer data bucket instead of `StoredState`."""
+        """Put information into the peer data."""
         if self.unit.is_leader():
             self.peers.data[self.app][key] = json.dumps(data)
 
     def get_peer_data(self, key: str) -> Any:
-        """Retrieve information from the peer data bucket instead of `StoredState`."""
-        data = self.peers.data[self.app].get(key, "")
-        return json.loads(data) if data else {}
+        """Retrieve information from the peer data."""
+        data = self.peers.data[self.app].get(key, "{}")
+        return json.loads(data)
 
     def _configure(self) -> None:
         """Configure the charm."""
@@ -63,11 +64,6 @@ class MysqlRouterOperatorCharm(CharmBase):
         data = self.get_peer_data(DATABASE)
 
         config_data = json.loads(data["mysql"])
-
-        if not self._validate_config(config_data):
-            logger.error("Invalid config")
-            self.unit.status = WaitingStatus("Invalid relation config")
-            return
 
         # Define Pebble layer configuration
         pebble_layer = self._mysqlrouter_layer(
@@ -80,7 +76,7 @@ class MysqlRouterOperatorCharm(CharmBase):
         container = self.unit.get_container(self.name)
         plan = container.get_plan()
 
-        if plan.services != pebble_layer["services"]:
+        if plan.services != pebble_layer.services:
             logger.info("Config changed")
             container.add_layer(self.name, pebble_layer, combine=True)
 
@@ -111,34 +107,26 @@ class MysqlRouterOperatorCharm(CharmBase):
             user (str): The username for the MySQL cluster.
             password (str): The password for the MySQL cluster.
         """
-        return {
-            "summary": "mysqlrouter layer",
-            "description": "pebble config layer for mysqlrouter",
-            "services": {
-                "mysqlrouter": {
-                    "override": "replace",
-                    "summary": "mysqlrouter",
-                    "command": "./run.sh",
-                    "startup": "enabled",
-                    "environment": {
-                        "MYSQL_PORT": port,
-                        "MYSQL_HOST": host,
-                        "MYSQL_USER": user,
-                        "MYSQL_PASSWORD": password,
-                    },
-                }
-            },
-        }
-
-    def _validate_config(self, configuration: Dict) -> bool:
-        """Validate the configuration."""
-        for k, v in configuration.items():
-            return (
-                (k == "host" and type(v) == str)
-                or (k == "port" and type(v) == int)
-                or (k == "user" and type(v) == str)
-                or (k == "password" and type(v) == str)
-            )
+        return Layer(
+            {
+                "summary": "mysqlrouter layer",
+                "description": "pebble config layer for mysqlrouter",
+                "services": {
+                    "mysqlrouter": {
+                        "override": "replace",
+                        "summary": "mysqlrouter",
+                        "command": "./run.sh",
+                        "startup": "enabled",
+                        "environment": {
+                            "MYSQL_PORT": port,
+                            "MYSQL_HOST": host,
+                            "MYSQL_USER": user,
+                            "MYSQL_PASSWORD": password,
+                        },
+                    }
+                },
+            }
+        )
 
     def _on_config_changed(self, event) -> None:
         """Handle config-changed event."""
@@ -173,4 +161,4 @@ class MysqlRouterOperatorCharm(CharmBase):
 
 
 if __name__ == "__main__":
-    main(MysqlRouterOperatorCharm)
+    main(MySQLRouterOperatorCharm)

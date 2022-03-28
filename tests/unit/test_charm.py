@@ -8,12 +8,12 @@ import unittest
 from ops.model import ActiveStatus, WaitingStatus
 from ops.testing import Harness
 
-from charm import MysqlRouterOperatorCharm
+from charm import MySQLRouterOperatorCharm
 
 
 class TestCharm(unittest.TestCase):
     def setUp(self):
-        self.harness = Harness(MysqlRouterOperatorCharm)
+        self.harness = Harness(MySQLRouterOperatorCharm)
         self.addCleanup(self.harness.cleanup)
         self.harness.begin()
         self.harness.add_relation("mysql-router", "mysql-router")
