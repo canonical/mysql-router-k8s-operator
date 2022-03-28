@@ -80,10 +80,7 @@ class MySQLRouterOperatorCharm(CharmBase):
             logger.info("Config changed")
             container.add_layer(self.name, pebble_layer, combine=True)
 
-            if container.get_service(self.name).is_running():
-                container.stop(self.name)
-
-            container.start(self.name)
+            container.restart(self.name)
             logging.info("mysqlrouter restarted")
 
         self.unit.status = ActiveStatus()
