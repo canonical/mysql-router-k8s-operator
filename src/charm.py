@@ -8,7 +8,7 @@
 
 import json
 import logging
-from typing import Any, Dict
+from typing import Any
 
 from ops.charm import CharmBase
 from ops.main import main
