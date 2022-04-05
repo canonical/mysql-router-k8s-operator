@@ -49,7 +49,7 @@ class TestCharm(unittest.TestCase):
                 "mysqlrouter": {
                     "override": "replace",
                     "summary": "mysqlrouter",
-                    "command": "./run.sh",
+                    "command": "/run.sh",
                     "startup": "enabled",
                     "environment": {
                         "MYSQL_PORT": 3306,
