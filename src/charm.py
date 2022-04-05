@@ -112,7 +112,7 @@ class MySQLRouterOperatorCharm(CharmBase):
                     "mysqlrouter": {
                         "override": "replace",
                         "summary": "mysqlrouter",
-                        "command": "./run.sh",
+                        "command": "/run.sh",
                         "startup": "enabled",
                         "environment": {
                             "MYSQL_PORT": port,
