@@ -44,17 +44,17 @@ async def test_build_and_deploy(ops_test: OpsTest):
     assert ops_test.model.applications[APP_NAME].units[0].workload_status == "waiting"
 
 
-@pytest.mark.abort_on_fail
-async def test_application_is_up(ops_test: OpsTest):
-    """Test if the application is up."""
-    status = await ops_test.model.get_status()  # noqa: F821
-    address = status["applications"][APP_NAME]["units"][f"{APP_NAME}/0"]["address"]
+# @pytest.mark.abort_on_fail
+# async def test_application_is_up(ops_test: OpsTest):
+#     """Test if the application is up."""
+#     status = await ops_test.model.get_status()  # noqa: F821
+#     address = status["applications"][APP_NAME]["units"][f"{APP_NAME}/0"]["address"]
 
-    test_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    target = (address, DEFAULT_PORT)
+#     test_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+#     target = (address, DEFAULT_PORT)
 
-    logger.info("Querying app open port at %s:%s", address, DEFAULT_PORT)
-    port_status = test_socket.connect_ex(target)
-    test_socket.close()
+#     logger.info("Querying app open port at %s:%s", address, DEFAULT_PORT)
+#     port_status = test_socket.connect_ex(target)
+#     test_socket.close()
 
-    assert port_status == 0
+#     assert port_status == 0
