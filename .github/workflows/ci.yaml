@@ -38,4 +38,4 @@ jobs:
           provider: microk8s
       - name: Run integration tests
         run: tox -e integration
-      
+
