@@ -11,5 +11,5 @@ bases:
         channel: "20.04"
 parts:
   charm:
-    build-packages:
-      - git
+    charm-binary-python-packages:
+      - mysql-connector-python==8.0.30

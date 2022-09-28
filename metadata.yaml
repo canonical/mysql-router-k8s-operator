@@ -1,22 +1,24 @@
 # Copyright 2022 Canonical Ltd.
 # See LICENSE file for licensing details.
-name: mysqlrouter-k8s
+name: mysql-router-k8s
 display-name: MySQL Router
 maintainers:
   - Paulo Machado <paulo.machado@canonical.com>
+  - Shayan Patel <shayan.patel@canonical.com>
 description: |
-  Charmed operator for mysql-router.
+  K8S charmed operator for mysql-router.
 summary: |
-  Charmed operator for mysql-router. Enables effective access to group replicated MySQL cluster for client applications.
+  Charmed operator for mysql-router.
+  Enables effective access to group replicated MySQL cluster for client applications.
 containers:
-  mysqlrouter:
+  mysql-router:
     resource: mysql-router-image
 provides:
-  client:
-    interface: db
-requires:
   database:
-    interface: db
+    interface: mysql_client
+requires:
+  backend-database:
+    interface: mysql_client
 peers:
   mysql-router:
     interface: mysql-router-peers
