@@ -5,13 +5,9 @@
 
 import logging
 import socket
-from tenacity import (
-    retry,
-    stop_after_delay,
-    wait_fixed,
-)
 
 import mysql.connector
+from tenacity import retry, stop_after_delay, wait_fixed
 
 logger = logging.getLogger(__name__)
 

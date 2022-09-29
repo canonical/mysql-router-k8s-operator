@@ -68,7 +68,7 @@ class ApplicationCharm(CharmBase):
             with MySQLConnector(database_config) as cursor:
                 self._query_data(
                     cursor,
-                    f"SELECT data FROM {self.database_name}.app_data WHERE data = '{inserted_value}'"
+                    f"SELECT data FROM {self.database_name}.app_data WHERE data = '{inserted_value}'",
                 )
                 output = list(itertools.chain(*cursor.fetchall()))
 
@@ -106,7 +106,7 @@ class ApplicationCharm(CharmBase):
         with MySQLConnector(read_only_config) as cursor:
             output = self._query_data(
                 cursor,
-                f"SELECT data FROM {self.database_name}.app_data WHERE data = '{random_value}'"
+                f"SELECT data FROM {self.database_name}.app_data WHERE data = '{random_value}'",
             )
             if output[0] == random_value:
                 self.unit.status = ActiveStatus()
@@ -149,6 +149,9 @@ class ApplicationCharm(CharmBase):
         cursor.execute(query)
         return list(itertools.chain(*cursor.fetchall()))
 
+    # =======================
+    #  Properties
+    # =======================
 
     @property
     def _peers(self):

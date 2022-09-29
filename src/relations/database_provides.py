@@ -11,7 +11,6 @@ from charms.data_platform_libs.v0.database_provides import (
     DatabaseRequestedEvent,
 )
 from ops.framework import Object
-# from ops.model import Application
 
 from constants import (
     CREDENTIALS_SHARED,
@@ -22,6 +21,9 @@ from constants import (
     PEER,
     UNIT_BOOTSTRAPPED,
 )
+
+# from ops.model import Application
+
 
 logger = logging.getLogger(__name__)
 
@@ -86,7 +88,9 @@ class DatabaseProvidesRelation(Object):
             self.charm._get_secret("app", "application-password"),
         )
 
-        self.database_provides_relation.set_endpoints(provides_relation_id, f"{self.charm.read_write_endpoint}:6446")
+        self.database_provides_relation.set_endpoints(
+            provides_relation_id, f"{self.charm.read_write_endpoint}:6446"
+        )
 
         self.database_provides_relation.set_read_only_endpoints(
             provides_relation_id, f"{self.charm.read_only_endpoint}:6447"

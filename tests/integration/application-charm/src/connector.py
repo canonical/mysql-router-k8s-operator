@@ -12,6 +12,7 @@ class MySQLConnector:
 
     def __init__(self, config: dict, commit: bool = True):
         """Initialize the context manager.
+
         Args:
             config: Configuration dict for the mysql connector, like:
                 config = {

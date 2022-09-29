@@ -13,17 +13,17 @@ from typing import Dict, Optional
 import lightkube
 from lightkube import codecs
 from lightkube.resources.core_v1 import Service
-from ops.charm import CharmBase, PebbleReadyEvent
+from ops.charm import CharmBase
 from ops.main import main
 from ops.model import ActiveStatus, BlockedStatus, WaitingStatus
 from ops.pebble import Layer
 
 from constants import (
-    NUM_UNITS_BOOTSTRAPPED,
     MYSQL_DATABASE_CREATED,
     MYSQL_ROUTER_CONTAINER_NAME,
     MYSQL_ROUTER_REQUIRES_DATA,
     MYSQL_ROUTER_SERVICE_NAME,
+    NUM_UNITS_BOOTSTRAPPED,
     PEER,
     UNIT_BOOTSTRAPPED,
 )
@@ -44,9 +44,7 @@ class MySQLRouterOperatorCharm(CharmBase):
         self.framework.observe(
             self.on.mysql_router_pebble_ready, self._on_mysql_router_pebble_ready
         )
-        self.framework.observe(
-            self.on.update_status, self._on_update_status
-        )
+        self.framework.observe(self.on.update_status, self._on_update_status)
 
         self.database_provides = DatabaseProvidesRelation(self)
         self.database_requires = DatabaseRequiresRelation(self)
@@ -221,10 +219,12 @@ class MySQLRouterOperatorCharm(CharmBase):
         Bootstraps mysqlrouter if the relations exist, but pebble_ready event
         fired before the requires relation was formed.
         """
-        if isinstance(self.unit.status, WaitingStatus) and \
-            self.app_peer_data.get(MYSQL_DATABASE_CREATED) and \
-            self._bootstrap_mysqlrouter():
-                self.unit.status = ActiveStatus()
+        if (
+            isinstance(self.unit.status, WaitingStatus)
+            and self.app_peer_data.get(MYSQL_DATABASE_CREATED)
+            and self._bootstrap_mysqlrouter()
+        ):
+            self.unit.status = ActiveStatus()
 
 
 if __name__ == "__main__":

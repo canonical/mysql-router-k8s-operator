@@ -6,11 +6,9 @@
 import asyncio
 import logging
 from pathlib import Path
-import yaml
 
 import pytest
-from pytest_operator.plugin import OpsTest
-
+import yaml
 from helpers import (
     execute_queries_on_unit,
     get_inserted_data_by_application,
@@ -18,6 +16,7 @@ from helpers import (
     get_unit_address,
     scale_application,
 )
+from pytest_operator.plugin import OpsTest
 
 logger = logging.getLogger(__name__)
 
@@ -38,32 +37,31 @@ async def test_database_relation(ops_test: OpsTest):
     mysqlrouter_charm = await ops_test.build_charm(".")
     application_charm = await ops_test.build_charm("./tests/integration/application-charm/")
 
-    mysqlrouter_resources = {"mysql-router-image": METADATA["resources"]["mysql-router-image"]["upstream-source"]}
+    mysqlrouter_resources = {
+        "mysql-router-image": METADATA["resources"]["mysql-router-image"]["upstream-source"]
+    }
 
     applications = await asyncio.gather(
         ops_test.model.deploy(
-            "mysql-k8s",
-            channel="latest/edge",
-            application_name=MYSQL_APP_NAME,
-            num_units=1
+            "mysql-k8s", channel="latest/edge", application_name=MYSQL_APP_NAME, num_units=1
         ),
         ops_test.model.deploy(
             mysqlrouter_charm,
             application_name=MYSQL_ROUTER_APP_NAME,
             resources=mysqlrouter_resources,
-            num_units=1
+            num_units=1,
         ),
         ops_test.model.deploy(
-            application_charm,
-            application_name=APPLICATION_APP_NAME,
-            num_units=1
-        )
+            application_charm, application_name=APPLICATION_APP_NAME, num_units=1
+        ),
     )
 
-    mysql_app, mysqlrouter_app, application_app = applications[0], applications[1], applications[2]
+    mysql_app, application_app = applications[0], applications[2]
 
     # Relate the application with mysqlrouter first
-    await ops_test.model.relate(f"{APPLICATION_APP_NAME}:database", f"{MYSQL_ROUTER_APP_NAME}:database")
+    await ops_test.model.relate(
+        f"{APPLICATION_APP_NAME}:database", f"{MYSQL_ROUTER_APP_NAME}:database"
+    )
 
     async with ops_test.fast_forward():
         await asyncio.gather(
@@ -78,7 +76,7 @@ async def test_database_relation(ops_test: OpsTest):
                 status="waiting",
                 raise_on_blocked=True,
                 timeout=SLOW_TIMEOUT,
-            )
+            ),
         )
 
         # Relate mysqlrouter with mysql next

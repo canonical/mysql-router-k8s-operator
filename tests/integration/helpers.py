@@ -4,8 +4,8 @@
 import itertools
 from typing import Dict, List
 
-from juju.unit import Unit
 import mysql.connector
+from juju.unit import Unit
 from pytest_operator.plugin import OpsTest
 
 SERVER_CONFIG_USERNAME = "serverconfig"
