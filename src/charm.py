@@ -204,7 +204,9 @@ class MySQLRouterOperatorCharm(CharmBase):
                 except lightkube.ApiError as e:
                     # Do nothing if the service already exists
                     if e.status.code != 409:
-                        logger.exception(f"Failed to create k8s service {str(service)}", exc_info=e)
+                        logger.exception(
+                            f"Failed to create k8s service {str(service)}", exc_info=e
+                        )
                         self.unit.status = BlockedStatus("Failed to create k8s service")
                         return
 
