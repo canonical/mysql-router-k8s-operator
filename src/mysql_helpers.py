@@ -4,6 +4,12 @@
 """Helper class to manage the MySQL Router lifecycle."""
 
 import logging
+import socket
+from tenacity import (
+    retry,
+    stop_after_delay,
+    wait_fixed,
+)
 
 import mysql.connector
 
@@ -30,6 +36,10 @@ class Error(Exception):
 
 class MySQLRouterCreateUserWithDatabasePrivilegesError(Error):
     """Exception raised when there is an issue creating a database scoped user."""
+
+
+class MySQLRouterPortsNotOpenError(Error):
+    """Exception raised when mysqlrouter is not bootstrapped and started."""
 
 
 class MySQL:
@@ -69,3 +79,22 @@ class MySQL:
         except mysql.connector.Error as e:
             logger.exception("Failed to create user scoped to a database", exc_info=e)
             raise MySQLRouterCreateUserWithDatabasePrivilegesError(e.msg)
+
+    @staticmethod
+    @retry(reraise=True, stop=stop_after_delay(30), wait=wait_fixed(5))
+    def wait_until_mysql_router_ready(container) -> None:
+        """Wait until a connection to MySQL router is possible.
+
+        Retry every 5 seconds for 30 seconds if there is an issue obtaining a connection.
+        """
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        result = sock.connect_ex(("127.0.0.1", 6446))
+        if result != 0:
+            raise MySQLRouterPortsNotOpenError()
+        sock.close()
+
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        result = sock.connect_ex(("127.0.0.1", 6447))
+        if result != 0:
+            raise MySQLRouterPortsNotOpenError()
+        sock.close()

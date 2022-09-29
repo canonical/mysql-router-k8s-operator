@@ -42,8 +42,8 @@ jobs:
       - name: Run tests
         run: tox -e unit
 
-  integration-test:
-    name: Integration tests
+  integration-test-database:
+    name: Integration tests for database relations
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -53,7 +53,7 @@ jobs:
         with:
           provider: microk8s
       - name: Run integration tests
-        run: tox -e integration
+        run: tox -e integration-databsae
 
   release-to-charmhub:
     name: Release to CharmHub
@@ -61,7 +61,7 @@ jobs:
       - lib-check
       - lint
       - unit-test
-      - integration-test
+      - integration-test-database
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

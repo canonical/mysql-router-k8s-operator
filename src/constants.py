@@ -6,6 +6,7 @@
 CREDENTIALS_SHARED = "credentials-shared"
 DATABASE_REQUIRES_RELATION = "backend-database"
 DATABASE_PROVIDES_RELATION = "database"
+NUM_UNITS_BOOTSTRAPPED = "num-units-bootstrapped"
 MYSQL_ROUTER_CONTAINER_NAME = "mysql-router"
 MYSQL_DATABASE_CREATED = "database-created"
 MYSQL_ROUTER_PROVIDES_DATA = "provides-data"

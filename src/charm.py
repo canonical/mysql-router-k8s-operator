@@ -19,6 +19,7 @@ from ops.model import ActiveStatus, BlockedStatus, WaitingStatus
 from ops.pebble import Layer
 
 from constants import (
+    NUM_UNITS_BOOTSTRAPPED,
     MYSQL_DATABASE_CREATED,
     MYSQL_ROUTER_CONTAINER_NAME,
     MYSQL_ROUTER_REQUIRES_DATA,
@@ -26,6 +27,7 @@ from constants import (
     PEER,
     UNIT_BOOTSTRAPPED,
 )
+from mysql_helpers import MySQL
 from relations.database_provides import DatabaseProvidesRelation
 from relations.database_requires import DatabaseRequiresRelation
 
@@ -161,7 +163,13 @@ class MySQLRouterOperatorCharm(CharmBase):
             container.add_layer(MYSQL_ROUTER_SERVICE_NAME, pebble_layer, combine=True)
             container.start(MYSQL_ROUTER_SERVICE_NAME)
 
+            MySQL.wait_until_mysql_router_ready(container)
+
             self.unit_peer_data[UNIT_BOOTSTRAPPED] = "true"
+
+            # Triggers a peer_relation_changed event in the DatabaseProvidesRelation
+            num_units_bootstrapped = int(self.app_peer_data.get(NUM_UNITS_BOOTSTRAPPED, "0"))
+            self.app_peer_data[NUM_UNITS_BOOTSTRAPPED] = str(num_units_bootstrapped + 1)
 
             return True
 
