@@ -59,9 +59,9 @@ async def test_database_relation(ops_test: OpsTest):
 
     mysql_app, application_app = applications[0], applications[2]
 
-    # Relate the application with mysqlrouter first
+    # Relate the database with mysqlrouter
     await ops_test.model.relate(
-        f"{APPLICATION_APP_NAME}:database", f"{MYSQL_ROUTER_APP_NAME}:database"
+        f"{MYSQL_ROUTER_APP_NAME}:backend-database", f"{MYSQL_APP_NAME}:database"
     )
 
     async with ops_test.fast_forward():
@@ -80,9 +80,9 @@ async def test_database_relation(ops_test: OpsTest):
             ),
         )
 
-        # Relate mysqlrouter with mysql next
+        # Relate mysqlrouter with application next
         await ops_test.model.relate(
-            f"{MYSQL_ROUTER_APP_NAME}:backend-database", f"{MYSQL_APP_NAME}:database"
+            f"{APPLICATION_APP_NAME}:database", f"{MYSQL_ROUTER_APP_NAME}:database"
         )
 
         await ops_test.model.wait_for_idle(

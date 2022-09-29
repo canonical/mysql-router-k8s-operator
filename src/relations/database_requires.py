@@ -12,6 +12,7 @@ from charms.data_platform_libs.v0.database_requires import (
     DatabaseEndpointsChangedEvent,
     DatabaseRequires,
 )
+from ops.charm import RelationCreatedEvent
 from ops.framework import Object
 from ops.model import BlockedStatus
 
@@ -34,9 +35,13 @@ class DatabaseRequiresRelation(Object):
     """Encapsulation of the relation between mysqlrouter and mysql database."""
 
     def __init__(self, charm):
-        super().__init__(charm, DATABASE_REQUIRES_RELATION)
+        super().__init__(charm, {DATABASE_REQUIRES_RELATION})
 
         self.charm = charm
+
+        self.framework.observe(
+            self.charm.on[DATABASE_REQUIRES_RELATION].relation_joined, self._on_database_requires_relation_joined
+        )
 
         provides_data = self._get_provides_data()
         if not provides_data:
@@ -48,6 +53,7 @@ class DatabaseRequiresRelation(Object):
             database_name=provides_data["database"],
             extra_user_roles="mysqlrouter",
         )
+
         self.framework.observe(
             self.database_requires_relation.on.database_created, self._on_database_created
         )
@@ -61,10 +67,6 @@ class DatabaseRequiresRelation(Object):
 
     def _get_provides_data(self) -> Dict:
         """Helper to get the `provides` relation data from the app peer databag."""
-        peers = self.charm._peers
-        if not peers:
-            return None
-
         provides_data = self.charm.app_peer_data.get(MYSQL_ROUTER_PROVIDES_DATA)
         if not provides_data:
             return None
@@ -74,6 +76,20 @@ class DatabaseRequiresRelation(Object):
     # =======================
     #  Handlers
     # =======================
+
+    def _on_database_requires_relation_joined(self, event) -> None:
+        """Handle the backend-database relation joined event.
+
+        Waits until the database relation with the application is formed before
+        triggering the database_requires relation joined event (which will
+        request the database).
+        """
+        provides_data = self._get_provides_data()
+        if not provides_data:
+            event.defer()
+            return
+
+        self.database_requires_relation._on_relation_joined_event(event)
 
     def _on_database_created(self, event: DatabaseCreatedEvent) -> None:
         """Handle the database created event."""

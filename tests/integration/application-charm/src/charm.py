@@ -66,11 +66,10 @@ class ApplicationCharm(CharmBase):
             database_config = json.loads(database_config)
 
             with MySQLConnector(database_config) as cursor:
-                self._query_data(
+                output = self._query_data(
                     cursor,
                     f"SELECT data FROM {self.database_name}.app_data WHERE data = '{inserted_value}'",
                 )
-                output = list(itertools.chain(*cursor.fetchall()))
 
             if output[0] == inserted_value:
                 self.unit.status = ActiveStatus()
