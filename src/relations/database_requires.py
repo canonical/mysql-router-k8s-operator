@@ -12,7 +12,6 @@ from charms.data_platform_libs.v0.database_requires import (
     DatabaseEndpointsChangedEvent,
     DatabaseRequires,
 )
-from ops.charm import RelationCreatedEvent
 from ops.framework import Object
 from ops.model import BlockedStatus
 
@@ -40,7 +39,8 @@ class DatabaseRequiresRelation(Object):
         self.charm = charm
 
         self.framework.observe(
-            self.charm.on[DATABASE_REQUIRES_RELATION].relation_joined, self._on_database_requires_relation_joined
+            self.charm.on[DATABASE_REQUIRES_RELATION].relation_joined,
+            self._on_database_requires_relation_joined,
         )
 
         provides_data = self._get_provides_data()
