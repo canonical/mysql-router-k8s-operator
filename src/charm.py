@@ -190,6 +190,7 @@ class MySQLRouterOperatorCharm(CharmBase):
             client.delete(Service, name=self.model.app.name, namespace=self.model.name)
         except lightkube.ApiError as e:
             if e.status.code != 404:
+                logger.exception("Failed to delete k8s service", exc_info=e)
                 self.unit.status = BlockedStatus("Failed to delete k8s service")
                 return
 
@@ -203,6 +204,7 @@ class MySQLRouterOperatorCharm(CharmBase):
                 except lightkube.ApiError as e:
                     # Do nothing if the service already exists
                     if e.status.code != 409:
+                        logger.exception(f"Failed to create k8s service {str(service)}", exc_info=e)
                         self.unit.status = BlockedStatus("Failed to create k8s service")
                         return
 
