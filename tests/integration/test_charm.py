@@ -110,6 +110,7 @@ async def test_database_relation(ops_test: OpsTest):
         select_inserted_data_sql,
     )
 
+    assert len(selected_data) > 0
     assert inserted_data == selected_data[0]
 
     # Ensure that both mysqlrouter and the application can be scaled up and down

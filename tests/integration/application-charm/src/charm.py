@@ -23,6 +23,7 @@ from connector import MySQLConnector
 from ops.charm import ActionEvent, CharmBase
 from ops.main import main
 from ops.model import ActiveStatus, BlockedStatus, WaitingStatus
+from tenacity import RetryError, Retrying, stop_after_attempt, wait_fixed
 
 from utils import generate_random_chars
 
@@ -103,21 +104,30 @@ class ApplicationCharm(CharmBase):
         read_only_config["host"] = event.read_only_endpoints.split(":")[0]
         read_only_config["port"] = event.read_only_endpoints.split(":")[1]
 
+        try:
+            for attempt in Retrying(stop=stop_after_attempt(6), wait=wait_fixed(10)):
+                with attempt:
+                    with MySQLConnector(read_only_config) as cursor:
+                        output = self._query_data(
+                            cursor,
+                            f"SELECT data FROM {self.database_name}.app_data WHERE data = '{random_value}'",
+                        )
+
+                        if output[0] == random_value:
+                            self.unit.status = ActiveStatus()
+                        else:
+                            self.unit.status = BlockedStatus("Failed to read data")
+                            return
+        except RetryError as e:
+            logger.exception("Failure querying data", exc_info=e)
+            self.unit.status = BlockedStatus("Failed to query data")
+            return
+
         with MySQLConnector(read_only_config) as cursor:
-            output = self._query_data(
-                cursor,
-                f"SELECT data FROM {self.database_name}.app_data WHERE data = '{random_value}'",
-            )
-            if output[0] == random_value:
-                self.unit.status = ActiveStatus()
-            else:
-                self.unit.status = BlockedStatus("Failed to read data")
-                return
-
             try:
-                random_value = generate_random_chars(255)
+                another_random_value = generate_random_chars(255)
 
-                self._insert_test_data(cursor, random_value)
+                self._insert_test_data(cursor, another_random_value)
 
                 self.unit.status = BlockedStatus("Able to write using the read-only connection")
                 return
