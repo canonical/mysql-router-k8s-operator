@@ -24,7 +24,10 @@ from constants import (
     MYSQL_ROUTER_REQUIRES_DATA,
     PASSWORD_LENGTH,
 )
-from mysql_helpers import MySQL, MySQLRouterCreateUserWithDatabasePrivilegesError
+from mysql_router_helpers import (
+    MySQLRouter,
+    MySQLRouterCreateUserWithDatabasePrivilegesError,
+)
 from utils import generate_random_password
 
 logger = logging.getLogger(__name__)
@@ -115,7 +118,7 @@ class DatabaseRequiresRelation(Object):
         password = generate_random_password(PASSWORD_LENGTH)
 
         try:
-            MySQL.create_user_with_database_privileges(
+            MySQLRouter.create_user_with_database_privileges(
                 username,
                 password,
                 "%",

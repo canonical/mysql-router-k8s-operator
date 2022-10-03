@@ -20,7 +20,7 @@ requires:
   backend-database:
     interface: mysql_client
 peers:
-  mysql-router:
+  mysql-router-peers:
     interface: mysql-router-peers
 resources:
   mysql-router-image:

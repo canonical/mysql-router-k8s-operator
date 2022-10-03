@@ -14,6 +14,7 @@ import json
 import logging
 from typing import List
 
+import mysql.connector
 from charms.data_platform_libs.v0.database_requires import (
     DatabaseCreatedEvent,
     DatabaseRequires,
@@ -111,6 +112,17 @@ class ApplicationCharm(CharmBase):
                 self.unit.status = ActiveStatus()
             else:
                 self.unit.status = BlockedStatus("Failed to read data")
+                return
+
+            try:
+                random_value = generate_random_chars(255)
+
+                self._insert_test_data(cursor, random_value)
+
+                self.unit.status = BlockedStatus("Able to write using the read-only connection")
+                return
+            except mysql.connector.Error:
+                pass
 
         self._peers.data[self.app]["inserted_value"] = random_value
         self._peers.data[self.app]["database_write_config"] = json.dumps(config)

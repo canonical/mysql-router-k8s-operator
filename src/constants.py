@@ -14,5 +14,5 @@ MYSQL_ROUTER_REQUIRES_DATA = "requires-data"
 MYSQL_ROUTER_REQUIRES_APPLICATION_DATA = "requires-application-data"
 MYSQL_ROUTER_SERVICE_NAME = "mysql_router"
 PASSWORD_LENGTH = 24
-PEER = "mysql-router"
+PEER = "mysql-router-peers"
 UNIT_BOOTSTRAPPED = "unit-bootstrapped"

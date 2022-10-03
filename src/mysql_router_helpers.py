@@ -38,7 +38,7 @@ class MySQLRouterPortsNotOpenError(Error):
     """Exception raised when mysqlrouter is not bootstrapped and started."""
 
 
-class MySQL:
+class MySQLRouter:
     """Encapsulates all operations related to MySQL and MySQLRouter."""
 
     @staticmethod

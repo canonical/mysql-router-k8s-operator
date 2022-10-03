@@ -10,8 +10,7 @@ import json
 import logging
 from typing import Dict, Optional
 
-import lightkube
-from lightkube import codecs
+from lightkube import ApiError, Client, codecs
 from lightkube.resources.core_v1 import Service
 from ops.charm import CharmBase
 from ops.main import main
@@ -27,7 +26,7 @@ from constants import (
     PEER,
     UNIT_BOOTSTRAPPED,
 )
-from mysql_helpers import MySQL
+from mysql_router_helpers import MySQLRouter
 from relations.database_provides import DatabaseProvidesRelation
 from relations.database_requires import DatabaseRequiresRelation
 
@@ -161,7 +160,7 @@ class MySQLRouterOperatorCharm(CharmBase):
             container.add_layer(MYSQL_ROUTER_SERVICE_NAME, pebble_layer, combine=True)
             container.start(MYSQL_ROUTER_SERVICE_NAME)
 
-            MySQL.wait_until_mysql_router_ready(container)
+            MySQLRouter.wait_until_mysql_router_ready(container)
 
             self.unit_peer_data[UNIT_BOOTSTRAPPED] = "true"
 
@@ -183,12 +182,12 @@ class MySQLRouterOperatorCharm(CharmBase):
         Creates read-write and read-only services from a template file, and deletes
         the service created by juju for the application.
         """
-        client = lightkube.Client()
+        client = Client()
 
         # Delete the service created by juju if it still exists
         try:
             client.delete(Service, name=self.model.app.name, namespace=self.model.name)
-        except lightkube.ApiError as e:
+        except ApiError as e:
             if e.status.code != 404:
                 logger.exception("Failed to delete k8s service", exc_info=e)
                 self.unit.status = BlockedStatus("Failed to delete k8s service")
@@ -201,7 +200,7 @@ class MySQLRouterOperatorCharm(CharmBase):
             ):
                 try:
                     client.create(service)
-                except lightkube.ApiError as e:
+                except ApiError as e:
                     # Do nothing if the service already exists
                     if e.status.code != 409:
                         logger.exception(

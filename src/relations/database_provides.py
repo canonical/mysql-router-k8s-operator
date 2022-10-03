@@ -22,9 +22,6 @@ from constants import (
     UNIT_BOOTSTRAPPED,
 )
 
-# from ops.model import Application
-
-
 logger = logging.getLogger(__name__)
 
 
