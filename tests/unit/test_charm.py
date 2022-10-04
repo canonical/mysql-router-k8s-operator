@@ -19,7 +19,7 @@ class TestCharm(unittest.TestCase):
         self.peer_relation_id = self.harness.add_relation(
             "mysql-router-peers", "mysql-router-peers"
         )
-        self.harness.add_relation_unit(self.peer_relation_id, "mysqlrouter/1")
+        self.harness.add_relation_unit(self.peer_relation_id, "mysql-router-k8s/1")
         self.harness.begin()
         self.charm = self.harness.charm
 
