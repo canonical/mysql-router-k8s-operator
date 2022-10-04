@@ -4,157 +4,230 @@
 #
 # Learn more at: https://juju.is/docs/sdk
 
-"""MySQL-Router charm."""
+"""MySQL-Router k8s charm."""
 
 import json
 import logging
-from typing import Any
+from typing import Dict, Optional
 
+from lightkube import ApiError, Client, codecs
+from lightkube.resources.core_v1 import Service
 from ops.charm import CharmBase
 from ops.main import main
-from ops.model import ActiveStatus, WaitingStatus
+from ops.model import ActiveStatus, BlockedStatus, WaitingStatus
 from ops.pebble import Layer
 
+from constants import (
+    MYSQL_DATABASE_CREATED,
+    MYSQL_ROUTER_CONTAINER_NAME,
+    MYSQL_ROUTER_REQUIRES_DATA,
+    MYSQL_ROUTER_SERVICE_NAME,
+    NUM_UNITS_BOOTSTRAPPED,
+    PEER,
+    UNIT_BOOTSTRAPPED,
+)
+from mysql_router_helpers import MySQLRouter
+from relations.database_provides import DatabaseProvidesRelation
+from relations.database_requires import DatabaseRequiresRelation
+
 logger = logging.getLogger(__name__)
-DATABASE = "database"
-PEER = "mysql-router"
 
 
 class MySQLRouterOperatorCharm(CharmBase):
-    """Charm the service."""
+    """Operator charm for MySQLRouter."""
 
     def __init__(self, *args):
         super().__init__(*args)
 
-        self.name = "mysqlrouter"
+        self.framework.observe(self.on.leader_elected, self._on_leader_elected)
+        self.framework.observe(
+            self.on.mysql_router_pebble_ready, self._on_mysql_router_pebble_ready
+        )
+        self.framework.observe(self.on.update_status, self._on_update_status)
 
-        self.framework.observe(self.on.mysqlrouter_pebble_ready, self._on_mysqlrouter_pebble_ready)
-        self.framework.observe(self.on.config_changed, self._on_config_changed)
-        self.framework.observe(
-            self.on.database_relation_created, self._on_database_relation_created
-        )
-        self.framework.observe(
-            self.on.database_relation_departed, self._on_database_relation_departed
-        )
+        self.database_provides = DatabaseProvidesRelation(self)
+        self.database_requires = DatabaseRequiresRelation(self)
+
+    # =======================
+    #  Properties
+    # =======================
 
     @property
-    def has_db(self) -> bool:
-        """Only consider a DB connection if we have config info."""
-        rel = self.model.get_relation(DATABASE)
-        return len(rel.units) > 0 if rel is not None else False
-
-    @property
-    def peers(self) -> list:
+    def _peers(self) -> list:
         """Fetch the peer relation."""
         return self.model.get_relation(PEER)
 
-    def set_peer_data(self, key: str, data: Any) -> None:
-        """Put information into the peer data."""
-        if self.unit.is_leader():
-            self.peers.data[self.app][key] = json.dumps(data)
+    @property
+    def app_peer_data(self):
+        """Application peer data object."""
+        if not self._peers:
+            return {}
 
-    def get_peer_data(self, key: str) -> Any:
-        """Retrieve information from the peer data."""
-        data = self.peers.data[self.app].get(key, "{}")
-        return json.loads(data)
+        return self._peers.data[self.app]
 
-    def _configure(self) -> None:
-        """Configure the charm."""
-        # Get the relation data
-        data = self.get_peer_data(DATABASE)
+    @property
+    def unit_peer_data(self):
+        """Unit peer data object."""
+        if not self._peers:
+            return {}
 
-        config_data = json.loads(data["mysql"])
+        return self._peers.data[self.unit]
 
-        # Define Pebble layer configuration
-        pebble_layer = self._mysqlrouter_layer(
-            port=config_data["port"],
-            host=config_data["host"],
-            user=config_data["user"],
-            password=config_data["password"],
-        )
-        # Add initial Pebble config layer using the Pebble API
-        container = self.unit.get_container(self.name)
-        plan = container.get_plan()
+    @property
+    def read_write_endpoint(self):
+        """The read write k8s endpoint for the charm."""
+        return f"{self.model.app.name}-read-write.{self.model.name}.svc.cluster.local"
 
-        if plan.services != pebble_layer.services:
-            logger.info("Config changed")
-            container.add_layer(self.name, pebble_layer, combine=True)
+    @property
+    def read_only_endpoint(self):
+        """The read only k8s endpoint for the charm."""
+        return f"{self.model.app.name}-read-only.{self.model.name}.svc.cluster.local"
 
-            container.restart(self.name)
-            logging.info("mysqlrouter restarted")
+    # =======================
+    #  Helpers
+    # =======================
 
-        self.unit.status = ActiveStatus()
+    def _get_secret(self, scope: str, key: str) -> Optional[str]:
+        """Get secret from the peer relation databag."""
+        if scope == "unit":
+            return self.unit_peer_data.get(key, None)
+        elif scope == "app":
+            return self.app_peer_data.get(key, None)
+        else:
+            raise RuntimeError("Unknown secret scope")
 
-    def _on_mysqlrouter_pebble_ready(self, event) -> None:
-        """Define and start a workload using the Pebble API."""
-        if not self.has_db:
-            logger.debug("No database relation found")
-            self.unit.status = WaitingStatus("Waiting for database relation")
-            event.defer()
-            return
+    def _set_secret(self, scope: str, key: str, value: Optional[str]) -> None:
+        """Set secret in the peer relation databag."""
+        if scope == "unit":
+            if not value:
+                del self.unit_peer_data[key]
+                return
+            self.unit_peer_data.update({key: value})
+        elif scope == "app":
+            if not value:
+                del self.app_peer_data[key]
+                return
+            self.app_peer_data.update({key: value})
+        else:
+            raise RuntimeError("Unknown secret scope")
 
-        self._configure()
-
-    def _mysqlrouter_layer(self, host, port, user, password) -> dict:
-        """Return a layer configuration for the mysqlrouter service.
+    def _mysql_router_layer(self, host: str, port: str, username: str, password: str) -> Dict:
+        """Return a layer configuration for the mysql router service.
 
         Args:
-            host (str): The hostname of the MySQL cluster.
-            port (int): The port of the MySQL cluster.
-            user (str): The username for the MySQL cluster.
-            password (str): The password for the MySQL cluster.
+            host: The hostname of the MySQL cluster endpoint
+            port: The port of the MySQL cluster endpoint
+            username: The username for the bootstrap user
+            password: The password for the bootstrap user
         """
         return Layer(
             {
-                "summary": "mysqlrouter layer",
-                "description": "pebble config layer for mysqlrouter",
+                "summary": "mysql router layer",
+                "description": "the pebble config layer for mysql router",
                 "services": {
-                    "mysqlrouter": {
+                    MYSQL_ROUTER_SERVICE_NAME: {
                         "override": "replace",
-                        "summary": "mysqlrouter",
-                        "command": "/run.sh",
+                        "summary": "mysql router",
+                        "command": "/run.sh mysqlrouter",
                         "startup": "enabled",
                         "environment": {
-                            "MYSQL_PORT": port,
                             "MYSQL_HOST": host,
-                            "MYSQL_USER": user,
+                            "MYSQL_PORT": port,
+                            "MYSQL_USER": username,
                             "MYSQL_PASSWORD": password,
                         },
-                    }
+                    },
                 },
             }
         )
 
-    def _on_config_changed(self, event) -> None:
-        """Handle config-changed event."""
-        if not self.has_db:
-            logger.debug("No database relation found")
-            self.unit.status = WaitingStatus("Waiting for database relation")
-            event.defer()
-            return
+    def _bootstrap_mysqlrouter(self) -> None:
+        if not self.app_peer_data.get(MYSQL_DATABASE_CREATED):
+            return False
 
-        self._configure()
+        requires_data = json.loads(self.app_peer_data[MYSQL_ROUTER_REQUIRES_DATA])
+        pebble_layer = self._mysql_router_layer(
+            requires_data["endpoints"].split(",")[0].split(":")[0],
+            "3306",
+            requires_data["username"],
+            self._get_secret("app", "database-password"),
+        )
 
-    def _on_database_relation_created(self, event) -> None:
-        """Handle database relation created event."""
-        logger.info("Database relation created")
-        if not self.has_db:
-            logger.info("No database relation found")
-            self.unit.status = WaitingStatus("Waiting for database relation")
-            event.defer()
-            return
+        container = self.unit.get_container(MYSQL_ROUTER_CONTAINER_NAME)
+        plan = container.get_plan()
 
-        data = dict(event.relation.data[event.app])
-        self.set_peer_data(DATABASE, data)
-        self._configure()
+        if plan.services != pebble_layer.services:
+            container.add_layer(MYSQL_ROUTER_SERVICE_NAME, pebble_layer, combine=True)
+            container.start(MYSQL_ROUTER_SERVICE_NAME)
 
-    def _on_database_relation_departed(self, event) -> None:
-        """Handle database relation departed event."""
-        container = event.workload
-        # Remove the pebble layer
-        container.stop("mysqlrouter")
+            MySQLRouter.wait_until_mysql_router_ready(container)
 
-        self.unit.status = WaitingStatus("Waiting for database relation")
+            self.unit_peer_data[UNIT_BOOTSTRAPPED] = "true"
+
+            # Triggers a peer_relation_changed event in the DatabaseProvidesRelation
+            num_units_bootstrapped = int(self.app_peer_data.get(NUM_UNITS_BOOTSTRAPPED, "0"))
+            self.app_peer_data[NUM_UNITS_BOOTSTRAPPED] = str(num_units_bootstrapped + 1)
+
+            return True
+
+        return False
+
+    # =======================
+    #  Handlers
+    # =======================
+
+    def _on_leader_elected(self, _) -> None:
+        """Handle the leader elected event.
+
+        Creates read-write and read-only services from a template file, and deletes
+        the service created by juju for the application.
+        """
+        client = Client()
+
+        # Delete the service created by juju if it still exists
+        try:
+            client.delete(Service, name=self.model.app.name, namespace=self.model.name)
+        except ApiError as e:
+            if e.status.code != 404:
+                logger.exception("Failed to delete k8s service", exc_info=e)
+                self.unit.status = BlockedStatus("Failed to delete k8s service")
+                return
+
+        # Create the read-write and read-only services defined in the yaml file
+        with open("src/k8s_services.yaml", "r") as resource_file:
+            for service in codecs.load_all_yaml(
+                resource_file, context={"app_name": self.model.app.name}
+            ):
+                try:
+                    client.create(service)
+                except ApiError as e:
+                    # Do nothing if the service already exists
+                    if e.status.code != 409:
+                        logger.exception(
+                            f"Failed to create k8s service {str(service)}", exc_info=e
+                        )
+                        self.unit.status = BlockedStatus("Failed to create k8s service")
+                        return
+
+        self.unit.status = WaitingStatus()
+
+    def _on_mysql_router_pebble_ready(self, _) -> None:
+        """Handle the mysql-router pebble ready event."""
+        if self._bootstrap_mysqlrouter():
+            self.unit.status = ActiveStatus()
+
+    def _on_update_status(self, _) -> None:
+        """Handle the update status event.
+
+        Bootstraps mysqlrouter if the relations exist, but pebble_ready event
+        fired before the requires relation was formed.
+        """
+        if (
+            isinstance(self.unit.status, WaitingStatus)
+            and self.app_peer_data.get(MYSQL_DATABASE_CREATED)
+            and self._bootstrap_mysqlrouter()
+        ):
+            self.unit.status = ActiveStatus()
 
 
 if __name__ == "__main__":

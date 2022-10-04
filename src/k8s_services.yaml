@@ -1,0 +1,26 @@
+kind: Service
+apiVersion: v1
+metadata:
+  labels:
+    app.kubernetes.io/name: {{ app_name }}
+  name: {{ app_name }}-read-write
+spec:
+  ports:
+    - port: 6446
+  selector:
+    app.kubernetes.io/name: {{ app_name }}
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  labels:
+    app.kubernetes.io/name: {{ app_name }}
+  name: {{ app_name }}-read-only
+spec:
+  ports:
+    - port: 6447
+  selector:
+    app.kubernetes.io/name: {{ app_name }}
+
+---
