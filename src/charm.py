@@ -8,13 +8,15 @@
 
 import json
 import logging
-from typing import Dict, Optional
+from typing import Optional
 
-from lightkube import ApiError, Client, codecs
-from lightkube.resources.core_v1 import Service
+from lightkube import ApiError, Client
+from lightkube.models.core_v1 import ServicePort, ServiceSpec
+from lightkube.models.meta_v1 import ObjectMeta
+from lightkube.resources.core_v1 import Pod, Service
 from ops.charm import CharmBase
 from ops.main import main
-from ops.model import ActiveStatus, BlockedStatus, WaitingStatus
+from ops.model import ActiveStatus, BlockedStatus, Relation, WaitingStatus
 from ops.pebble import Layer
 
 from constants import (
@@ -53,7 +55,7 @@ class MySQLRouterOperatorCharm(CharmBase):
     # =======================
 
     @property
-    def _peers(self) -> list:
+    def _peers(self) -> Optional[Relation]:
         """Fetch the peer relation."""
         return self.model.get_relation(PEER)
 
@@ -87,6 +89,41 @@ class MySQLRouterOperatorCharm(CharmBase):
     #  Helpers
     # =======================
 
+    def _create_service(self, name: str, port: int) -> None:
+        client = Client()
+        pod0 = client.get(
+            res=Pod,
+            name=self.app.name + "-0",
+            namespace=self.model.name,
+        )
+        service = Service(
+            metadata=ObjectMeta(
+                name=name,
+                namespace=self.model.name,
+                ownerReferences=pod0.metadata.ownerReferences,
+                labels={
+                    "app.kubernetes.io/name": self.app.name,
+                },
+            ),
+            spec=ServiceSpec(
+                ports=[
+                    ServicePort(
+                        name="mysql",
+                        port=port,
+                        targetPort=port,
+                    )
+                ],
+                selector={"app.kubernetes.io/name": self.app.name},
+            ),
+        )
+        client.apply(
+            obj=service,
+            name=service.metadata.name,
+            namespace=service.metadata.namespace,
+            force=True,
+            field_manager=self.model.app.name,
+        )
+
     def _get_secret(self, scope: str, key: str) -> Optional[str]:
         """Get secret from the peer relation databag."""
         if scope == "unit":
@@ -111,7 +148,8 @@ class MySQLRouterOperatorCharm(CharmBase):
         else:
             raise RuntimeError("Unknown secret scope")
 
-    def _mysql_router_layer(self, host: str, port: str, username: str, password: str) -> Dict:
+    @staticmethod
+    def _mysql_router_layer(host: str, port: str, username: str, password: str) -> Layer:
         """Return a layer configuration for the mysql router service.
 
         Args:
@@ -141,7 +179,7 @@ class MySQLRouterOperatorCharm(CharmBase):
             }
         )
 
-    def _bootstrap_mysqlrouter(self) -> None:
+    def _bootstrap_mysqlrouter(self) -> bool:
         if not self.app_peer_data.get(MYSQL_DATABASE_CREATED):
             return False
 
@@ -182,33 +220,14 @@ class MySQLRouterOperatorCharm(CharmBase):
         Creates read-write and read-only services from a template file, and deletes
         the service created by juju for the application.
         """
-        client = Client()
-
-        # Delete the service created by juju if it still exists
+        # Create the read-write and read-only services
         try:
-            client.delete(Service, name=self.model.app.name, namespace=self.model.name)
+            self._create_service(f"{self.app.name}-read-only", 6447)
+            self._create_service(f"{self.app.name}-read-write", 6446)
         except ApiError as e:
-            if e.status.code != 404:
-                logger.exception("Failed to delete k8s service", exc_info=e)
-                self.unit.status = BlockedStatus("Failed to delete k8s service")
-                return
-
-        # Create the read-write and read-only services defined in the yaml file
-        with open("src/k8s_services.yaml", "r") as resource_file:
-            for service in codecs.load_all_yaml(
-                resource_file, context={"app_name": self.model.app.name}
-            ):
-                try:
-                    client.create(service)
-                except ApiError as e:
-                    # Do nothing if the service already exists
-                    if e.status.code != 409:
-                        logger.exception(
-                            f"Failed to create k8s service {str(service)}", exc_info=e
-                        )
-                        self.unit.status = BlockedStatus("Failed to create k8s service")
-                        return
-
+            logger.exception("Failed to create k8s service", exc_info=e)
+            self.unit.status = BlockedStatus("Failed to create k8s service")
+            return
         self.unit.status = WaitingStatus()
 
     def _on_mysql_router_pebble_ready(self, _) -> None:
