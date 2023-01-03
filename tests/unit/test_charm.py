@@ -5,7 +5,6 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 import lightkube
-from lightkube.resources.core_v1 import Service
 from ops.model import BlockedStatus, WaitingStatus
 from ops.testing import Harness
 
@@ -27,11 +26,7 @@ class TestCharm(unittest.TestCase):
     def test_on_peer_relation_created(self, _lightkube_client):
         self.charm.on.leader_elected.emit()
 
-        _lightkube_client.return_value.delete.assert_called_once_with(
-            Service, name=self.charm.model.app.name, namespace=self.charm.model.name
-        )
-
-        self.assertEqual(_lightkube_client.return_value.create.call_count, 2)
+        self.assertEqual(_lightkube_client.return_value.apply.call_count, 2)
 
         self.assertTrue(isinstance(self.harness.model.unit.status, WaitingStatus))
 
@@ -40,7 +35,7 @@ class TestCharm(unittest.TestCase):
         response = MagicMock()
         response.json.return_value = {"status": "Bad Request", "code": 400}
         api_error = lightkube.ApiError(request=MagicMock(), response=response)
-        _lightkube_client.return_value.delete.side_effect = api_error
+        _lightkube_client.return_value.apply.side_effect = api_error
 
         self.charm.on.leader_elected.emit()
 
@@ -62,7 +57,7 @@ class TestCharm(unittest.TestCase):
         response = MagicMock()
         response.json.return_value = {"status": "Bad Request", "code": 400}
         api_error = lightkube.ApiError(request=MagicMock(), response=response)
-        _lightkube_client.return_value.create.side_effect = api_error
+        _lightkube_client.return_value.apply.side_effect = api_error
 
         self.charm.on.leader_elected.emit()
 

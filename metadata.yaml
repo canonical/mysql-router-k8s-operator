@@ -19,6 +19,7 @@ provides:
 requires:
   backend-database:
     interface: mysql_client
+    limit: 1
 peers:
   mysql-router-peers:
     interface: mysql-router-peers
