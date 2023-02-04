@@ -5,7 +5,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 import lightkube
-from ops.model import BlockedStatus, MaintenanceStatus, WaitingStatus
+from ops.model import BlockedStatus, MaintenanceStatus
 from ops.testing import Harness
 
 from charm import MySQLRouterOperatorCharm
