@@ -5,7 +5,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 import lightkube
-from ops.model import BlockedStatus, WaitingStatus
+from ops.model import BlockedStatus, MaintenanceStatus, WaitingStatus
 from ops.testing import Harness
 
 from charm import MySQLRouterOperatorCharm
@@ -28,7 +28,7 @@ class TestCharm(unittest.TestCase):
 
         self.assertEqual(_lightkube_client.return_value.apply.call_count, 2)
 
-        self.assertTrue(isinstance(self.harness.model.unit.status, WaitingStatus))
+        self.assertTrue(isinstance(self.harness.model.unit.status, MaintenanceStatus))
 
     @patch("charm.Client", return_value=MagicMock())
     def test_on_peer_relation_created_delete_exception(self, _lightkube_client):
@@ -50,7 +50,7 @@ class TestCharm(unittest.TestCase):
 
         self.charm.on.leader_elected.emit()
 
-        self.assertTrue(isinstance(self.harness.model.unit.status, WaitingStatus))
+        self.assertTrue(isinstance(self.harness.model.unit.status, MaintenanceStatus))
 
     @patch("charm.Client", return_value=MagicMock())
     def test_on_leader_elected_create_exception(self, _lightkube_client):
@@ -72,4 +72,4 @@ class TestCharm(unittest.TestCase):
 
         self.charm.on.leader_elected.emit()
 
-        self.assertTrue(isinstance(self.harness.model.unit.status, WaitingStatus))
+        self.assertTrue(isinstance(self.harness.model.unit.status, MaintenanceStatus))
