@@ -144,6 +144,11 @@ class DatabaseRequiresRelation(Object):
         self.charm.app_peer_data[MYSQL_DATABASE_CREATED] = "true"
 
     def _on_endpoints_changed(self, event: DatabaseEndpointsChangedEvent) -> None:
+        """Handle the endpoints changed event.
+
+        Update the endpoint in the MYSQL_ROUTER_REQUIRES_DATA so that future
+        bootstrapping units will not fail.
+        """
         if not self.charm.unit.is_leader():
             return
 

@@ -52,6 +52,7 @@ class DatabaseProvidesRelation(Object):
         if not self.charm.unit.is_leader():
             return
 
+        # Store data in databag to trigger DatabaseRequires initialization in database_requires.py
         self.charm.app_peer_data[MYSQL_ROUTER_PROVIDES_DATA] = json.dumps(
             {"database": event.database, "extra_user_roles": event.extra_user_roles}
         )
