@@ -41,11 +41,12 @@ class MySQLRouterOperatorCharm(CharmBase):
     def __init__(self, *args):
         super().__init__(*args)
 
+        self.framework.observe(self.on.install, self._on_install)
         self.framework.observe(self.on.leader_elected, self._on_leader_elected)
         self.framework.observe(
             self.on.mysql_router_pebble_ready, self._on_mysql_router_pebble_ready
         )
-        self.framework.observe(self.on.update_status, self._on_update_status)
+        self.framework.observe(self.on[PEER].relation_changed, self._on_peer_relation_changed)
 
         self.database_provides = DatabaseProvidesRelation(self)
         self.database_requires = DatabaseRequiresRelation(self)
@@ -90,6 +91,11 @@ class MySQLRouterOperatorCharm(CharmBase):
     # =======================
 
     def _create_service(self, name: str, port: int) -> None:
+        """Create a k8s service that is tied to pod-0.
+
+        The k8s service is tied to pod-0 so that the service is auto cleaned by
+        k8s when the last pod is scaled down.
+        """
         client = Client()
         pod0 = client.get(
             res=Pod,
@@ -184,9 +190,11 @@ class MySQLRouterOperatorCharm(CharmBase):
             return False
 
         requires_data = json.loads(self.app_peer_data[MYSQL_ROUTER_REQUIRES_DATA])
+
+        endpoint_host, endpoint_port = requires_data["endpoints"].split(",")[0].split(":")
         pebble_layer = self._mysql_router_layer(
-            requires_data["endpoints"].split(",")[0].split(":")[0],
-            "3306",
+            endpoint_host,
+            endpoint_port,
             requires_data["username"],
             self._get_secret("app", "database-password"),
         )
@@ -202,10 +210,6 @@ class MySQLRouterOperatorCharm(CharmBase):
 
             self.unit_peer_data[UNIT_BOOTSTRAPPED] = "true"
 
-            # Triggers a peer_relation_changed event in the DatabaseProvidesRelation
-            num_units_bootstrapped = int(self.app_peer_data.get(NUM_UNITS_BOOTSTRAPPED, "0"))
-            self.app_peer_data[NUM_UNITS_BOOTSTRAPPED] = str(num_units_bootstrapped + 1)
-
             return True
 
         return False
@@ -213,6 +217,10 @@ class MySQLRouterOperatorCharm(CharmBase):
     # =======================
     #  Handlers
     # =======================
+
+    def _on_install(self, _) -> None:
+        """Handle the install event."""
+        self.unit.status = WaitingStatus()
 
     def _on_leader_elected(self, _) -> None:
         """Handle the leader elected event.
@@ -228,15 +236,14 @@ class MySQLRouterOperatorCharm(CharmBase):
             logger.exception("Failed to create k8s service", exc_info=e)
             self.unit.status = BlockedStatus("Failed to create k8s service")
             return
-        self.unit.status = WaitingStatus()
 
     def _on_mysql_router_pebble_ready(self, _) -> None:
         """Handle the mysql-router pebble ready event."""
         if self._bootstrap_mysqlrouter():
             self.unit.status = ActiveStatus()
 
-    def _on_update_status(self, _) -> None:
-        """Handle the update status event.
+    def _on_peer_relation_changed(self, _) -> None:
+        """Handle the peer relation changed event.
 
         Bootstraps mysqlrouter if the relations exist, but pebble_ready event
         fired before the requires relation was formed.
@@ -247,6 +254,14 @@ class MySQLRouterOperatorCharm(CharmBase):
             and self._bootstrap_mysqlrouter()
         ):
             self.unit.status = ActiveStatus()
+
+        if self.unit.is_leader():
+            num_units_bootstrapped = sum(
+                1
+                for unit in self._peers.units.union({self.unit})
+                if self._peers.data[unit].get(UNIT_BOOTSTRAPPED)
+            )
+            self.app_peer_data[NUM_UNITS_BOOTSTRAPPED] = str(num_units_bootstrapped)
 
 
 if __name__ == "__main__":
