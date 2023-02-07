@@ -191,7 +191,7 @@ class MySQLRouterOperatorCharm(CharmBase):
 
         requires_data = json.loads(self.app_peer_data[MYSQL_ROUTER_REQUIRES_DATA])
 
-        [endpoint_host, endpoint_port] = requires_data["endpoints"].split(",")[0].split(":")
+        endpoint_host, endpoint_port = requires_data["endpoints"].split(",")[0].split(":")
         pebble_layer = self._mysql_router_layer(
             endpoint_host,
             endpoint_port,
@@ -257,11 +257,9 @@ class MySQLRouterOperatorCharm(CharmBase):
 
         if self.unit.is_leader():
             num_units_bootstrapped = sum(
-                [
-                    1
-                    for unit in self._peers.units.union({self.unit})
-                    if self._peers.data[unit].get(UNIT_BOOTSTRAPPED)
-                ]
+                1
+                for unit in self._peers.units.union({self.unit})
+                if self._peers.data[unit].get(UNIT_BOOTSTRAPPED)
             )
             self.app_peer_data[NUM_UNITS_BOOTSTRAPPED] = str(num_units_bootstrapped)
 
