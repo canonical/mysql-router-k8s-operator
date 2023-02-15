@@ -9,6 +9,8 @@ from pathlib import Path
 
 import pytest
 import yaml
+from pytest_operator.plugin import OpsTest
+
 from .helpers import (
     execute_queries_on_unit,
     get_inserted_data_by_application,
@@ -16,7 +18,6 @@ from .helpers import (
     get_unit_address,
     scale_application,
 )
-from pytest_operator.plugin import OpsTest
 
 logger = logging.getLogger(__name__)
 
