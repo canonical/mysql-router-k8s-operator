@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 import yaml
-from helpers import (
+from .helpers import (
     execute_queries_on_unit,
     get_inserted_data_by_application,
     get_server_config_credentials,
@@ -28,9 +28,7 @@ APPLICATION_APP_NAME = "application"
 SLOW_TIMEOUT = 15 * 60
 
 
-@pytest.mark.order(1)
 @pytest.mark.abort_on_fail
-@pytest.mark.database_tests
 async def test_database_relation(ops_test: OpsTest):
     """Test the database relation."""
     # Build and deploy applications
