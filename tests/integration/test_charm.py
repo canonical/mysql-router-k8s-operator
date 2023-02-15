@@ -120,5 +120,5 @@ async def test_database_relation(ops_test: OpsTest):
     await scale_application(ops_test, APPLICATION_APP_NAME, 2)
 
     # Disabled until juju fixes k8s scaledown: https://bugs.launchpad.net/juju/+bug/1977582
-    #await scale_application(ops_test, MYSQL_ROUTER_APP_NAME, 1)
-    #await scale_application(ops_test, APPLICATION_APP_NAME, 1)
+    # await scale_application(ops_test, MYSQL_ROUTER_APP_NAME, 1)
+    # await scale_application(ops_test, APPLICATION_APP_NAME, 1)
