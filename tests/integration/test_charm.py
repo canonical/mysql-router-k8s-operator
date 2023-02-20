@@ -23,8 +23,8 @@ logger = logging.getLogger(__name__)
 
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 
-MYSQL_APP_NAME = "mysql"
-MYSQL_ROUTER_APP_NAME = "mysqlrouter"
+MYSQL_APP_NAME = "mysql-k8s"
+MYSQL_ROUTER_APP_NAME = "mysql-router-k8s"
 APPLICATION_APP_NAME = "application"
 SLOW_TIMEOUT = 15 * 60
 
@@ -42,7 +42,11 @@ async def test_database_relation(ops_test: OpsTest):
 
     applications = await asyncio.gather(
         ops_test.model.deploy(
-            "mysql-k8s", channel="latest/edge", application_name=MYSQL_APP_NAME, num_units=3
+            MYSQL_APP_NAME,
+            channel="latest/edge",
+            application_name=MYSQL_APP_NAME,
+            num_units=3,
+            trust=True, # Necessary after a6f1f01: Fix/endpoints as k8s services (#142)
         ),
         ops_test.model.deploy(
             mysqlrouter_charm,
