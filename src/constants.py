@@ -16,3 +16,4 @@ MYSQL_ROUTER_SERVICE_NAME = "mysql_router"
 PASSWORD_LENGTH = 24
 PEER = "mysql-router-peers"
 UNIT_BOOTSTRAPPED = "unit-bootstrapped"
+TLS_RELATION = "certificates"

@@ -31,6 +31,7 @@ from constants import (
 from mysql_router_helpers import MySQLRouter
 from relations.database_provides import DatabaseProvidesRelation
 from relations.database_requires import DatabaseRequiresRelation
+from relations.tls import MySQLRouterTLS
 
 logger = logging.getLogger(__name__)
 
@@ -50,31 +51,32 @@ class MySQLRouterOperatorCharm(CharmBase):
 
         self.database_provides = DatabaseProvidesRelation(self)
         self.database_requires = DatabaseRequiresRelation(self)
+        self.tls = MySQLRouterTLS(self)
 
     # =======================
     #  Properties
     # =======================
 
     @property
-    def _peers(self) -> Optional[Relation]:
+    def peers(self) -> Optional[Relation]:
         """Fetch the peer relation."""
         return self.model.get_relation(PEER)
 
     @property
     def app_peer_data(self):
         """Application peer data object."""
-        if not self._peers:
+        if not self.peers:
             return {}
 
-        return self._peers.data[self.app]
+        return self.peers.data[self.app]
 
     @property
     def unit_peer_data(self):
         """Unit peer data object."""
-        if not self._peers:
+        if not self.peers:
             return {}
 
-        return self._peers.data[self.unit]
+        return self.peers.data[self.unit]
 
     @property
     def read_write_endpoint(self):
@@ -85,6 +87,18 @@ class MySQLRouterOperatorCharm(CharmBase):
     def read_only_endpoint(self):
         """The read only k8s endpoint for the charm."""
         return f"{self.model.app.name}-read-only.{self.model.name}.svc.cluster.local"
+
+    @property
+    def unit_hostname(self) -> str:
+        """Get the hostname.localdomain for a unit.
+
+        Translate juju unit name to hostname.localdomain, necessary
+        for correct name resolution under k8s.
+
+        Returns:
+            A string representing the hostname.localdomain of the unit.
+        """
+        return f"{self.unit.name.replace('/', '-')}.{self.app.name}-endpoints"
 
     # =======================
     #  Helpers
@@ -130,7 +144,7 @@ class MySQLRouterOperatorCharm(CharmBase):
             field_manager=self.model.app.name,
         )
 
-    def _get_secret(self, scope: str, key: str) -> Optional[str]:
+    def get_secret(self, scope: str, key: str) -> Optional[str]:
         """Get secret from the peer relation databag."""
         if scope == "unit":
             return self.unit_peer_data.get(key, None)
@@ -139,7 +153,7 @@ class MySQLRouterOperatorCharm(CharmBase):
         else:
             raise RuntimeError("Unknown secret scope")
 
-    def _set_secret(self, scope: str, key: str, value: Optional[str]) -> None:
+    def set_secret(self, scope: str, key: str, value: Optional[str]) -> None:
         """Set secret in the peer relation databag."""
         if scope == "unit":
             if not value:
@@ -196,7 +210,7 @@ class MySQLRouterOperatorCharm(CharmBase):
             endpoint_host,
             endpoint_port,
             requires_data["username"],
-            self._get_secret("app", "database-password"),
+            self.get_secret("app", "database-password") or "",
         )
 
         container = self.unit.get_container(MYSQL_ROUTER_CONTAINER_NAME)
@@ -258,8 +272,8 @@ class MySQLRouterOperatorCharm(CharmBase):
         if self.unit.is_leader():
             num_units_bootstrapped = sum(
                 1
-                for unit in self._peers.units.union({self.unit})
-                if self._peers.data[unit].get(UNIT_BOOTSTRAPPED)
+                for _ in self.peers.units.union({self.unit})
+                if self.unit_peer_data.get(UNIT_BOOTSTRAPPED)
             )
             self.app_peer_data[NUM_UNITS_BOOTSTRAPPED] = str(num_units_bootstrapped)
 

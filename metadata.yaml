@@ -23,9 +23,15 @@ requires:
 peers:
   mysql-router-peers:
     interface: mysql-router-peers
+requires:
+  certificates:
+    interface: tls-certificates
+    limit: 1
 resources:
   mysql-router-image:
     type: oci-image
     description: OCI image for mysql-router
     # TODO: replace with canonical maintained image
     upstream-source: dataplatformoci/mysql-router:latest
+assumes:
+  - k8s-api
