@@ -41,6 +41,11 @@ class DatabaseRequiresRelation(Object):
 
         self.charm = charm
 
+        self.framework.observe(
+            self.charm.on[DATABASE_REQUIRES_RELATION].relation_joined,
+            self._on_database_requires_relation_joined,
+        )
+
         provides_data = self._get_provides_data()
         if not provides_data:
             return
@@ -57,10 +62,6 @@ class DatabaseRequiresRelation(Object):
         )
         self.framework.observe(
             self.database_requires_relation.on.endpoints_changed, self._on_endpoints_changed
-        )
-        self.framework.observe(
-            self.charm.on[DATABASE_REQUIRES_RELATION].relation_joined,
-            self._on_database_requires_relation_joined,
         )
 
     # =======================
