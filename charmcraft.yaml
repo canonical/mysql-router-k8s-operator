@@ -13,3 +13,8 @@ parts:
   charm:
     charm-binary-python-packages:
       - mysql-connector-python==8.0.30
+    build-packages:
+      - libffi-dev
+      - libssl-dev
+      - rustc
+      - cargo

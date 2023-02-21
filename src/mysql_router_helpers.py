@@ -103,7 +103,7 @@ class MySQLRouter:
         """Get the MySQL Router version."""
         process = container.exec(["mysqlrouter", "-V"])
         raw_version, _ = process.wait_output()
-        for version in raw_version.decode('utf8').strip().split():
+        for version in raw_version.strip().split():
             if version.startswith('8'):
                 return version
         return None
