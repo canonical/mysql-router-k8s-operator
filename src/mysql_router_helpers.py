@@ -5,6 +5,9 @@
 
 import logging
 import socket
+from typing import Optional
+
+from ops.model import Container
 
 import mysql.connector
 from tenacity import retry, stop_after_delay, wait_fixed
@@ -78,7 +81,7 @@ class MySQLRouter:
 
     @staticmethod
     @retry(reraise=True, stop=stop_after_delay(30), wait=wait_fixed(5))
-    def wait_until_mysql_router_ready(container) -> None:
+    def wait_until_mysql_router_ready() -> None:
         """Wait until a connection to MySQL router is possible.
 
         Retry every 5 seconds for 30 seconds if there is an issue obtaining a connection.
@@ -94,3 +97,13 @@ class MySQLRouter:
         if result != 0:
             raise MySQLRouterPortsNotOpenError()
         sock.close()
+
+    @staticmethod
+    def get_version(container: Container) -> Optional[str]:
+        """Get the MySQL Router version."""
+        process = container.exec(["mysqlrouter", "-V"])
+        raw_version, _ = process.wait_output()
+        for version in raw_version.decode('utf8').strip().split():
+            if version.startswith('8'):
+                return version
+        return None

@@ -220,7 +220,7 @@ class MySQLRouterOperatorCharm(CharmBase):
             container.add_layer(MYSQL_ROUTER_SERVICE_NAME, pebble_layer, combine=True)
             container.start(MYSQL_ROUTER_SERVICE_NAME)
 
-            MySQLRouter.wait_until_mysql_router_ready(container)
+            MySQLRouter.wait_until_mysql_router_ready()
 
             self.unit_peer_data[UNIT_BOOTSTRAPPED] = "true"
 
@@ -235,6 +235,11 @@ class MySQLRouterOperatorCharm(CharmBase):
     def _on_install(self, _) -> None:
         """Handle the install event."""
         self.unit.status = WaitingStatus()
+        # Try set workload version
+        container = self.unit.get_container(MYSQL_ROUTER_CONTAINER_NAME)
+        if container.can_connect():
+            if version := MySQLRouter.get_version(container):
+                self.unit.set_workload_version(version)
 
     def _on_leader_elected(self, _) -> None:
         """Handle the leader elected event.
