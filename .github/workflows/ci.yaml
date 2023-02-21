@@ -85,6 +85,5 @@ jobs:
         uses: canonical/charm-logdump-action@main
         if: failure()
         with:
-          # TEMPLATE-TODO: Replace the application name
-          app: operator-template
+          app: mysql-router-k8s
           model: testing
