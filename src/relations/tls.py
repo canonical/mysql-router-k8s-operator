@@ -7,6 +7,7 @@ import base64
 import logging
 import re
 import socket
+from string import Template
 from typing import List, Optional
 
 from charms.tls_certificates_interface.v1.tls_certificates import (
@@ -20,7 +21,15 @@ from ops.charm import ActionEvent, CharmBase
 from ops.framework import Object
 from ops.model import MaintenanceStatus
 
-from constants import TLS_RELATION, UNIT_BOOTSTRAPPED
+from constants import (
+    MYSQL_ROUTER_CONTAINER_NAME,
+    MYSQL_ROUTER_SERVICE_NAME,
+    ROUTER_CONFIG_DIRECTORY,
+    TLS_RELATION,
+    TLS_SSL_CERT_FILE,
+    TLS_SSL_KEY_FILE,
+    UNIT_BOOTSTRAPPED,
+)
 
 SCOPE = "unit"
 
@@ -49,6 +58,11 @@ class MySQLRouterTLS(Object):
         self.framework.observe(self.certs.on.certificate_available, self._on_certificate_available)
         self.framework.observe(self.certs.on.certificate_expiring, self._on_certificate_expiring)
 
+    @property
+    def container(self):
+        """Map to the MySQL Router container."""
+        return self.charm.unit.get_container(MYSQL_ROUTER_CONTAINER_NAME)
+
     # Handlers
 
     def _on_set_tls_private_key(self, event: ActionEvent) -> None:
@@ -70,10 +84,9 @@ class MySQLRouterTLS(Object):
             except KeyError:
                 # ignore key error for unit teardown
                 pass
-        # set member-state to avoid unwanted health-check actions
+        # unset tls flag
         self.charm.unit_peer_data.update({"tls": ""})
-        # trigger rolling restart
-        # self.charm.on[self.charm.restart_manager.name].acquire_lock.emit()
+        self._unset_tls()
 
     def _on_certificate_available(self, event: CertificateAvailableEvent) -> None:
         """Enable TLS when TLS certificate available."""
@@ -103,6 +116,7 @@ class MySQLRouterTLS(Object):
 
         # set member-state to avoid unwanted health-check actions
         self.charm.unit_peer_data.update({"tls": "enabled"})
+        self._setup_tls()
 
     def _on_certificate_expiring(self, event: CertificateExpiringEvent) -> None:
         """Request the new certificate when old certificate is expiring."""
@@ -168,3 +182,80 @@ class MySQLRouterTLS(Object):
                 raw_content,
             ).encode("utf-8")
         return base64.b64decode(raw_content)
+
+    def _remove_file(self, path: str) -> None:
+        """Remove a file from container workload.
+
+        Args:
+            path: Full filesystem path to remove
+        """
+        self.container.remove_path(path)
+
+    def _setup_tls(self) -> None:
+        """Enable TLS."""
+        self._create_tls_config_file()
+        self._push_tls_files_to_workload()
+        self.container.restart(MYSQL_ROUTER_SERVICE_NAME)
+
+    def _unset_tls(self) -> None:
+        """Disable TLS."""
+        for file in [TLS_SSL_KEY_FILE, TLS_SSL_CERT_FILE, f"{ROUTER_CONFIG_DIRECTORY}/99-tls.cnf"]:
+            self._remove_file(file)
+        self.container.restart(MYSQL_ROUTER_SERVICE_NAME)
+
+    def _write_content_to_file(
+        self,
+        path: str,
+        content: str,
+        owner: str,
+        group: str,
+        permission: int = 0o640,
+    ) -> None:
+        """Write content to file.
+
+        Args:
+            path: filesystem full path (with filename)
+            content: string content to write
+            owner: file owner
+            group: file group
+            permission: file permission
+        """
+        self.container.push(path, content, permissions=permission, user=owner, group=group)
+
+    def _create_tls_config_file(self) -> None:
+        """Render TLS template directly to file.
+
+        Render and write TLS enabling config file from template.
+        """
+        with open("templates/tls.cnf", "r") as template_file:
+            template = Template(template_file.read())
+            config_string = template.substitute(
+                tls_ssl_key_file=TLS_SSL_KEY_FILE,
+                tls_ssl_cert_file=TLS_SSL_CERT_FILE,
+            )
+
+        self._write_content_to_file(
+            f"{ROUTER_CONFIG_DIRECTORY}/99-tls.cnf",
+            config_string,
+            owner="root",
+            group="root",
+            permission=0o644,
+        )
+
+    def _push_tls_files_to_workload(self) -> None:
+        """Push TLS files to unit."""
+        self._write_content_to_file(
+            f"/tmp/{TLS_SSL_KEY_FILE}",
+            self.charm.get_secret(SCOPE, "key"),
+            owner="root",
+            group="root",
+            permission=0o400,
+        )
+
+        self._write_content_to_file(
+            f"/tmp/{TLS_SSL_CERT_FILE}",
+            self.charm.get_secret(SCOPE, "cert"),
+            owner="root",
+            group="root",
+            permission=0o400,
+        )

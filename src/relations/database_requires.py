@@ -63,7 +63,6 @@ class DatabaseRequiresRelation(Object):
             self._on_database_requires_relation_joined,
         )
 
-
     # =======================
     #  Helpers
     # =======================
