@@ -20,13 +20,12 @@ requires:
   backend-database:
     interface: mysql_client
     limit: 1
-peers:
-  mysql-router-peers:
-    interface: mysql-router-peers
-requires:
   certificates:
     interface: tls-certificates
     limit: 1
+peers:
+  mysql-router-peers:
+    interface: mysql-router-peers
 resources:
   mysql-router-image:
     type: oci-image
