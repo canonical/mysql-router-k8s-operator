@@ -20,6 +20,7 @@ from charms.tls_certificates_interface.v1.tls_certificates import (
 from ops.charm import ActionEvent, CharmBase
 from ops.framework import Object
 from ops.model import MaintenanceStatus
+from ops.pebble import Layer
 
 from constants import (
     MYSQL_ROUTER_CONTAINER_NAME,
@@ -27,6 +28,7 @@ from constants import (
     ROUTER_CONFIG_DIRECTORY,
     TLS_RELATION,
     TLS_SSL_CERT_FILE,
+    TLS_SSL_CONFIG_FILE,
     TLS_SSL_KEY_FILE,
     UNIT_BOOTSTRAPPED,
 )
@@ -191,17 +193,23 @@ class MySQLRouterTLS(Object):
         """
         self.container.remove_path(path)
 
-    def _setup_tls(self) -> None:
+    def _set_tls(self) -> None:
         """Enable TLS."""
         self._create_tls_config_file()
         self._push_tls_files_to_workload()
-        self.container.restart(MYSQL_ROUTER_SERVICE_NAME)
+        # add tls layer merging with mysql-router layer
+        self.container.add_layer(MYSQL_ROUTER_SERVICE_NAME, self._tls_layer(), combine=False)
+        self.container.replan()
 
     def _unset_tls(self) -> None:
         """Disable TLS."""
-        for file in [TLS_SSL_KEY_FILE, TLS_SSL_CERT_FILE, f"{ROUTER_CONFIG_DIRECTORY}/99-tls.cnf"]:
-            self._remove_file(file)
-        self.container.restart(MYSQL_ROUTER_SERVICE_NAME)
+        for file in [TLS_SSL_KEY_FILE, TLS_SSL_CERT_FILE, TLS_SSL_CONFIG_FILE]:
+            self._remove_file(f"{ROUTER_CONFIG_DIRECTORY}/{file}")
+        # remove tls layer overriding with original layer
+        self.container.add_layer(
+            MYSQL_ROUTER_SERVICE_NAME, self.charm.mysql_router_layer, combine=True
+        )
+        self.container.replan()
 
     def _write_content_to_file(
         self,
@@ -235,7 +243,7 @@ class MySQLRouterTLS(Object):
             )
 
         self._write_content_to_file(
-            f"{ROUTER_CONFIG_DIRECTORY}/99-tls.cnf",
+            f"{ROUTER_CONFIG_DIRECTORY}/tls.cnf",
             config_string,
             owner="root",
             group="root",
@@ -258,4 +266,22 @@ class MySQLRouterTLS(Object):
             owner="root",
             group="root",
             permission=0o400,
+        )
+
+    @staticmethod
+    def _tls_layer() -> Layer:
+        """Create a Pebble layer for TLS.
+
+        Returns:
+            A Pebble layer object.
+        """
+        return Layer(
+            {
+                "services": {
+                    MYSQL_ROUTER_SERVICE_NAME: {
+                        "override": "merge",
+                        "command": f"/run.sh mysqlrouter --extra-config {ROUTER_CONFIG_DIRECTORY}/tls.cnf",
+                    },
+                },
+            },
         )
