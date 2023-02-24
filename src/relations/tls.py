@@ -20,11 +20,12 @@ from charms.tls_certificates_interface.v1.tls_certificates import (
 from ops.charm import ActionEvent, CharmBase
 from ops.framework import Object
 from ops.model import MaintenanceStatus
-from ops.pebble import Layer
+from ops.pebble import Layer, PathError
 
 from constants import (
     MYSQL_ROUTER_CONTAINER_NAME,
     MYSQL_ROUTER_SERVICE_NAME,
+    MYSQL_ROUTER_USER_NAME,
     ROUTER_CONFIG_DIRECTORY,
     TLS_RELATION,
     TLS_SSL_CERT_FILE,
@@ -65,6 +66,11 @@ class MySQLRouterTLS(Object):
         """Map to the MySQL Router container."""
         return self.charm.unit.get_container(MYSQL_ROUTER_CONTAINER_NAME)
 
+    @property
+    def hostname(self):
+        """Return the hostname of the MySQL Router container."""
+        return socket.gethostname()
+
     # Handlers
 
     def _on_set_tls_private_key(self, event: ActionEvent) -> None:
@@ -101,14 +107,12 @@ class MySQLRouterTLS(Object):
             event.certificate_signing_request.strip()
             != self.charm.get_secret(SCOPE, "csr").strip()
         ):
-            logger.warning("Unknown certificate received. Igonoring.")
+            logger.warning("Unknown certificate received. Ignoring.")
             return
 
         if self.charm.unit_peer_data.get("tls") == "enabled":
             logger.debug("TLS is already enabled.")
             return
-
-        self.charm.unit.status = MaintenanceStatus("Setting up TLS")
 
         self.charm.set_secret(
             SCOPE, "chain", "\n".join(event.chain) if event.chain is not None else None
@@ -118,7 +122,7 @@ class MySQLRouterTLS(Object):
 
         # set member-state to avoid unwanted health-check actions
         self.charm.unit_peer_data.update({"tls": "enabled"})
-        self._setup_tls()
+        self._set_tls()
 
     def _on_certificate_expiring(self, event: CertificateExpiringEvent) -> None:
         """Request the new certificate when old certificate is expiring."""
@@ -148,7 +152,7 @@ class MySQLRouterTLS(Object):
 
         csr = generate_csr(
             private_key=key,
-            subject=self.charm.unit_peer_data["instance-hostname"].split(":")[0],
+            subject=self.hostname,
             organization=self.charm.app.name,
             sans=self._get_sans(),
         )
@@ -167,9 +171,8 @@ class MySQLRouterTLS(Object):
         Returns:
             A list representing the hostnames of the unit.
         """
-        unit_id = self.charm.unit.name.split("/")[1]
         return [
-            f"{self.charm.app.name}-{unit_id}",
+            self.hostname,
             socket.getfqdn(),
             str(self.charm.model.get_binding(self.charm.peers).network.bind_address),
         ]
@@ -191,14 +194,18 @@ class MySQLRouterTLS(Object):
         Args:
             path: Full filesystem path to remove
         """
-        self.container.remove_path(path)
+        try:
+            self.container.remove_path(path)
+        except PathError:
+            # ignore file not found
+            pass
 
     def _set_tls(self) -> None:
         """Enable TLS."""
         self._create_tls_config_file()
         self._push_tls_files_to_workload()
         # add tls layer merging with mysql-router layer
-        self.container.add_layer(MYSQL_ROUTER_SERVICE_NAME, self._tls_layer(), combine=False)
+        self.container.add_layer(MYSQL_ROUTER_SERVICE_NAME, self._tls_layer(), combine=True)
         self.container.replan()
 
     def _unset_tls(self) -> None:
@@ -238,35 +245,29 @@ class MySQLRouterTLS(Object):
         with open("templates/tls.cnf", "r") as template_file:
             template = Template(template_file.read())
             config_string = template.substitute(
-                tls_ssl_key_file=TLS_SSL_KEY_FILE,
-                tls_ssl_cert_file=TLS_SSL_CERT_FILE,
+                tls_ssl_key_file=f"{ROUTER_CONFIG_DIRECTORY}/{TLS_SSL_KEY_FILE}",
+                tls_ssl_cert_file=f"{ROUTER_CONFIG_DIRECTORY}/{TLS_SSL_CERT_FILE}",
             )
 
         self._write_content_to_file(
-            f"{ROUTER_CONFIG_DIRECTORY}/tls.cnf",
+            f"{ROUTER_CONFIG_DIRECTORY}/{TLS_SSL_CONFIG_FILE}",
             config_string,
-            owner="root",
-            group="root",
-            permission=0o644,
+            owner=MYSQL_ROUTER_USER_NAME,
+            group=MYSQL_ROUTER_USER_NAME,
+            permission=0o600,
         )
 
     def _push_tls_files_to_workload(self) -> None:
         """Push TLS files to unit."""
-        self._write_content_to_file(
-            f"/tmp/{TLS_SSL_KEY_FILE}",
-            self.charm.get_secret(SCOPE, "key"),
-            owner="root",
-            group="root",
-            permission=0o400,
-        )
-
-        self._write_content_to_file(
-            f"/tmp/{TLS_SSL_CERT_FILE}",
-            self.charm.get_secret(SCOPE, "cert"),
-            owner="root",
-            group="root",
-            permission=0o400,
-        )
+        tls_file = {"key": TLS_SSL_KEY_FILE, "cert": TLS_SSL_CERT_FILE}
+        for key, value in tls_file.items():
+            self._write_content_to_file(
+                f"{ROUTER_CONFIG_DIRECTORY}/{value}",
+                self.charm.get_secret(SCOPE, key),
+                owner=MYSQL_ROUTER_USER_NAME,
+                group=MYSQL_ROUTER_USER_NAME,
+                permission=0o600,
+            )
 
     @staticmethod
     def _tls_layer() -> Layer:
@@ -280,7 +281,7 @@ class MySQLRouterTLS(Object):
                 "services": {
                     MYSQL_ROUTER_SERVICE_NAME: {
                         "override": "merge",
-                        "command": f"/run.sh mysqlrouter --extra-config {ROUTER_CONFIG_DIRECTORY}/tls.cnf",
+                        "command": f"/run.sh mysqlrouter --extra-config {ROUTER_CONFIG_DIRECTORY}/{TLS_SSL_CONFIG_FILE}",
                     },
                 },
             },
