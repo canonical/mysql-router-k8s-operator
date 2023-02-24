@@ -7,9 +7,8 @@ import logging
 import socket
 from typing import Optional
 
-from ops.model import Container
-
 import mysql.connector
+from ops.model import Container
 from tenacity import retry, stop_after_delay, wait_fixed
 
 logger = logging.getLogger(__name__)
@@ -104,6 +103,6 @@ class MySQLRouter:
         process = container.exec(["mysqlrouter", "-V"])
         raw_version, _ = process.wait_output()
         for version in raw_version.strip().split():
-            if version.startswith('8'):
+            if version.startswith("8"):
                 return version
         return None
