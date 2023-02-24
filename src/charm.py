@@ -168,16 +168,11 @@ class MySQLRouterOperatorCharm(CharmBase):
         else:
             raise RuntimeError("Unknown secret scope")
 
-    @staticmethod
-    def _mysql_router_layer(host: str, port: str, username: str, password: str) -> Layer:
-        """Return a layer configuration for the mysql router service.
-
-        Args:
-            host: The hostname of the MySQL cluster endpoint
-            port: The port of the MySQL cluster endpoint
-            username: The username for the bootstrap user
-            password: The password for the bootstrap user
-        """
+    @property
+    def mysql_router_layer(self) -> Layer:
+        """Return a layer configuration for the mysql router service."""
+        requires_data = json.loads(self.app_peer_data[MYSQL_ROUTER_REQUIRES_DATA])
+        host, port = requires_data["endpoints"].split(",")[0].split(":")
         return Layer(
             {
                 "summary": "mysql router layer",
@@ -191,8 +186,8 @@ class MySQLRouterOperatorCharm(CharmBase):
                         "environment": {
                             "MYSQL_HOST": host,
                             "MYSQL_PORT": port,
-                            "MYSQL_USER": username,
-                            "MYSQL_PASSWORD": password,
+                            "MYSQL_USER": requires_data["username"],
+                            "MYSQL_PASSWORD": self.get_secret("app", "database-password") or "",
                         },
                     },
                 },
@@ -203,15 +198,7 @@ class MySQLRouterOperatorCharm(CharmBase):
         if not self.app_peer_data.get(MYSQL_DATABASE_CREATED):
             return False
 
-        requires_data = json.loads(self.app_peer_data[MYSQL_ROUTER_REQUIRES_DATA])
-
-        endpoint_host, endpoint_port = requires_data["endpoints"].split(",")[0].split(":")
-        pebble_layer = self._mysql_router_layer(
-            endpoint_host,
-            endpoint_port,
-            requires_data["username"],
-            self.get_secret("app", "database-password") or "",
-        )
+        pebble_layer = self.mysql_router_layer
 
         container = self.unit.get_container(MYSQL_ROUTER_CONTAINER_NAME)
         plan = container.get_plan()
