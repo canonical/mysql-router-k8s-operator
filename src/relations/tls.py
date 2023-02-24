@@ -19,7 +19,6 @@ from charms.tls_certificates_interface.v1.tls_certificates import (
 )
 from ops.charm import ActionEvent, CharmBase
 from ops.framework import Object
-from ops.model import MaintenanceStatus
 from ops.pebble import Layer, PathError
 
 from constants import (
@@ -207,6 +206,7 @@ class MySQLRouterTLS(Object):
         # add tls layer merging with mysql-router layer
         self.container.add_layer(MYSQL_ROUTER_SERVICE_NAME, self._tls_layer(), combine=True)
         self.container.replan()
+        logger.info("TLS enabled.")
 
     def _unset_tls(self) -> None:
         """Disable TLS."""
@@ -217,6 +217,7 @@ class MySQLRouterTLS(Object):
             MYSQL_ROUTER_SERVICE_NAME, self.charm.mysql_router_layer, combine=True
         )
         self.container.replan()
+        logger.info("TLS disabled.")
 
     def _write_content_to_file(
         self,
