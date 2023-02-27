@@ -74,6 +74,9 @@ class MySQLRouterTLS(Object):
 
     def _on_set_tls_private_key(self, event: ActionEvent) -> None:
         """Action for setting a TLS private key."""
+        if not self.charm.model.get_relation(TLS_RELATION):
+            event.fail("No TLS relation available.")
+            return
         try:
             self._request_certificate(event.params.get("internal-key", None))
         except Exception as e:
@@ -92,7 +95,7 @@ class MySQLRouterTLS(Object):
                 # ignore key error for unit teardown
                 pass
         # unset tls flag
-        self.charm.unit_peer_data.update({"tls": ""})
+        self.charm.unit_peer_data.pop("tls")
         self._unset_tls()
 
     def _on_certificate_available(self, event: CertificateAvailableEvent) -> None:
@@ -144,6 +147,7 @@ class MySQLRouterTLS(Object):
 
     # Helpers
     def _request_certificate(self, internal_key: Optional[str] = None) -> None:
+        """Request a certificate from the TLS relation."""
         if internal_key:
             key = self._parse_tls_file(internal_key)
         else:
@@ -161,8 +165,7 @@ class MySQLRouterTLS(Object):
         self.charm.set_secret(SCOPE, "csr", csr.decode("utf-8"))
         # set control flag
         self.charm.unit_peer_data.update({"tls": "requested"})
-        if self.charm.model.get_relation(TLS_RELATION):
-            self.certs.request_certificate_creation(certificate_signing_request=csr)
+        self.certs.request_certificate_creation(certificate_signing_request=csr)
 
     def _get_sans(self) -> List[str]:
         """Create a list of DNS names for a unit.
