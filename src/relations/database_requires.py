@@ -37,7 +37,7 @@ class DatabaseRequiresRelation(Object):
     """Encapsulation of the relation between mysqlrouter and mysql database."""
 
     def __init__(self, charm):
-        super().__init__(charm, {DATABASE_REQUIRES_RELATION})
+        super().__init__(charm, DATABASE_REQUIRES_RELATION)
 
         self.charm = charm
 
@@ -84,8 +84,7 @@ class DatabaseRequiresRelation(Object):
         """Handle the backend-database relation joined event.
 
         Waits until the database relation with the application is formed before
-        triggering the database_requires relation joined event (which will
-        request the database).
+        triggering the database_requires relations joined event (which will request the database).
         """
         provides_data = self._get_provides_data()
         if not provides_data:
@@ -109,7 +108,7 @@ class DatabaseRequiresRelation(Object):
             }
         )
 
-        self.charm._set_secret("app", "database-password", event.password)
+        self.charm.set_secret("app", "database-password", event.password)
 
         provides_data = self._get_provides_data()
         provides_relation_id = self.charm.model.relations[DATABASE_PROVIDES_RELATION][0].id
@@ -139,7 +138,7 @@ class DatabaseRequiresRelation(Object):
             }
         )
 
-        self.charm._set_secret("app", "application-password", password)
+        self.charm.set_secret("app", "application-password", password)
 
         self.charm.app_peer_data[MYSQL_DATABASE_CREATED] = "true"
 

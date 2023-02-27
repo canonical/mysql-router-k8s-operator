@@ -20,6 +20,9 @@ requires:
   backend-database:
     interface: mysql_client
     limit: 1
+  certificates:
+    interface: tls-certificates
+    limit: 1
 peers:
   mysql-router-peers:
     interface: mysql-router-peers
@@ -29,3 +32,5 @@ resources:
     description: OCI image for mysql-router
     # TODO: replace with canonical maintained image
     upstream-source: dataplatformoci/mysql-router:latest
+assumes:
+  - k8s-api

@@ -83,7 +83,7 @@ class DatabaseProvidesRelation(Object):
         self.database_provides_relation.set_credentials(
             provides_relation_id,
             requires_application_data["username"],
-            self.charm._get_secret("app", "application-password"),
+            self.charm.get_secret("app", "application-password"),
         )
 
         self.database_provides_relation.set_endpoints(

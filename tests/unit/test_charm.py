@@ -15,11 +15,11 @@ class TestCharm(unittest.TestCase):
     def setUp(self):
         self.harness = Harness(MySQLRouterOperatorCharm)
         self.addCleanup(self.harness.cleanup)
+        self.harness.begin()
         self.peer_relation_id = self.harness.add_relation(
             "mysql-router-peers", "mysql-router-peers"
         )
         self.harness.add_relation_unit(self.peer_relation_id, "mysql-router-k8s/1")
-        self.harness.begin()
         self.charm = self.harness.charm
 
     @patch("charm.Client", return_value=MagicMock())
