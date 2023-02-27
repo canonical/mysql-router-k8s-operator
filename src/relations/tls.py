@@ -42,7 +42,7 @@ class MySQLRouterTLS(Object):
     """TLS Management class for MySQL Router Operator."""
 
     def __init__(self, charm: CharmBase):
-        super().__init__(charm, "mysql-router-tls")
+        super().__init__(charm, TLS_RELATION)
         self.charm = charm
         self.certs = TLSCertificatesRequiresV1(self.charm, TLS_RELATION)
 
