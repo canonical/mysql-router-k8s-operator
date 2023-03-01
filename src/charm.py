@@ -8,7 +8,7 @@
 
 import json
 import logging
-from typing import Optional
+from typing import Optional, Set
 
 from lightkube import ApiError, Client
 from lightkube.models.core_v1 import ServicePort, ServiceSpec
@@ -218,6 +218,15 @@ class MySQLRouterOperatorCharm(CharmBase):
 
         return False
 
+    @property
+    def missing_relations(self) -> Set[str]:
+        """Return a set of missing relations."""
+        missing_relations = set()
+        for relation_name in [DATABASE_REQUIRES_RELATION, DATABASE_PROVIDES_RELATION]:
+            if not self.model.get_relation(relation_name):
+                missing_relations.add(relation_name)
+        return missing_relations
+
     # =======================
     #  Handlers
     # =======================
@@ -274,15 +283,13 @@ class MySQLRouterOperatorCharm(CharmBase):
 
     def _on_update_status(self, _) -> None:
         """Handle update-status event."""
-        missing_relations = []
-        for relation in [DATABASE_REQUIRES_RELATION, DATABASE_PROVIDES_RELATION]:
-            if not self.model.get_relation(relation):
-                missing_relations.append(relation)
-
-        if missing_relations:
+        if self.missing_relations:
             self.unit.status = WaitingStatus(
-                f"Waiting for relations: {' '.join(missing_relations)}"
+                f"Waiting for relations: {' '.join(self.missing_relations)}"
             )
+            return
+        self.unit.status = ActiveStatus()
+
 
 
 if __name__ == "__main__":
