@@ -69,8 +69,8 @@ class MySQLRouter:
             )
             cursor = connection.cursor()
 
-            cursor.execute(f"CREATE USER '{username}'@'{hostname}' IDENTIFIED BY '{password}'")
-            cursor.execute(f"GRANT ALL PRIVILEGES ON {database}.* TO '{username}'@'{hostname}'")
+            cursor.execute(f"CREATE USER `{username}`@`{hostname}` IDENTIFIED BY '{password}'")
+            cursor.execute(f"GRANT ALL PRIVILEGES ON {database}.* TO `{username}`@`{hostname}`")
 
             cursor.close()
             connection.close()
