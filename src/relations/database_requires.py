@@ -117,8 +117,8 @@ class DatabaseRequiresRelation(Object):
                 db_host,
                 db_port,
             )
-        except MySQLRouterCreateUserWithDatabasePrivilegesError as e:
-            logger.exception("Failed to create a database scoped user", exc_info=e)
+        except MySQLRouterCreateUserWithDatabasePrivilegesError:
+            logger.exception("Failed to create a database scoped user")
             self.charm.unit.status = BlockedStatus("Failed to create a database scoped user")
             return
 
