@@ -40,6 +40,7 @@ async def test_database_relation(ops_test: OpsTest):
         "mysql-router-image": METADATA["resources"]["mysql-router-image"]["upstream-source"]
     }
 
+    logger.info("Deploying mysql, mysqlrouter and application")
     applications = await asyncio.gather(
         ops_test.model.deploy(
             MYSQL_APP_NAME,
@@ -65,6 +66,7 @@ async def test_database_relation(ops_test: OpsTest):
 
     mysql_app, application_app = applications[0], applications[2]
 
+    logger.info("Waiting for mysql, mysqlrouter and application to be ready")
     async with ops_test.fast_forward():
         await asyncio.gather(
             ops_test.model.wait_for_idle(
@@ -81,6 +83,7 @@ async def test_database_relation(ops_test: OpsTest):
             ),
         )
 
+        logger.info("Relating mysql, mysqlrouter and application")
         # Relate the database with mysqlrouter
         await ops_test.model.relate(
             f"{MYSQL_ROUTER_APP_NAME}:backend-database", f"{MYSQL_APP_NAME}:database"
