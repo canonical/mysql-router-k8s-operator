@@ -69,14 +69,41 @@ class MySQLRouter:
             )
             cursor = connection.cursor()
 
-            cursor.execute(f"CREATE USER '{username}'@'{hostname}' IDENTIFIED BY '{password}'")
-            cursor.execute(f"GRANT ALL PRIVILEGES ON {database}.* TO '{username}'@'{hostname}'")
+            cursor.execute(f"CREATE USER `{username}`@`{hostname}` IDENTIFIED BY '{password}'")
+            cursor.execute(f"GRANT ALL PRIVILEGES ON {database}.* TO `{username}`@`{hostname}`")
 
             cursor.close()
             connection.close()
         except mysql.connector.Error as e:
             logger.exception("Failed to create user scoped to a database", exc_info=e)
             raise MySQLRouterCreateUserWithDatabasePrivilegesError(e.msg)
+
+    @staticmethod
+    def delete_application_user(
+        username, hostname, db_username, db_password, db_host, db_port
+    ) -> None:
+        """Delete the application user.
+
+        Args:
+            username: Username of the user to delete
+            hostname: Hostname of the user to delete
+            db_username: The user to connect to the database with
+            db_password: The password to use to connect to the database
+            db_host: The host name of the database
+            db_port: The port for the database
+        """
+        try:
+            connection = mysql.connector.connect(
+                user=db_username, password=db_password, host=db_host, port=db_port
+            )
+            cursor = connection.cursor()
+
+            cursor.execute(f"DROP USER IF EXISTS `{username}`@`{hostname}`")
+
+            cursor.close()
+            connection.close()
+        except mysql.connector.Error as e:
+            logger.exception("Failed to delete application user", exc_info=e)
 
     @staticmethod
     @retry(reraise=True, stop=stop_after_delay(30), wait=wait_fixed(5))

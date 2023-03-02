@@ -8,7 +8,7 @@
 
 import json
 import logging
-from typing import Optional
+from typing import Optional, Set
 
 from lightkube import ApiError, Client
 from lightkube.models.core_v1 import ServicePort, ServiceSpec
@@ -20,6 +20,8 @@ from ops.model import ActiveStatus, BlockedStatus, Relation, WaitingStatus
 from ops.pebble import Layer
 
 from constants import (
+    DATABASE_PROVIDES_RELATION,
+    DATABASE_REQUIRES_RELATION,
     MYSQL_DATABASE_CREATED,
     MYSQL_ROUTER_CONTAINER_NAME,
     MYSQL_ROUTER_REQUIRES_DATA,
@@ -48,6 +50,7 @@ class MySQLRouterOperatorCharm(CharmBase):
             self.on.mysql_router_pebble_ready, self._on_mysql_router_pebble_ready
         )
         self.framework.observe(self.on[PEER].relation_changed, self._on_peer_relation_changed)
+        self.framework.observe(self.on.update_status, self._on_update_status)
 
         self.database_provides = DatabaseProvidesRelation(self)
         self.database_requires = DatabaseRequiresRelation(self)
@@ -215,6 +218,15 @@ class MySQLRouterOperatorCharm(CharmBase):
 
         return False
 
+    @property
+    def missing_relations(self) -> Set[str]:
+        """Return a set of missing relations."""
+        missing_relations = set()
+        for relation_name in [DATABASE_REQUIRES_RELATION, DATABASE_PROVIDES_RELATION]:
+            if not self.model.get_relation(relation_name):
+                missing_relations.add(relation_name)
+        return missing_relations
+
     # =======================
     #  Handlers
     # =======================
@@ -268,6 +280,15 @@ class MySQLRouterOperatorCharm(CharmBase):
                 if self.unit_peer_data.get(UNIT_BOOTSTRAPPED)
             )
             self.app_peer_data[NUM_UNITS_BOOTSTRAPPED] = str(num_units_bootstrapped)
+
+    def _on_update_status(self, _) -> None:
+        """Handle update-status event."""
+        if self.missing_relations:
+            self.unit.status = WaitingStatus(
+                f"Waiting for relations: {' '.join(self.missing_relations)}"
+            )
+            return
+        self.unit.status = ActiveStatus()
 
 
 if __name__ == "__main__":
