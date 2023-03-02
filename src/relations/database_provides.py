@@ -123,8 +123,8 @@ class DatabaseProvidesRelation(Object):
 
                 db_username = backend_relation.data[backend_relation.app]["username"]
                 db_password = backend_relation.data[backend_relation.app]["password"]
-                db_host, db_port = (
-                    backend_relation.data[backend_relation.app]["endpoints"].split(":")
+                db_host, db_port = backend_relation.data[backend_relation.app]["endpoints"].split(
+                    ":"
                 )
 
                 MySQLRouter.delete_application_user(
