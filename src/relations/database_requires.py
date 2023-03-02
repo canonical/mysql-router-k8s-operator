@@ -193,9 +193,9 @@ class DatabaseRequiresRelation(Object):
             requires_data = json.loads(self.charm.app_peer_data[MYSQL_ROUTER_REQUIRES_DATA])
 
             self._create_application_user(
-                requires_data.get("username"),
+                requires_data["username"],
                 self.charm.get_secret("app", "database-password"),
-                requires_data.get("endpoints"),
+                requires_data["endpoints"],
             )
 
     def _on_backend_database_broken(self, _) -> None:

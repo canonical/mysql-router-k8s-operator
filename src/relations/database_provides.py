@@ -119,12 +119,12 @@ class DatabaseProvidesRelation(Object):
         # application user cleanup when backend relation still in place
         if backend_relation := self.charm.model.get_relation(DATABASE_REQUIRES_RELATION):
             if app_data := self.charm.app_peer_data.get(MYSQL_ROUTER_REQUIRES_APPLICATION_DATA):
-                username = json.loads(app_data).get("username")
+                username = json.loads(app_data)["username"]
 
-                db_username = backend_relation.data[backend_relation.app].get("username")
-                db_password = backend_relation.data[backend_relation.app].get("password")
+                db_username = backend_relation.data[backend_relation.app]["username"]
+                db_password = backend_relation.data[backend_relation.app]["password"]
                 db_host, db_port = (
-                    backend_relation.data[backend_relation.app].get("endpoints").split(":")
+                    backend_relation.data[backend_relation.app]["endpoints"].split(":")
                 )
 
                 MySQLRouter.delete_application_user(
