@@ -25,16 +25,16 @@ METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 
 MYSQL_APP_NAME = "mysql-k8s"
 MYSQL_ROUTER_APP_NAME = "mysql-router-k8s"
-APPLICATION_APP_NAME = "application"
+APPLICATION_APP_NAME = "mysql-test-app"
 SLOW_TIMEOUT = 15 * 60
-
+MODEL_CONFIG = {"logging-config": "<root>=INFO;unit=DEBUG"}
 
 @pytest.mark.abort_on_fail
 async def test_database_relation(ops_test: OpsTest):
     """Test the database relation."""
     # Build and deploy applications
     mysqlrouter_charm = await ops_test.build_charm(".")
-    application_charm = await ops_test.build_charm("./tests/integration/application-charm/")
+    await ops_test.model.set_config(MODEL_CONFIG)
 
     mysqlrouter_resources = {
         "mysql-router-image": METADATA["resources"]["mysql-router-image"]["upstream-source"]
@@ -56,16 +56,14 @@ async def test_database_relation(ops_test: OpsTest):
             trust=True,  # Needed to be able to delete/create k8s services in the charm
         ),
         ops_test.model.deploy(
-            application_charm, application_name=APPLICATION_APP_NAME, num_units=1
+            APPLICATION_APP_NAME,
+            channel="latest/edge",
+            application_name=APPLICATION_APP_NAME,
+            num_units=1,
         ),
     )
 
     mysql_app, application_app = applications[0], applications[2]
-
-    # Relate the database with mysqlrouter
-    await ops_test.model.relate(
-        f"{MYSQL_ROUTER_APP_NAME}:backend-database", f"{MYSQL_APP_NAME}:database"
-    )
 
     async with ops_test.fast_forward():
         await asyncio.gather(
@@ -83,6 +81,10 @@ async def test_database_relation(ops_test: OpsTest):
             ),
         )
 
+        # Relate the database with mysqlrouter
+        await ops_test.model.relate(
+            f"{MYSQL_ROUTER_APP_NAME}:backend-database", f"{MYSQL_APP_NAME}:database"
+        )
         # Relate mysqlrouter with application next
         await ops_test.model.relate(
             f"{APPLICATION_APP_NAME}:database", f"{MYSQL_ROUTER_APP_NAME}:database"
@@ -103,9 +105,9 @@ async def test_database_relation(ops_test: OpsTest):
     mysql_unit_address = await get_unit_address(ops_test, mysql_unit.name)
     server_config_credentials = await get_server_config_credentials(mysql_unit)
 
-    select_inserted_data_sql = (
-        f"SELECT data FROM application_test_database.app_data WHERE data = '{inserted_data}'",
-    )
+    select_inserted_data_sql = [
+        f"SELECT data FROM continuous_writes_database.random_data WHERE data = '{inserted_data}'",
+    ]
     selected_data = await execute_queries_on_unit(
         mysql_unit_address,
         server_config_credentials["username"],
