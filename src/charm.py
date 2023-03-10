@@ -47,7 +47,7 @@ class MySQLRouterOperatorCharm(CharmBase):
         self.framework.observe(self.on.install, self._on_install)
         self.framework.observe(self.on.leader_elected, self._on_leader_elected)
         self.framework.observe(
-            self.on.mysql_router_pebble_ready, self._on_mysql_router_pebble_ready
+            getattr(self.on, "mysql_router_pebble_ready"), self._on_mysql_router_pebble_ready
         )
         self.framework.observe(self.on[PEER].relation_changed, self._on_peer_relation_changed)
         self.framework.observe(self.on.update_status, self._on_update_status)
