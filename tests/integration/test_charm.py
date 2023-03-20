@@ -55,7 +55,6 @@ async def test_database_relation(ops_test: OpsTest):
             application_name=MYSQL_ROUTER_APP_NAME,
             resources=mysqlrouter_resources,
             num_units=1,
-            trust=True,  # Needed to be able to delete/create k8s services in the charm
         ),
         ops_test.model.deploy(
             APPLICATION_APP_NAME,
