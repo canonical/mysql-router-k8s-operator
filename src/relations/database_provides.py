@@ -99,11 +99,11 @@ class DatabaseProvidesRelation(Object):
         )
 
         self.database_provides_relation.set_endpoints(
-            provides_relation_id, f"{self.charm.read_write_endpoint}:6446"
+            provides_relation_id, f"{self.charm.endpoint}:6446"
         )
 
         self.database_provides_relation.set_read_only_endpoints(
-            provides_relation_id, f"{self.charm.read_only_endpoint}:6447"
+            provides_relation_id, f"{self.charm.endpoint}:6447"
         )
 
         self.charm.app_peer_data[CREDENTIALS_SHARED] = "true"

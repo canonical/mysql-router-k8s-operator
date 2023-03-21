@@ -82,14 +82,9 @@ class MySQLRouterOperatorCharm(CharmBase):
         return self.peers.data[self.unit]
 
     @property
-    def read_write_endpoint(self):
-        """The read write k8s endpoint for the charm."""
-        return f"{self.model.app.name}-read-write.{self.model.name}.svc.cluster.local"
-
-    @property
-    def read_only_endpoint(self):
-        """The read only k8s endpoint for the charm."""
-        return f"{self.model.app.name}-read-only.{self.model.name}.svc.cluster.local"
+    def endpoint(self):
+        """The k8s endpoint for the charm."""
+        return f"{self.model.app.name}.{self.model.name}.svc.cluster.local"
 
     @property
     def unit_hostname(self) -> str:
@@ -107,11 +102,16 @@ class MySQLRouterOperatorCharm(CharmBase):
     #  Helpers
     # =======================
 
-    def _create_service(self, name: str, port: int) -> None:
-        """Create a k8s service that is tied to pod-0.
+    def _patch_service(self, name: str, ro_port: int, rw_port: int) -> None:
+        """Patch juju created k8s service.
 
-        The k8s service is tied to pod-0 so that the service is auto cleaned by
+        The k8s service will be tied to pod-0 so that the service is auto cleaned by
         k8s when the last pod is scaled down.
+
+        Args:
+            name: The name of the service.
+            ro_port: The read only port.
+            rw_port: The read write port.
         """
         client = Client()
         pod0 = client.get(
@@ -131,15 +131,21 @@ class MySQLRouterOperatorCharm(CharmBase):
             spec=ServiceSpec(
                 ports=[
                     ServicePort(
-                        name="mysql",
-                        port=port,
-                        targetPort=port,
-                    )
+                        name="mysql-ro",
+                        port=ro_port,
+                        targetPort=ro_port,
+                    ),
+                    ServicePort(
+                        name="mysql-rw",
+                        port=rw_port,
+                        targetPort=rw_port,
+                    ),
                 ],
                 selector={"app.kubernetes.io/name": self.app.name},
             ),
         )
-        client.apply(
+        client.patch(
+            res=Service,
             obj=service,
             name=service.metadata.name,
             namespace=service.metadata.namespace,
@@ -243,16 +249,14 @@ class MySQLRouterOperatorCharm(CharmBase):
     def _on_leader_elected(self, _) -> None:
         """Handle the leader elected event.
 
-        Creates read-write and read-only services from a template file, and deletes
-        the service created by juju for the application.
+        Patch existing k8s service to include read-write and read-only services.
         """
         # Create the read-write and read-only services
         try:
-            self._create_service(f"{self.app.name}-read-only", 6447)
-            self._create_service(f"{self.app.name}-read-write", 6446)
-        except ApiError as e:
-            logger.exception("Failed to create k8s service", exc_info=e)
-            self.unit.status = BlockedStatus("Failed to create k8s service")
+            self._patch_service(f"{self.app.name}", ro_port=6447, rw_port=6446)
+        except ApiError:
+            logger.exception("Failed to patch k8s service")
+            self.unit.status = BlockedStatus("Failed to patch k8s service")
             return
 
     def _on_mysql_router_pebble_ready(self, _) -> None:
