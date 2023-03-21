@@ -26,7 +26,7 @@ class TestCharm(unittest.TestCase):
     def test_on_peer_relation_created(self, _lightkube_client):
         self.charm.on.leader_elected.emit()
 
-        self.assertEqual(_lightkube_client.return_value.apply.call_count, 2)
+        self.assertEqual(_lightkube_client.return_value.patch.call_count, 1)
 
         self.assertTrue(isinstance(self.harness.model.unit.status, MaintenanceStatus))
 
@@ -35,7 +35,7 @@ class TestCharm(unittest.TestCase):
         response = MagicMock()
         response.json.return_value = {"status": "Bad Request", "code": 400}
         api_error = lightkube.ApiError(request=MagicMock(), response=response)
-        _lightkube_client.return_value.apply.side_effect = api_error
+        _lightkube_client.return_value.patch.side_effect = api_error
 
         self.charm.on.leader_elected.emit()
 
@@ -57,7 +57,7 @@ class TestCharm(unittest.TestCase):
         response = MagicMock()
         response.json.return_value = {"status": "Bad Request", "code": 400}
         api_error = lightkube.ApiError(request=MagicMock(), response=response)
-        _lightkube_client.return_value.apply.side_effect = api_error
+        _lightkube_client.return_value.patch.side_effect = api_error
 
         self.charm.on.leader_elected.emit()
 
