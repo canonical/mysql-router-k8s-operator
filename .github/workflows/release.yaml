@@ -1,4 +1,6 @@
-name: Release to latest/edge
+# Copyright 2023 Canonical Ltd.
+# See LICENSE file for licensing details.
+name: Release to Charmhub
 
 on:
   push:
@@ -28,30 +30,21 @@ jobs:
       - lib-check
     uses: ./.github/workflows/ci.yaml
 
-  release-to-charmhub:
-    name: Release to CharmHub
+  build:
+    name: Build charm
+    uses: canonical/data-platform-workflows/.github/workflows/build_charm_without_cache.yaml@v2
+
+  release:
+    name: Release charm
     needs:
       - lib-check
       - ci-tests
-    runs-on: ubuntu-latest
-    timeout-minutes: 60
-    steps:
-      - name: 'Foresight: Collect workflow telemetry'
-        uses: runforesight/foresight-workflow-kit-action@v1
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - name: Setup LXD
-        uses: canonical/setup-lxd@main
-      - name: Select charmhub channel
-        uses: canonical/charming-actions/channel@2.2.2
-        id: channel
-      - name: Upload charm to charmhub
-        uses: canonical/charming-actions/upload-charm@2.2.2
-        with:
-          resource-overrides: "mysql-router-image:1"
-          credentials: "${{ secrets.CHARMHUB_TOKEN }}"
-          github-token: "${{ secrets.GITHUB_TOKEN }}"
-          channel: "${{ steps.channel.outputs.name }}"
-          destructive-mode: false
+      - build
+    uses: canonical/data-platform-workflows/.github/workflows/release_charm.yaml@v2
+    with:
+      channel: latest/edge
+      artifact-name: ${{ needs.build.outputs.artifact-name }}
+    secrets:
+      charmhub-token: ${{ secrets.CHARMHUB_TOKEN }}
+    permissions:
+      contents: write  # Needed to create GitHub release
