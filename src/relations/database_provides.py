@@ -1,142 +1,70 @@
-# Copyright 2022 Canonical Ltd.
-# See LICENSE file for licensing details.
+import dataclasses
+import secrets
+import string
 
-"""Library containing the implementation of the database provides relation."""
+import charms.data_platform_libs.v0.data_interfaces as data_interfaces
+import ops
 
-import json
-import logging
-
-from charms.data_platform_libs.v0.data_interfaces import (
-    DatabaseProvides,
-    DatabaseRequestedEvent,
-)
-from ops.framework import Object
-from ops.model import WaitingStatus
-
-from constants import (
-    CREDENTIALS_SHARED,
-    DATABASE_PROVIDES_RELATION,
-    DATABASE_REQUIRES_RELATION,
-    MYSQL_DATABASE_CREATED,
-    MYSQL_ROUTER_PROVIDES_DATA,
-    MYSQL_ROUTER_REQUIRES_APPLICATION_DATA,
-    PEER,
-    UNIT_BOOTSTRAPPED,
-)
-from mysql_router_helpers import MySQLRouter
-
-logger = logging.getLogger(__name__)
+from constants import PASSWORD_LENGTH
 
 
-class DatabaseProvidesRelation(Object):
-    """Encapsulation of the relation between mysqlrouter and the consumer application."""
+@dataclasses.dataclass
+class Relation:
+    interface: data_interfaces.DatabaseProvides
 
-    def __init__(self, charm):
-        super().__init__(charm, DATABASE_PROVIDES_RELATION)
+    @property
+    def active(self) -> bool:
+        """Whether relation is currently active"""
+        for key in ["database", "username", "password", "endpoints"]:
+            if key not in self._local_databag:
+                return False
+        return True
 
-        self.charm = charm
-        self.database_provides_relation = DatabaseProvides(
-            self.charm, relation_name=DATABASE_PROVIDES_RELATION
-        )
+    @property
+    def database(self) -> str:
+        return self._remote_databag["database"]
 
-        self.framework.observe(
-            self.database_provides_relation.on.database_requested, self._on_database_requested
-        )
-        self.framework.observe(
-            self.charm.on[PEER].relation_changed, self._on_peer_relation_changed
-        )
+    @property
+    def username(self) -> str:
+        return f"relation-{self._id}"
 
-        self.framework.observe(
-            self.charm.on[DATABASE_PROVIDES_RELATION].relation_broken, self._on_database_broken
-        )
+    @property
+    def _relation(self) -> ops.model.Relation:
+        relations = self.interface.relations
+        assert len(relations) == 1
+        return relations[0]
 
-    # =======================
-    #  Handlers
-    # =======================
+    @property
+    def _id(self) -> int:
+        return self._relation.id
 
-    def _on_database_requested(self, event: DatabaseRequestedEvent) -> None:
-        """Handle the database requested event."""
-        if not self.charm.unit.is_leader():
-            return
+    @property
+    def _remote_databag(self) -> dict:
+        return self.interface.fetch_relation_data()[self._id]
 
-        # Store data in databag to trigger DatabaseRequires initialization in database_requires.py
-        self.charm.app_peer_data[MYSQL_ROUTER_PROVIDES_DATA] = json.dumps(
-            {"database": event.database, "extra_user_roles": event.extra_user_roles}
-        )
+    @property
+    def _local_databag(self) -> ops.model.RelationDataContent:
+        return self._relation.data[self.interface.local_app]
 
-    def _on_peer_relation_changed(self, _) -> None:
-        """Handle the peer relation changed event."""
-        if not self.charm.unit.is_leader():
-            return
+    def is_desired_active(self, event) -> bool:
+        """Whether relation should be active once the event is handled"""
+        if isinstance(event, ops.charm.RelationBrokenEvent) and event.relation.id == self._id:
+            # Relation is being removed; it is no longer active
+            return False
+        if isinstance(event, data_interfaces.DatabaseRequestedEvent):
+            return True
+        return self.active
 
-        if self.charm.app_peer_data.get(CREDENTIALS_SHARED):
-            logger.debug("Credentials already shared")
-            return
+    def set_databag(self, password: str, endpoint: str) -> None:
+        self.interface.set_database(self._id, self.database)
+        self.interface.set_credentials(self._id, self.username, password)
+        self.interface.set_endpoints(self._id, f"{endpoint}:6446")
+        self.interface.set_read_only_endpoints(self._id, f"{endpoint}:6447")
 
-        if not self.charm.app_peer_data.get(MYSQL_DATABASE_CREATED):
-            logger.debug("Database not created yet")
-            return
+    def delete_databag(self) -> None:
+        self._local_databag.clear()
 
-        if not self.charm.unit_peer_data.get(UNIT_BOOTSTRAPPED):
-            logger.debug("Unit not bootstrapped yet")
-            return
-
-        if not self.charm.app_peer_data.get(MYSQL_ROUTER_REQUIRES_APPLICATION_DATA):
-            logger.debug("No requires application data found")
-            return
-
-        database_provides_relations = self.charm.model.relations.get(DATABASE_PROVIDES_RELATION)
-
-        requires_application_data = json.loads(
-            self.charm.app_peer_data[MYSQL_ROUTER_REQUIRES_APPLICATION_DATA]
-        )
-        provides_relation_id = database_provides_relations[0].id
-
-        self.database_provides_relation.set_credentials(
-            provides_relation_id,
-            requires_application_data["username"],
-            self.charm.get_secret("app", "application-password"),
-        )
-
-        self.database_provides_relation.set_endpoints(
-            provides_relation_id, f"{self.charm.endpoint}:6446"
-        )
-
-        self.database_provides_relation.set_read_only_endpoints(
-            provides_relation_id, f"{self.charm.endpoint}:6447"
-        )
-
-        self.charm.app_peer_data[CREDENTIALS_SHARED] = "true"
-
-    def _on_database_broken(self, _) -> None:
-        """Handle the database relation broken event."""
-        self.charm.unit.status = WaitingStatus(
-            f"Waiting for relations: {DATABASE_PROVIDES_RELATION}"
-        )
-        if not self.charm.unit.is_leader():
-            return
-
-        # application user cleanup when backend relation still in place
-        if backend_relation := self.charm.model.get_relation(DATABASE_REQUIRES_RELATION):
-            if app_data := self.charm.app_peer_data.get(MYSQL_ROUTER_REQUIRES_APPLICATION_DATA):
-                username = json.loads(app_data)["username"]
-
-                db_username = backend_relation.data[backend_relation.app]["username"]
-                db_password = backend_relation.data[backend_relation.app]["password"]
-                db_host, db_port = backend_relation.data[backend_relation.app]["endpoints"].split(
-                    ":"
-                )
-
-                MySQLRouter.delete_application_user(
-                    username=username,
-                    hostname="%",
-                    db_username=db_username,
-                    db_password=db_password,
-                    db_host=db_host,
-                    db_port=db_port,
-                )
-        # clean up departing app data
-        self.charm.app_peer_data.pop(MYSQL_ROUTER_REQUIRES_APPLICATION_DATA, None)
-        self.charm.app_peer_data.pop(MYSQL_ROUTER_PROVIDES_DATA, None)
-        self.charm.app_peer_data.pop(CREDENTIALS_SHARED, None)
-        self.charm.set_secret("app", "application-password", None)
+    @staticmethod
+    def generate_password() -> str:
+        choices = string.ascii_letters + string.digits
+        return "".join([secrets.choice(choices) for _ in range(PASSWORD_LENGTH)])
