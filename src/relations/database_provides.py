@@ -49,7 +49,7 @@ class Relation:
     def is_desired_active(self, event) -> bool:
         """Whether relation should be active once the event is handled"""
         if isinstance(event, ops.charm.RelationBrokenEvent) and event.relation.id == self._id:
-            # Relation is being removed; it is no longer active
+            # Relation is being removed
             return False
         if isinstance(event, data_interfaces.DatabaseRequestedEvent):
             return True
