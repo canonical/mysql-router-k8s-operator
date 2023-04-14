@@ -18,15 +18,13 @@ from charms.tls_certificates_interface.v1.tls_certificates import (
     generate_private_key,
 )
 from ops import Relation
-from ops.charm import ActionEvent, CharmBase
+from ops.charm import ActionEvent
 from ops.framework import Object
-from ops.pebble import Layer, PathError
+from ops.pebble import Layer
 
 from charm import MySQLRouterOperatorCharm
 from constants import (
-    MYSQL_ROUTER_CONTAINER_NAME,
     MYSQL_ROUTER_SERVICE_NAME,
-    MYSQL_ROUTER_USER_NAME,
     PEER,
     ROUTER_CONFIG_DIRECTORY,
     TLS_RELATION,
