@@ -2,7 +2,14 @@ import dataclasses
 
 import ops
 
-from constants import MYSQL_ROUTER_SERVICE_NAME
+from constants import (
+    MYSQL_ROUTER_SERVICE_NAME,
+    MYSQL_ROUTER_USER_NAME,
+    ROUTER_CONFIG_DIRECTORY,
+    TLS_SSL_CERT_FILE,
+    TLS_SSL_CONFIG_FILE,
+    TLS_SSL_KEY_FILE,
+)
 
 
 @dataclasses.dataclass
@@ -44,11 +51,18 @@ class Workload:
     def stop(self) -> None:
         self._container.stop(MYSQL_ROUTER_SERVICE_NAME)
 
-    def enable_tls(self, layer: ops.pebble.Layer):
+    def enable_tls(
+        self, layer: ops.pebble.Layer, config_file_content: str, key: str, certificate: str
+    ):
+        self._write_file(f"{ROUTER_CONFIG_DIRECTORY}/{TLS_SSL_CONFIG_FILE}", config_file_content)
+        self._write_file(f"{ROUTER_CONFIG_DIRECTORY}/{TLS_SSL_KEY_FILE}", key)
+        self._write_file(f"{ROUTER_CONFIG_DIRECTORY}/{TLS_SSL_CERT_FILE}", certificate)
         self._container.add_layer(MYSQL_ROUTER_SERVICE_NAME, layer, combine=True)
         self._container.replan()
 
     def disable_tls(self) -> None:
+        for file in [TLS_SSL_CONFIG_FILE, TLS_SSL_KEY_FILE, TLS_SSL_CERT_FILE]:
+            self._delete_file(f"{ROUTER_CONFIG_DIRECTORY}/{file}")
         layer = ops.pebble.Layer(
             {
                 "services": {
@@ -61,6 +75,30 @@ class Workload:
         )
         self._container.add_layer(MYSQL_ROUTER_SERVICE_NAME, layer, combine=True)
         self._container.replan()
+
+    def _write_file(self, path: str, content: str) -> None:
+        """Write content to file.
+
+        Args:
+            path: Full filesystem path (with filename)
+            content: File content
+        """
+        self._container.push(
+            path,
+            content,
+            permissions=0o600,
+            user=MYSQL_ROUTER_USER_NAME,
+            group=MYSQL_ROUTER_USER_NAME,
+        )
+
+    def _delete_file(self, path: str) -> None:
+        """Delete file.
+
+        Args:
+            path: Full filesystem path (with filename)
+        """
+        if self._container.exists(path):
+            self._container.remove_path(path)
 
     @staticmethod
     def _get_mysql_router_layer(
