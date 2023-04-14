@@ -221,7 +221,7 @@ class MySQLRouterTLS(Object):
         # store secrets
         self.set_secret(SCOPE, "key", key.decode("utf-8"))
         self.set_secret(SCOPE, "csr", csr.decode("utf-8"))
-        self.unit_peer_data.pop("tls")
+        self.unit_peer_data.pop("tls", None)
         self.certs.request_certificate_creation(certificate_signing_request=csr)
 
     def _get_sans(self) -> List[str]:
