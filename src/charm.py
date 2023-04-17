@@ -15,7 +15,9 @@ from lightkube.models.core_v1 import ServicePort, ServiceSpec
 from lightkube.models.meta_v1 import ObjectMeta
 from lightkube.resources.core_v1 import Pod, Service
 
-import relations
+import relations.database_provides
+import relations.database_requires
+import relations.tls
 import workload
 from constants import (
     DATABASE_PROVIDES_RELATION,
