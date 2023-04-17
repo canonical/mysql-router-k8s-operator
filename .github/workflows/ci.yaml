@@ -52,8 +52,6 @@ jobs:
           - integration-database
     name: ${{ matrix.tox-environments }}
     needs:
-      - lint
-      - unit-test
       - build
     runs-on: ubuntu-latest
     timeout-minutes: 120
