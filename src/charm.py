@@ -86,7 +86,7 @@ class MySQLRouterOperatorCharm(ops.charm.CharmBase):
             if not active:
                 inactive_relations.append(relation)
         if inactive_relations:
-            return ops.model.WaitingStatus(
+            return ops.model.BlockedStatus(
                 f"Waiting for relation{'s' if len(inactive_relations) > 1 else ''}: {', '.join(inactive_relations)}"
             )
         if not self.workload.container_ready:
@@ -94,7 +94,9 @@ class MySQLRouterOperatorCharm(ops.charm.CharmBase):
         return ops.model.ActiveStatus()
 
     def _set_status(self, event=None) -> None:
-        if isinstance(self.unit.status, ops.model.BlockedStatus):
+        if isinstance(
+            self.unit.status, ops.model.BlockedStatus
+        ) and not self.unit.status.message.startswith("Waiting for relation"):
             return
         self.unit.status = self._determine_status(event)
 
