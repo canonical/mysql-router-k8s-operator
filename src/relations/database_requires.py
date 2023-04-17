@@ -26,6 +26,14 @@ class Relation:
         return self._remote_databag["password"]
 
     @property
+    def _exists(self) -> bool:
+        relations = self.interface.relations
+        if relations:
+            assert len(relations) == 1
+            return True
+        return False
+
+    @property
     def _id(self) -> int:
         relations = self.interface.relations
         assert len(relations) == 1
@@ -44,13 +52,13 @@ class Relation:
     @property
     def _active(self) -> bool:
         """Whether relation is currently active"""
-        if not self.interface.relations:
+        if not self._exists:
             return False
         return self.interface.is_resource_created()
 
     def is_desired_active(self, event) -> bool:
         """Whether relation should be active once the event is handled"""
-        if isinstance(event, ops.charm.RelationBrokenEvent) and event.relation.id == self._id:
+        if isinstance(event, ops.charm.RelationBrokenEvent) and self._exists and event.relation.id == self._id:
             # Relation is being removed; it is no longer active
             return False
         return self._active

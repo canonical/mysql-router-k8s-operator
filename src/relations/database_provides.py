@@ -15,6 +15,8 @@ class Relation:
     @property
     def active(self) -> bool:
         """Whether relation is currently active"""
+        if not self._exists:
+            return False
         for key in ["database", "username", "password", "endpoints"]:
             if key not in self._local_databag:
                 return False
@@ -27,6 +29,14 @@ class Relation:
     @property
     def username(self) -> str:
         return f"relation-{self._id}"
+
+    @property
+    def _exists(self) -> bool:
+        relations = self.interface.relations
+        if relations:
+            assert len(relations) == 1
+            return True
+        return False
 
     @property
     def _relation(self) -> ops.model.Relation:
@@ -48,7 +58,7 @@ class Relation:
 
     def is_desired_active(self, event) -> bool:
         """Whether relation should be active once the event is handled"""
-        if isinstance(event, ops.charm.RelationBrokenEvent) and event.relation.id == self._id:
+        if isinstance(event, ops.charm.RelationBrokenEvent) and self._exists and event.relation.id == self._id:
             # Relation is being removed
             return False
         if isinstance(event, data_interfaces.DatabaseRequestedEvent):
