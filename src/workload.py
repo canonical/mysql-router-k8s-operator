@@ -1,6 +1,8 @@
 import dataclasses
+import socket
 
 import ops
+import tenacity
 
 from constants import (
     MYSQL_ROUTER_SERVICE_NAME,
@@ -46,6 +48,7 @@ class Workload:
             combine=True,
         )
         self._container.start(MYSQL_ROUTER_SERVICE_NAME)
+        self._wait_until_mysql_router_ready()
         # TODO: wait until mysql router ready? https://github.com/canonical/mysql-router-k8s-operator/blob/45cf3be44f27476a0371c67d50d7a0193c0fadc2/src/charm.py#L219
 
     def stop(self) -> None:
@@ -124,3 +127,21 @@ class Workload:
                 },
             }
         )
+
+    @staticmethod
+    @tenacity.retry(reraise=True, stop=tenacity.stop_after_delay(30), wait=tenacity.wait_fixed(5))
+    def _wait_until_mysql_router_ready() -> None:
+        """Wait until a connection to MySQL router is possible.
+        Retry every 5 seconds for 30 seconds if there is an issue obtaining a connection.
+        """
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        result = sock.connect_ex(("127.0.0.1", 6446))
+        if result != 0:
+            raise BaseException()
+        sock.close()
+
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        result = sock.connect_ex(("127.0.0.1", 6447))
+        if result != 0:
+            raise BaseException()
+        sock.close()
