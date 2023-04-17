@@ -24,7 +24,10 @@ class Workload:
 
     @property
     def active(self) -> bool:
-        return self._container.get_service(MYSQL_ROUTER_SERVICE_NAME).is_running()
+        service = self._container.get_services(MYSQL_ROUTER_SERVICE_NAME).get(MYSQL_ROUTER_SERVICE_NAME)
+        if service is None:
+            return False
+        return service.is_running()
 
     @property
     def version(self) -> str:
@@ -52,6 +55,8 @@ class Workload:
         # TODO: wait until mysql router ready? https://github.com/canonical/mysql-router-k8s-operator/blob/45cf3be44f27476a0371c67d50d7a0193c0fadc2/src/charm.py#L219
 
     def stop(self) -> None:
+        if not self.active:
+            return
         self._container.stop(MYSQL_ROUTER_SERVICE_NAME)
 
     def enable_tls(
