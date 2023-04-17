@@ -26,9 +26,9 @@ class Workload:
 
     @property
     def version(self) -> str:
-        process = self._container.exec(["mysqlrouter", "-V"])
+        process = self._container.exec(["mysqlrouter", "--version"])
         raw_version, _ = process.wait_output()
-        for version in raw_version.strip().split():
+        for version in raw_version.split():
             if version.startswith("8"):
                 return version
         return ""
