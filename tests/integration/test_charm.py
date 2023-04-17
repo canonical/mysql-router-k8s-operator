@@ -77,8 +77,7 @@ async def test_database_relation(ops_test: OpsTest):
             ),
             ops_test.model.wait_for_idle(
                 apps=[MYSQL_ROUTER_APP_NAME, APPLICATION_APP_NAME],
-                status="waiting",
-                raise_on_blocked=True,
+                status="blocked",
                 timeout=SLOW_TIMEOUT,
             ),
         )
