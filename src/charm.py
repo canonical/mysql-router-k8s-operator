@@ -175,7 +175,7 @@ class MySQLRouterOperatorCharm(ops.charm.CharmBase):
     # =======================
 
     def _reconcile_database_relations(self, event=None) -> None:
-        # TODO: rename method?
+        """Handle database requires/provides events."""
         if self.database_requires.is_desired_active(event) and self.workload.container_ready:
             self.workload.start(
                 self.database_requires.host,
