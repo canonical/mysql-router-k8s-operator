@@ -47,12 +47,14 @@ async def test_database_relation(ops_test: OpsTest):
             MYSQL_APP_NAME,
             channel="8.0/edge/mysqlrouter-user",
             application_name=MYSQL_APP_NAME,
+            series="jammy",
             num_units=3,
             trust=True,  # Necessary after a6f1f01: Fix/endpoints as k8s services (#142)
         ),
         ops_test.model.deploy(
             mysqlrouter_charm,
             application_name=MYSQL_ROUTER_APP_NAME,
+            series="jammy",
             resources=mysqlrouter_resources,
             num_units=1,
         ),
@@ -60,6 +62,7 @@ async def test_database_relation(ops_test: OpsTest):
             APPLICATION_APP_NAME,
             channel="latest/edge",
             application_name=APPLICATION_APP_NAME,
+            series="jammy",
             num_units=1,
         ),
     )
