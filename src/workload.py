@@ -24,7 +24,9 @@ class Workload:
 
     @property
     def active(self) -> bool:
-        service = self._container.get_services(MYSQL_ROUTER_SERVICE_NAME).get(MYSQL_ROUTER_SERVICE_NAME)
+        service = self._container.get_services(MYSQL_ROUTER_SERVICE_NAME).get(
+            MYSQL_ROUTER_SERVICE_NAME
+        )
         if service is None:
             return False
         return service.is_running()
