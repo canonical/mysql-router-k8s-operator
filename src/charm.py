@@ -89,7 +89,7 @@ class MySQLRouterOperatorCharm(ops.charm.CharmBase):
                 inactive_relations.append(relation)
         if inactive_relations:
             return ops.model.BlockedStatus(
-                f"Waiting for relation{'s' if len(inactive_relations) > 1 else ''}: {', '.join(inactive_relations)}"
+                f"Missing relation{'s' if len(inactive_relations) > 1 else ''}: {', '.join(inactive_relations)}"
             )
         if not self.workload.container_ready:
             return ops.model.MaintenanceStatus("Waiting for container")  # TODO
@@ -98,13 +98,13 @@ class MySQLRouterOperatorCharm(ops.charm.CharmBase):
     def _set_status(self, event=None) -> None:
         if isinstance(
             self.unit.status, ops.model.BlockedStatus
-        ) and not self.unit.status.message.startswith("Waiting for relation"):
+        ) and not self.unit.status.message.startswith("Missing relation"):
             return
         self.unit.status = self._determine_status(event)
 
-    def _create_user(self) -> None:
+    def _create_database_and_user(self) -> None:
         if self.database_provides.active:
-            # User already created
+            # Database and user already created
             return
         password = self.database_provides.generate_password()
         self.database_requires.create_application_database_and_user(
@@ -189,7 +189,7 @@ class MySQLRouterOperatorCharm(ops.charm.CharmBase):
             if self.database_requires.is_desired_active(
                 event
             ) and self.database_provides.is_desired_active(event):
-                self._create_user()
+                self._create_database_and_user()
             else:
                 self._delete_user()
         self._set_status(event)

@@ -1,4 +1,5 @@
 import dataclasses
+import logging
 import secrets
 import string
 
@@ -6,6 +7,8 @@ import charms.data_platform_libs.v0.data_interfaces as data_interfaces
 import ops
 
 from constants import PASSWORD_LENGTH
+
+logger = logging.getLogger(__name__)
 
 
 @dataclasses.dataclass
@@ -70,13 +73,23 @@ class Relation:
         return self.active
 
     def set_databag(self, password: str, endpoint: str) -> None:
+        endpoint = f"{endpoint}:6446"
+        read_only_endpoint = f"{endpoint}:6447"
+        logger.debug(
+            f"Setting databag {self.database=}, {self.username=}, {endpoint=}, {read_only_endpoint=}"
+        )
         self.interface.set_database(self._id, self.database)
         self.interface.set_credentials(self._id, self.username, password)
-        self.interface.set_endpoints(self._id, f"{endpoint}:6446")
-        self.interface.set_read_only_endpoints(self._id, f"{endpoint}:6447")
+        self.interface.set_endpoints(self._id, endpoint)
+        self.interface.set_read_only_endpoints(self._id, read_only_endpoint)
+        logger.debug(
+            f"Set databag {self.database=}, {self.username=}, {endpoint=}, {read_only_endpoint=}"
+        )
 
     def delete_databag(self) -> None:
+        logger.debug("Deleting databag")
         self._local_databag.clear()
+        logger.debug("Deleted databag")
 
     @staticmethod
     def generate_password() -> str:

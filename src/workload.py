@@ -1,4 +1,5 @@
 import dataclasses
+import logging
 import socket
 
 import ops
@@ -12,6 +13,8 @@ from constants import (
     TLS_SSL_CONFIG_FILE,
     TLS_SSL_KEY_FILE,
 )
+
+logger = logging.getLogger(__name__)
 
 
 @dataclasses.dataclass
@@ -47,30 +50,37 @@ class Workload:
             # Assumption: username or password will not change while database requires relation is active
             # Therefore, MySQL Router does not need to be restarted if it is already running
             return
+        logger.debug(f"Starting MySQL Router service {host=}, {port=}, {username=}")
         self._container.add_layer(
             MYSQL_ROUTER_SERVICE_NAME,
             self._get_mysql_router_layer(host, port, username, password),
             combine=True,
         )
         self._container.start(MYSQL_ROUTER_SERVICE_NAME)
+        logger.debug(f"Started MySQL Router service {host=}, {port=}, {username=}")
         self._wait_until_mysql_router_ready()
         # TODO: wait until mysql router ready? https://github.com/canonical/mysql-router-k8s-operator/blob/45cf3be44f27476a0371c67d50d7a0193c0fadc2/src/charm.py#L219
 
     def stop(self) -> None:
         if not self.active:
             return
+        logger.debug("Stopping MySQL Router service")
         self._container.stop(MYSQL_ROUTER_SERVICE_NAME)
+        logger.debug("Stopped MySQL Router service")
 
     def enable_tls(
         self, layer: ops.pebble.Layer, config_file_content: str, key: str, certificate: str
     ):
+        logger.debug("Enabling TLS")
         self._write_file(f"{ROUTER_CONFIG_DIRECTORY}/{TLS_SSL_CONFIG_FILE}", config_file_content)
         self._write_file(f"{ROUTER_CONFIG_DIRECTORY}/{TLS_SSL_KEY_FILE}", key)
         self._write_file(f"{ROUTER_CONFIG_DIRECTORY}/{TLS_SSL_CERT_FILE}", certificate)
         self._container.add_layer(MYSQL_ROUTER_SERVICE_NAME, layer, combine=True)
         self._container.replan()
+        logger.debug("Enabled TLS")
 
     def disable_tls(self) -> None:
+        logger.debug("Disabling TLS")
         for file in [TLS_SSL_CONFIG_FILE, TLS_SSL_KEY_FILE, TLS_SSL_CERT_FILE]:
             self._delete_file(f"{ROUTER_CONFIG_DIRECTORY}/{file}")
         layer = ops.pebble.Layer(
@@ -85,6 +95,7 @@ class Workload:
         )
         self._container.add_layer(MYSQL_ROUTER_SERVICE_NAME, layer, combine=True)
         self._container.replan()
+        logger.debug("Disabled TLS")
 
     def _write_file(self, path: str, content: str) -> None:
         """Write content to file.
@@ -138,6 +149,7 @@ class Workload:
     @staticmethod
     @tenacity.retry(reraise=True, stop=tenacity.stop_after_delay(30), wait=tenacity.wait_fixed(5))
     def _wait_until_mysql_router_ready() -> None:
+        # TODO: add debug logging
         """Wait until a connection to MySQL router is possible.
         Retry every 5 seconds for 30 seconds if there is an issue obtaining a connection.
         """

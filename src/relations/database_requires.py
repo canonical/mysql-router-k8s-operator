@@ -1,8 +1,11 @@
 import dataclasses
+import logging
 
 import charms.data_platform_libs.v0.data_interfaces as data_interfaces
 import mysql.connector
 import ops
+
+logger = logging.getLogger(__name__)
 
 
 @dataclasses.dataclass
@@ -70,6 +73,7 @@ class Relation:
     def create_application_database_and_user(
         self, username: str, password: str, database: str
     ) -> None:
+        logger.debug(f"Creating {database=} and {username=}")
         self._execute_sql_statements(
             [
                 f"CREATE DATABASE IF NOT EXISTS `{database}`",
@@ -77,9 +81,12 @@ class Relation:
                 f"GRANT ALL PRIVILEGES ON `{database}`.* TO `{username}`",
             ]
         )
+        logger.debug(f"Created {database=} and {username=}")
 
     def delete_application_user(self, username: str) -> None:
+        logger.debug(f"Deleting {username=}")
         self._execute_sql_statements([f"DROP USER IF EXISTS `{username}`"])
+        logger.debug(f"Deleted {username=}")
 
     def _execute_sql_statements(self, statements: list[str]) -> None:
         # TODO: catch exceptions?
