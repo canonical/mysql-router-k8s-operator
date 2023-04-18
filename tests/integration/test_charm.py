@@ -45,7 +45,7 @@ async def test_database_relation(ops_test: OpsTest):
     applications = await asyncio.gather(
         ops_test.model.deploy(
             MYSQL_APP_NAME,
-            channel="8.0/edge",
+            channel="8.0/edge/mysqlrouter-user",
             application_name=MYSQL_APP_NAME,
             num_units=3,
             trust=True,  # Necessary after a6f1f01: Fix/endpoints as k8s services (#142)
