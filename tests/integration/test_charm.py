@@ -98,6 +98,9 @@ async def test_database_relation(ops_test: OpsTest):
             f"{APPLICATION_APP_NAME}:database", f"{MYSQL_ROUTER_APP_NAME}:database"
         )
 
+        # Wait for mysqlrouter to exit blockedstatus
+        await asyncio.sleep(10)
+
         await ops_test.model.wait_for_idle(
             apps=[MYSQL_APP_NAME, MYSQL_ROUTER_APP_NAME, APPLICATION_APP_NAME],
             status="active",
