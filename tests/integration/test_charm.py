@@ -76,10 +76,16 @@ async def test_database_relation(ops_test: OpsTest):
                 timeout=SLOW_TIMEOUT,
             ),
             ops_test.model.wait_for_idle(
-                apps=[MYSQL_ROUTER_APP_NAME, APPLICATION_APP_NAME],
+                apps=[MYSQL_ROUTER_APP_NAME],
                 status="blocked",
                 timeout=SLOW_TIMEOUT,
             ),
+            ops_test.model.wait_for_idle(
+                apps=[APPLICATION_APP_NAME],
+                status="waiting",
+                raise_on_blocked=True,
+                timeout=SLOW_TIMEOUT,
+            )
         )
 
         logger.info("Relating mysql, mysqlrouter and application")
