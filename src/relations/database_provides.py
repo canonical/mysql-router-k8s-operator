@@ -65,7 +65,7 @@ class _Relation:
         database_requires_relation: database_requires._Relation,  # TODO: replace with mysqlsh Python module
     ) -> None:
         password = database_requires_relation.create_application_database_and_user(
-            self.username, endpoint
+            self.username, self.database
         )
         self._set_databag(password, endpoint)
 
