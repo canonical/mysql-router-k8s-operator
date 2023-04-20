@@ -1,16 +1,37 @@
 import dataclasses
 import logging
+import secrets
+import string
+import typing
 
 import charms.data_platform_libs.v0.data_interfaces as data_interfaces
 import mysql.connector
 import ops
 
+from constants import PASSWORD_LENGTH
+
 logger = logging.getLogger(__name__)
 
 
-@dataclasses.dataclass
-class Relation:
-    interface: data_interfaces.DatabaseRequires
+class _Relation:
+    def __init__(self, interface: data_interfaces.DatabaseRequires) -> None:
+        self._interface = interface
+
+    @property
+    def _id(self) -> int:
+        relations = self._interface.relations
+        assert len(relations) == 1
+        return relations[0].id
+
+    @property
+    def _remote_databag(self) -> dict:
+        return self._interface.fetch_relation_data()[self._id]
+
+    @property
+    def _endpoint(self) -> str:
+        endpoints = self._remote_databag["endpoints"].split(",")
+        assert len(endpoints) == 1
+        return endpoints[0]
 
     @property
     def host(self) -> str:
@@ -28,52 +49,13 @@ class Relation:
     def password(self) -> str:
         return self._remote_databag["password"]
 
-    @property
-    def _exists(self) -> bool:
-        relations = self.interface.relations
-        if relations:
-            assert len(relations) == 1
-            return True
-        return False
+    def is_breaking(self, event):
+        return isinstance(event, ops.charm.RelationBrokenEvent) and event.relation.id == self._id
 
-    @property
-    def _id(self) -> int:
-        relations = self.interface.relations
-        assert len(relations) == 1
-        return relations[0].id
-
-    @property
-    def _remote_databag(self) -> dict:
-        return self.interface.fetch_relation_data()[self._id]
-
-    @property
-    def _endpoint(self) -> str:
-        endpoints = self._remote_databag["endpoints"].split(",")
-        assert len(endpoints) == 1
-        return endpoints[0]
-
-    @property
-    def _active(self) -> bool:
-        """Whether relation is currently active"""
-        if not self._exists:
-            return False
-        return self.interface.is_resource_created()
-
-    def is_desired_active(self, event) -> bool:
-        """Whether relation should be active once the event is handled"""
-        if (
-            isinstance(event, ops.charm.RelationBrokenEvent)
-            and self._exists
-            and event.relation.id == self._id
-        ):
-            # Relation is being removed; it is no longer active
-            return False
-        return self._active
-
-    def create_application_database_and_user(
-        self, username: str, password: str, database: str
-    ) -> None:
+    # TODO: move methods below to mysqlsh Python file
+    def create_application_database_and_user(self, username: str, database: str) -> str:
         logger.debug(f"Creating {database=} and {username=}")
+        password = self._generate_password()
         self._execute_sql_statements(
             [
                 f"CREATE DATABASE IF NOT EXISTS `{database}`",
@@ -82,10 +64,11 @@ class Relation:
             ]
         )
         logger.debug(f"Created {database=} and {username=}")
+        return password
 
     def delete_application_user(self, username: str) -> None:
         logger.debug(f"Deleting {username=}")
-        self._execute_sql_statements([f"DROP USER IF EXISTS `{username}`"])
+        self._execute_sql_statements([f"DROP USER `{username}`"])
         logger.debug(f"Deleted {username=}")
 
     def _execute_sql_statements(self, statements: list[str]) -> None:
@@ -95,3 +78,20 @@ class Relation:
         ) as connection, connection.cursor() as cursor:
             for statement in statements:
                 cursor.execute(statement)
+
+    @staticmethod
+    def _generate_password() -> str:
+        choices = string.ascii_letters + string.digits
+        return "".join([secrets.choice(choices) for _ in range(PASSWORD_LENGTH)])
+
+
+@dataclasses.dataclass
+class RelationEndpoint:
+    def __init__(self, interface: data_interfaces.DatabaseRequires) -> None:
+        self.interface = interface
+
+    @property
+    def relation(self) -> typing.Optional[_Relation]:
+        if not self.interface.relations:
+            return
+        return _Relation(self.interface)

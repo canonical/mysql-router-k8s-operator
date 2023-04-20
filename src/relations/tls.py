@@ -150,7 +150,7 @@ class MySQLRouterTLS(Object):
 
     def _on_certificate_available(self, event: CertificateAvailableEvent) -> None:
         """Enable TLS when TLS certificate available."""
-        if not self.charm.workload.active:
+        if not self.charm.workload.running:
             logger.debug("Unit not bootstrapped, defer TLS setup")
             event.defer()
             return

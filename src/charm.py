@@ -34,7 +34,7 @@ class MySQLRouterOperatorCharm(ops.charm.CharmBase):
     def __init__(self, *args) -> None:
         super().__init__(*args)
 
-        self.database_requires = relations.database_requires.Relation(
+        self.database_requires = relations.database_requires.RelationEndpoint(
             data_interfaces.DatabaseRequires(
                 self,
                 relation_name=DATABASE_REQUIRES_RELATION,
@@ -53,7 +53,7 @@ class MySQLRouterOperatorCharm(ops.charm.CharmBase):
             self._reconcile_database_relations,
         )
 
-        self.database_provides = relations.database_provides.Relation(
+        self.database_provides = relations.database_provides.RelationEndpoint(
             data_interfaces.DatabaseProvides(self, relation_name=DATABASE_PROVIDES_RELATION)
         )
         self.framework.observe(
@@ -79,47 +79,28 @@ class MySQLRouterOperatorCharm(ops.charm.CharmBase):
         """The k8s endpoint for the charm."""
         return f"{self.model.app.name}.{self.model.name}.svc.cluster.local"
 
-    def _determine_status(self, event) -> ops.model.StatusBase:
-        inactive_relations = []
-        for relation, active in [
-            (DATABASE_REQUIRES_RELATION, self.database_requires.is_desired_active(event)),
-            (DATABASE_PROVIDES_RELATION, self.database_provides.is_desired_active(event)),
+    def _determine_status(self) -> ops.model.StatusBase:
+        missing_relations = []
+        for relation, missing in [
+            (DATABASE_REQUIRES_RELATION, self.database_requires.relation is None),
+            (DATABASE_PROVIDES_RELATION, self.database_provides.missing_relation),
         ]:
-            if not active:
-                inactive_relations.append(relation)
-        if inactive_relations:
+            if missing:
+                missing_relations.append(relation)
+        if missing_relations:
             return ops.model.BlockedStatus(
-                f"Missing relation{'s' if len(inactive_relations) > 1 else ''}: {', '.join(inactive_relations)}"
+                f"Missing relation{'s' if len(missing_relations) > 1 else ''}: {', '.join(missing_relations)}"
             )
         if not self.workload.container_ready:
             return ops.model.MaintenanceStatus("Waiting for container")  # TODO
         return ops.model.ActiveStatus()
 
-    def _set_status(self, event=None) -> None:
+    def _set_status(self) -> None:
         if isinstance(
             self.unit.status, ops.model.BlockedStatus
         ) and not self.unit.status.message.startswith("Missing relation"):
             return
-        self.unit.status = self._determine_status(event)
-
-    def _create_database_and_user(self) -> None:
-        if self.database_provides.active:
-            # Database and user already created
-            return
-        password = self.database_provides.generate_password()
-        self.database_requires.create_application_database_and_user(
-            self.database_provides.username,
-            password,
-            self.database_provides.database,
-        )
-        self.database_provides.set_databag(password, self._endpoint)
-
-    def _delete_user(self) -> None:
-        if not self.database_provides.active:
-            # No user to delete
-            return
-        self.database_requires.delete_application_user(self.database_provides.username)
-        self.database_provides.delete_databag()
+        self.unit.status = self._determine_status()
 
     def _patch_service(self, name: str, ro_port: int, rw_port: int) -> None:
         """Patch juju created k8s service.
@@ -176,23 +157,31 @@ class MySQLRouterOperatorCharm(ops.charm.CharmBase):
 
     def _reconcile_database_relations(self, event=None) -> None:
         """Handle database requires/provides events."""
-        if self.database_requires.is_desired_active(event) and self.workload.container_ready:
+        if (
+            self.unit.is_leader()
+            and self.database_requires.relation
+            and self.workload.container_ready
+        ):
+            self.database_provides.reconcile_users(
+                event,
+                self.database_requires.relation.is_breaking(event),
+                self._endpoint,
+                self.database_requires.relation,
+            )
+        if (
+            self.database_requires.relation
+            and not self.database_requires.relation.is_breaking(event)
+            and self.workload.container_ready
+        ):
             self.workload.start(
-                self.database_requires.host,
-                self.database_requires.port,
-                self.database_requires.username,
-                self.database_requires.password,
+                self.database_requires.relation.host,
+                self.database_requires.relation.port,
+                self.database_requires.relation.username,
+                self.database_requires.relation.password,
             )
         else:
             self.workload.stop()
-        if self.unit.is_leader():
-            if self.database_requires.is_desired_active(
-                event
-            ) and self.database_provides.is_desired_active(event):
-                self._create_database_and_user()
-            else:
-                self._delete_user()
-        self._set_status(event)
+        self._set_status()
 
     def _on_mysql_router_pebble_ready(self, _) -> None:
         self.unit.set_workload_version(self.workload.version)

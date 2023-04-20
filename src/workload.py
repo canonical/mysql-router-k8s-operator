@@ -26,7 +26,7 @@ class Workload:
         return self._container.can_connect()
 
     @property
-    def active(self) -> bool:
+    def running(self) -> bool:
         service = self._container.get_services(MYSQL_ROUTER_SERVICE_NAME).get(
             MYSQL_ROUTER_SERVICE_NAME
         )
@@ -44,9 +44,10 @@ class Workload:
         return ""
 
     def start(self, host, port, username, password) -> None:
-        if self.active:
+        if self.running:
             # If the host or port changes, MySQL Router will receive topology change notifications from MySQL
             # Therefore, if the host or port changes, we do not need to restart MySQL Router
+            # TODO: update comment
             # Assumption: username or password will not change while database requires relation is active
             # Therefore, MySQL Router does not need to be restarted if it is already running
             return
@@ -62,7 +63,7 @@ class Workload:
         # TODO: wait until mysql router ready? https://github.com/canonical/mysql-router-k8s-operator/blob/45cf3be44f27476a0371c67d50d7a0193c0fadc2/src/charm.py#L219
 
     def stop(self) -> None:
-        if not self.active:
+        if not self.running:
             return
         logger.debug("Stopping MySQL Router service")
         self._container.stop(MYSQL_ROUTER_SERVICE_NAME)
