@@ -139,7 +139,7 @@ class Workload:
                         "environment": {
                             "MYSQL_HOST": host,
                             "MYSQL_PORT": port,
-                            "MYSQL_USER": username,
+                            "MYSQL_USER": username,  # TODO switch to limited permissions user
                             "MYSQL_PASSWORD": password,
                         },
                     },
