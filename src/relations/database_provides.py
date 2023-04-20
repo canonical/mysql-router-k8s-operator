@@ -2,7 +2,7 @@ import dataclasses
 import logging
 
 import charms.data_platform_libs.v0.data_interfaces as data_interfaces
-import database_requires
+import relations.database_requires as database_requires
 import ops
 
 logger = logging.getLogger(__name__)

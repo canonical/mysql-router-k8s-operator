@@ -92,6 +92,7 @@ class RelationEndpoint:
 
     @property
     def relation(self) -> typing.Optional[_Relation]:
-        if not self.interface.relations:
+        # TODO: rename property?
+        if not self.interface.is_resource_created():
             return
         return _Relation(self.interface)
