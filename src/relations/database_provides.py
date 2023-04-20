@@ -42,6 +42,10 @@ class Relation:
         return False
 
     @property
+    def _database_requested(self) -> bool:
+        return self._remote_databag.get("database") is not None
+
+    @property
     def _relation(self) -> ops.model.Relation:
         relations = self.interface.relations
         assert len(relations) == 1
@@ -68,7 +72,7 @@ class Relation:
         ):
             # Relation is being removed
             return False
-        if isinstance(event, data_interfaces.DatabaseRequestedEvent):
+        if self._exists and self._database_requested:
             return True
         return self.active
 
