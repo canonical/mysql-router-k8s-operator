@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 @dataclasses.dataclass
 class Workload:
-    _container: ops.model.Container
+    _container: ops.Container
 
     @property
     def container_ready(self) -> bool:

@@ -28,7 +28,7 @@ from constants import (
 logger = logging.getLogger(__name__)
 
 
-class MySQLRouterOperatorCharm(ops.charm.CharmBase):
+class MySQLRouterOperatorCharm(ops.CharmBase):
     """Operator charm for MySQL Router."""
 
     def __init__(self, *args) -> None:
@@ -79,7 +79,7 @@ class MySQLRouterOperatorCharm(ops.charm.CharmBase):
         """The k8s endpoint for the charm."""
         return f"{self.model.app.name}.{self.model.name}.svc.cluster.local"
 
-    def _determine_status(self) -> ops.model.StatusBase:
+    def _determine_status(self) -> ops.StatusBase:
         missing_relations = []
         for relation, missing in [
             (DATABASE_REQUIRES_RELATION, self.database_requires.relation is None),
@@ -88,16 +88,16 @@ class MySQLRouterOperatorCharm(ops.charm.CharmBase):
             if missing:
                 missing_relations.append(relation)
         if missing_relations:
-            return ops.model.BlockedStatus(
+            return ops.BlockedStatus(
                 f"Missing relation{'s' if len(missing_relations) > 1 else ''}: {', '.join(missing_relations)}"
             )
         if not self.workload.container_ready:
-            return ops.model.MaintenanceStatus("Waiting for container")  # TODO
-        return ops.model.ActiveStatus()
+            return ops.MaintenanceStatus("Waiting for container")  # TODO
+        return ops.ActiveStatus()
 
     def _set_status(self) -> None:
         if isinstance(
-            self.unit.status, ops.model.BlockedStatus
+            self.unit.status, ops.BlockedStatus
         ) and not self.unit.status.message.startswith("Missing relation"):
             return
         self.unit.status = self._determine_status()
@@ -197,7 +197,7 @@ class MySQLRouterOperatorCharm(ops.charm.CharmBase):
             self._patch_service(self.app.name, ro_port=6447, rw_port=6446)
         except ApiError:
             logger.exception("Failed to patch k8s service")
-            self.unit.status = ops.model.BlockedStatus("Failed to patch k8s service")
+            self.unit.status = ops.BlockedStatus("Failed to patch k8s service")
 
 
 if __name__ == "__main__":

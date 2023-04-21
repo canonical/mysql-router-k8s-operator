@@ -10,11 +10,11 @@ logger = logging.getLogger(__name__)
 
 @dataclasses.dataclass
 class _Relation:
-    _relation: ops.model.Relation
+    _relation: ops.Relation
     _interface: data_interfaces.DatabaseProvides
 
     @property
-    def _local_databag(self) -> ops.model.RelationDataContent:
+    def _local_databag(self) -> ops.RelationDataContent:
         return self._relation.data[self._interface.local_app]
 
     @property
@@ -92,7 +92,7 @@ class RelationEndpoint:
         requested_users = []
         for relation in self._relations:
             if (
-                isinstance(event, ops.charm.RelationBrokenEvent)
+                isinstance(event, ops.RelationBrokenEvent)
                 and event.relation.id == relation.id
             ):
                 # Relation is being removed; delete user

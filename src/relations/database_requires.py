@@ -50,7 +50,7 @@ class _Relation:
         return self._remote_databag["password"]
 
     def is_breaking(self, event):
-        return isinstance(event, ops.charm.RelationBrokenEvent) and event.relation.id == self._id
+        return isinstance(event, ops.RelationBrokenEvent) and event.relation.id == self._id
 
     # TODO: move methods below to mysqlsh Python file
     def create_application_database_and_user(self, username: str, database: str) -> str:
