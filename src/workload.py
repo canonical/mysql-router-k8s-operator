@@ -148,7 +148,9 @@ class Workload:
         )
 
     @staticmethod
-    @tenacity.retry(reraise=True, stop=tenacity.stop_after_delay(30), wait=tenacity.wait_fixed(5))
+    @tenacity.retry(
+        reraise=True, stop=tenacity.stop_after_delay(360), wait=tenacity.wait_fixed(5)
+    )
     def _wait_until_mysql_router_ready() -> None:
         # TODO: add debug logging
         """Wait until a connection to MySQL router is possible.
