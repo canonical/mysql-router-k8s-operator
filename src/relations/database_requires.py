@@ -5,9 +5,9 @@ import charms.data_platform_libs.v0.data_interfaces as data_interfaces
 import ops
 
 
+@dataclasses.dataclass
 class _Relation:
-    def __init__(self, interface: data_interfaces.DatabaseRequires) -> None:
-        self._interface = interface
+    _interface: data_interfaces.DatabaseRequires
 
     @property
     def _id(self) -> int:
@@ -47,8 +47,7 @@ class _Relation:
 
 @dataclasses.dataclass
 class RelationEndpoint:
-    def __init__(self, interface: data_interfaces.DatabaseRequires) -> None:
-        self.interface = interface
+    interface: data_interfaces.DatabaseRequires
 
     @property
     def relation(self) -> typing.Optional[_Relation]:
