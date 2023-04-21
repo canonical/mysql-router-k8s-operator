@@ -23,6 +23,7 @@ from constants import (
     DATABASE_PROVIDES_RELATION,
     DATABASE_REQUIRES_RELATION,
     MYSQL_ROUTER_CONTAINER_NAME,
+    MYSQL_ROUTER_SERVICE_NAME,
 )
 
 logger = logging.getLogger(__name__)
@@ -40,7 +41,7 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
                 relation_name=DATABASE_REQUIRES_RELATION,
                 # HACK: mysqlrouter needs a user, but not a database
                 # Use the DatabaseRequires interface to get a user; disregard the database
-                database_name="continuous_writes_database",
+                database_name="_unused_mysqlrouter_database",
                 extra_user_roles="mysqlrouter",
             )
         )
@@ -70,9 +71,23 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
         self.framework.observe(self.on.start, self._on_start)
         self.framework.observe(self.on.leader_elected, self._on_leader_elected)
 
-        self.workload = workload.Workload(self.unit.get_container(MYSQL_ROUTER_CONTAINER_NAME))
-
         self.tls = relations.tls.MySQLRouterTLS(self)
+
+    @property
+    def workload(self):
+        # Defined as a property instead of an attribute in __init__ since this class is
+        # not re-instantiated between events (if there are deferred events)
+        container = self.unit.get_container(MYSQL_ROUTER_CONTAINER_NAME)
+        if self.database_requires.relation:
+            return workload.AuthenticatedWorkload(
+                container,
+                MYSQL_ROUTER_SERVICE_NAME,
+                self.database_requires.relation.username,
+                self.database_requires.relation.password,
+                self.database_requires.relation.host,
+                self.database_requires.relation.port,
+            )
+        return workload.Workload(container, MYSQL_ROUTER_SERVICE_NAME)
 
     @property
     def _endpoint(self) -> str:
@@ -160,29 +175,21 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
         """Handle database requires/provides events."""
         if (
             self.unit.is_leader()
-            and self.database_requires.relation
+            and isinstance(self.workload, workload.AuthenticatedWorkload)
             and self.workload.container_ready
         ):
             self.database_provides.reconcile_users(
                 event,
                 self.database_requires.relation.is_breaking(event),
                 self._endpoint,
-                self.workload.get_shell(
-                    self.database_requires.relation.username,
-                    self.database_requires.relation.password,
-                    self.database_requires.relation.host,
-                    self.database_requires.relation.port,
-                ),
+                self.workload.shell,
             )
         if (
-            self.database_requires.relation
+            isinstance(self.workload, workload.AuthenticatedWorkload)
             and not self.database_requires.relation.is_breaking(event)
             and self.workload.container_ready
         ):
-            self.workload.start(
-                self.database_requires.relation.host,
-                self.database_requires.relation.port,
-            )
+            self.workload.start()
         else:
             self.workload.stop()
         self._set_status()

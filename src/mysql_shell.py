@@ -51,13 +51,23 @@ class Shell:
         logger.debug(f"Created {database=} and {username=}")
         return password
 
-    def delete_application_user(self, username: str) -> None:
+    def create_mysql_router_user(self, username: str) -> str:
+        logger.debug(f"Creating router {username=}")
+        password = self._generate_password()
+        self._run_commands(
+            [
+                "cluster = dba.get_cluster()",
+                "cluster.setup_router_account('"
+                + username
+                + "', {'password': '"
+                + password
+                + "'})",
+            ]
+        )
+        logger.debug(f"Created router {username=}")
+        return password
+
+    def delete_user(self, username: str) -> None:
         logger.debug(f"Deleting {username=}")
         self._run_sql([f"DROP USER `{username}`"])
         logger.debug(f"Deleted {username=}")
-
-    def create_mysql_router_user(self) -> str:
-        pass
-
-    def delete_mysql_router_user(self) -> None:
-        pass

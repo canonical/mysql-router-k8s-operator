@@ -7,7 +7,6 @@ import tenacity
 
 import mysql_shell
 from constants import (
-    MYSQL_ROUTER_SERVICE_NAME,
     MYSQL_ROUTER_USER_NAME,
     ROUTER_CONFIG_DIRECTORY,
     TLS_SSL_CERT_FILE,
@@ -21,6 +20,7 @@ logger = logging.getLogger(__name__)
 @dataclasses.dataclass
 class Workload:
     _container: ops.Container
+    _service_name: str
 
     @property
     def container_ready(self) -> bool:
@@ -28,9 +28,7 @@ class Workload:
 
     @property
     def running(self) -> bool:
-        service = self._container.get_services(MYSQL_ROUTER_SERVICE_NAME).get(
-            MYSQL_ROUTER_SERVICE_NAME
-        )
+        service = self._container.get_services(self._service_name).get(self._service_name)
         if service is None:
             return False
         return service.is_running()
@@ -44,37 +42,43 @@ class Workload:
                 return version
         return ""
 
-    def get_shell(self, username: str, password: str, host: str, port: str) -> mysql_shell.Shell:
-        return mysql_shell.Shell(self._container, username, password, host, port)
 
-    def start(self, host, port) -> None:
-        # TODO use shell to create user
-        username = "foo"
-        password = "foo"
+@dataclasses.dataclass
+class AuthenticatedWorkload(Workload):
+    _admin_username: str
+    _admin_password: str
+    _host: str
+    _port: str
+
+    @property
+    def shell(self) -> mysql_shell.Shell:
+        return mysql_shell.Shell(
+            self._container, self._admin_username, self._admin_password, self._host, self._port
+        )
+
+    def start(self) -> None:
         if self.running:
             # If the host or port changes, MySQL Router will receive topology change notifications from MySQL
             # Therefore, if the host or port changes, we do not need to restart MySQL Router
-            # TODO: update comment
-            # Assumption: username or password will not change while database requires relation is active
-            # Therefore, MySQL Router does not need to be restarted if it is already running
             return
-        logger.debug(f"Starting MySQL Router service {host=}, {port=}, {username=}")
+        logger.debug(f"Starting MySQL Router service {self._host=}, {self._port=}")
+        router_password = self.shell.create_mysql_router_user(MYSQL_ROUTER_USER_NAME)
         self._container.add_layer(
-            MYSQL_ROUTER_SERVICE_NAME,
-            self._get_mysql_router_layer(host, port, username, password),
+            self._service_name,
+            self._get_mysql_router_layer(MYSQL_ROUTER_USER_NAME, router_password),
             combine=True,
         )
-        self._container.start(MYSQL_ROUTER_SERVICE_NAME)
-        logger.debug(f"Started MySQL Router service {host=}, {port=}, {username=}")
+        self._container.start(self._service_name)
+        logger.debug(f"Started MySQL Router service {self._host=}, {self._port=}")
         self._wait_until_mysql_router_ready()
         # TODO: wait until mysql router ready? https://github.com/canonical/mysql-router-k8s-operator/blob/45cf3be44f27476a0371c67d50d7a0193c0fadc2/src/charm.py#L219
 
     def stop(self) -> None:
         if not self.running:
             return
-        # TODO: use shell to delete user
         logger.debug("Stopping MySQL Router service")
-        self._container.stop(MYSQL_ROUTER_SERVICE_NAME)
+        self.shell.delete_user(MYSQL_ROUTER_USER_NAME)
+        self._container.stop(self._service_name)
         logger.debug("Stopped MySQL Router service")
 
     def enable_tls(
@@ -84,7 +88,7 @@ class Workload:
         self._write_file(f"{ROUTER_CONFIG_DIRECTORY}/{TLS_SSL_CONFIG_FILE}", config_file_content)
         self._write_file(f"{ROUTER_CONFIG_DIRECTORY}/{TLS_SSL_KEY_FILE}", key)
         self._write_file(f"{ROUTER_CONFIG_DIRECTORY}/{TLS_SSL_CERT_FILE}", certificate)
-        self._container.add_layer(MYSQL_ROUTER_SERVICE_NAME, layer, combine=True)
+        self._container.add_layer(self._service_name, layer, combine=True)
         self._container.replan()
         logger.debug("Enabled TLS")
 
@@ -95,14 +99,14 @@ class Workload:
         layer = ops.pebble.Layer(
             {
                 "services": {
-                    MYSQL_ROUTER_SERVICE_NAME: {
+                    self._service_name: {
                         "override": "merge",
                         "command": "/run.sh mysqlrouter",
                     },
                 },
             },
         )
-        self._container.add_layer(MYSQL_ROUTER_SERVICE_NAME, layer, combine=True)
+        self._container.add_layer(self._service_name, layer, combine=True)
         self._container.replan()
         logger.debug("Disabled TLS")
 
@@ -130,24 +134,21 @@ class Workload:
         if self._container.exists(path):
             self._container.remove_path(path)
 
-    @staticmethod
-    def _get_mysql_router_layer(
-        host: str, port: str, username: str, password: str
-    ) -> ops.pebble.Layer:
+    def _get_mysql_router_layer(self, username: str, password: str) -> ops.pebble.Layer:
         return ops.pebble.Layer(
             {
                 "summary": "mysql router layer",
                 "description": "the pebble config layer for mysql router",
                 "services": {
-                    MYSQL_ROUTER_SERVICE_NAME: {
+                    self._service_name: {
                         "override": "replace",
                         "summary": "mysql router",
                         "command": "/run.sh mysqlrouter",
                         "startup": "enabled",
                         "environment": {
-                            "MYSQL_HOST": host,
-                            "MYSQL_PORT": port,
-                            "MYSQL_USER": username,  # TODO switch to limited permissions user
+                            "MYSQL_HOST": self._host,
+                            "MYSQL_PORT": self._port,
+                            "MYSQL_USER": username,
                             "MYSQL_PASSWORD": password,
                         },
                     },

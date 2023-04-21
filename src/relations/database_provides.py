@@ -45,20 +45,20 @@ class _Relation:
         read_write_endpoint = f"{endpoint}:6446"
         read_only_endpoint = f"{endpoint}:6447"
         logger.debug(
-            f"Setting databag {self.database=}, {self.username=}, {read_write_endpoint=}, {read_only_endpoint=}"
+            f"Setting databag {self.id=} {self.database=}, {self.username=}, {read_write_endpoint=}, {read_only_endpoint=}"
         )
         self._interface.set_database(self.id, self.database)
         self._interface.set_credentials(self.id, self.username, password)
         self._interface.set_endpoints(self.id, read_write_endpoint)
         self._interface.set_read_only_endpoints(self.id, read_only_endpoint)
         logger.debug(
-            f"Set databag {self.database=}, {self.username=}, {read_write_endpoint=}, {read_only_endpoint=}"
+            f"Set databag {self.id=} {self.database=}, {self.username=}, {read_write_endpoint=}, {read_only_endpoint=}"
         )
 
     def _delete_databag(self) -> None:
-        logger.debug("Deleting databag")
+        logger.debug(f"Deleting databag {self.id=}")
         self._local_databag.clear()
-        logger.debug("Deleted databag")
+        logger.debug(f"Deleted databag {self.id=}")
 
     def create_database_and_user(self, endpoint: str, shell: mysql_shell.Shell) -> None:
         password = shell.create_application_database_and_user(self.username, self.database)
@@ -66,7 +66,7 @@ class _Relation:
 
     def delete_user(self, shell: mysql_shell.Shell) -> None:
         self._delete_databag()
-        shell.delete_application_user(self.username)
+        shell.delete_user(self.username)
 
 
 @dataclasses.dataclass
