@@ -45,7 +45,7 @@ async def test_database_relation(ops_test: OpsTest):
     applications = await asyncio.gather(
         ops_test.model.deploy(
             MYSQL_APP_NAME,
-            channel="8.0/edge/mysqlrouter-user",
+            channel="8.0/edge",
             application_name=MYSQL_APP_NAME,
             series="jammy",
             num_units=3,

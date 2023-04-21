@@ -40,7 +40,7 @@ class MySQLRouterOperatorCharm(ops.charm.CharmBase):
                 relation_name=DATABASE_REQUIRES_RELATION,
                 # HACK: mysqlrouter needs a user, but not a database
                 # Use the DatabaseRequires interface to get a user; disregard the database
-                database_name="_unused_mysqlrouter_database",
+                database_name="continuous_writes_database",
                 extra_user_roles="mysqlrouter",
             )
         )
