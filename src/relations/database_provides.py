@@ -2,8 +2,9 @@ import dataclasses
 import logging
 
 import charms.data_platform_libs.v0.data_interfaces as data_interfaces
-import relations.database_requires as database_requires
 import ops
+
+import mysql_shell
 
 logger = logging.getLogger(__name__)
 
@@ -59,22 +60,13 @@ class _Relation:
         self._local_databag.clear()
         logger.debug("Deleted databag")
 
-    def create_database_and_user(
-        self,
-        endpoint: str,
-        database_requires_relation: database_requires._Relation,  # TODO: replace with mysqlsh Python module
-    ) -> None:
-        password = database_requires_relation.create_application_database_and_user(
-            self.username, self.database
-        )
+    def create_database_and_user(self, endpoint: str, shell: mysql_shell.Shell) -> None:
+        password = shell.create_application_database_and_user(self.username, self.database)
         self._set_databag(password, endpoint)
 
-    def delete_user(
-        self,
-        database_requires_relation: database_requires._Relation,  # TODO: replace with mysqlsh Python module
-    ) -> None:
+    def delete_user(self, shell: mysql_shell.Shell) -> None:
         self._delete_databag()
-        database_requires_relation.delete_application_user(self.username)
+        shell.delete_application_user(self.username)
 
 
 @dataclasses.dataclass
@@ -91,10 +83,7 @@ class RelationEndpoint:
             return []
         requested_users = []
         for relation in self._relations:
-            if (
-                isinstance(event, ops.RelationBrokenEvent)
-                and event.relation.id == relation.id
-            ):
+            if isinstance(event, ops.RelationBrokenEvent) and event.relation.id == relation.id:
                 # Relation is being removed; delete user
                 continue
             requested_users.append(relation)
@@ -113,13 +102,13 @@ class RelationEndpoint:
         event,
         event_is_database_requires_broken: bool,
         endpoint: str,
-        database_requires_relation: database_requires._Relation,  # TODO: replace with mysqlsh Python module
+        shell: mysql_shell.Shell,
     ) -> None:
         requested_users = self._requested_users(event, event_is_database_requires_broken)
         created_users = self._created_users
         for relation in requested_users:
             if relation not in created_users:
-                relation.create_database_and_user(endpoint, database_requires_relation)
+                relation.create_database_and_user(endpoint, shell)
         for relation in created_users:
             if relation not in requested_users:
-                relation.delete_user(database_requires_relation)
+                relation.delete_user(shell)

@@ -5,6 +5,7 @@ import socket
 import ops
 import tenacity
 
+import mysql_shell
 from constants import (
     MYSQL_ROUTER_SERVICE_NAME,
     MYSQL_ROUTER_USER_NAME,
@@ -43,7 +44,13 @@ class Workload:
                 return version
         return ""
 
-    def start(self, host, port, username, password) -> None:
+    def get_shell(self, username: str, password: str, host: str, port: str) -> mysql_shell.Shell:
+        return mysql_shell.Shell(self._container, username, password, host, port)
+
+    def start(self, host, port) -> None:
+        # TODO use shell to create user
+        username = "foo"
+        password = "foo"
         if self.running:
             # If the host or port changes, MySQL Router will receive topology change notifications from MySQL
             # Therefore, if the host or port changes, we do not need to restart MySQL Router
@@ -65,6 +72,7 @@ class Workload:
     def stop(self) -> None:
         if not self.running:
             return
+        # TODO: use shell to delete user
         logger.debug("Stopping MySQL Router service")
         self._container.stop(MYSQL_ROUTER_SERVICE_NAME)
         logger.debug("Stopped MySQL Router service")
@@ -148,9 +156,7 @@ class Workload:
         )
 
     @staticmethod
-    @tenacity.retry(
-        reraise=True, stop=tenacity.stop_after_delay(360), wait=tenacity.wait_fixed(5)
-    )
+    @tenacity.retry(reraise=True, stop=tenacity.stop_after_delay(360), wait=tenacity.wait_fixed(5))
     def _wait_until_mysql_router_ready() -> None:
         # TODO: add debug logging
         """Wait until a connection to MySQL router is possible.

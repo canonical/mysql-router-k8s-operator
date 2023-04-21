@@ -76,6 +76,7 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
 
     @property
     def _endpoint(self) -> str:
+        # TODO rename
         """The k8s endpoint for the charm."""
         return f"{self.model.app.name}.{self.model.name}.svc.cluster.local"
 
@@ -166,7 +167,12 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
                 event,
                 self.database_requires.relation.is_breaking(event),
                 self._endpoint,
-                self.database_requires.relation,
+                self.workload.get_shell(
+                    self.database_requires.relation.username,
+                    self.database_requires.relation.password,
+                    self.database_requires.relation.host,
+                    self.database_requires.relation.port,
+                ),
             )
         if (
             self.database_requires.relation
@@ -176,8 +182,6 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
             self.workload.start(
                 self.database_requires.relation.host,
                 self.database_requires.relation.port,
-                self.database_requires.relation.username,
-                self.database_requires.relation.password,
             )
         else:
             self.workload.stop()

@@ -3,6 +3,8 @@
 
 """File containing constants to be used in the charm."""
 
+# TODO: cleanup
+
 CREDENTIALS_SHARED = "credentials-shared"
 DATABASE_REQUIRES_RELATION = "backend-database"
 DATABASE_PROVIDES_RELATION = "database"
