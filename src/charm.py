@@ -68,10 +68,15 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
         self.framework.observe(
             getattr(self.on, "mysql_router_pebble_ready"), self._on_mysql_router_pebble_ready
         )
-        self.framework.observe(self.on.start, self._on_start)
+
+        # Start workload after pod churn or charm upgrade
+        # (https://juju.is/docs/sdk/start-event#heading--emission-sequence)
+        # Also, set status on first start if no relations active
+        self.framework.observe(self.on.start, self._reconcile_database_relations)
+
         self.framework.observe(self.on.leader_elected, self._on_leader_elected)
 
-        self.tls = relations.tls.MySQLRouterTLS(self)
+        self.tls = relations.tls.RelationEndpoint(self)
 
     @property
     def workload(self):
@@ -189,18 +194,14 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
             and not self.database_requires.relation.is_breaking(event)
             and self.workload.container_ready
         ):
-            self.workload.start()
+            self.workload.enable(self.tls.certificate_saved)
         else:
-            self.workload.stop()
+            self.workload.disable()
         self._set_status()
 
     def _on_mysql_router_pebble_ready(self, _) -> None:
         self.unit.set_workload_version(self.workload.version)
         self._reconcile_database_relations()
-
-    def _on_start(self, _) -> None:
-        # If no relations are active, charm status has not been set
-        self._set_status()
 
     def _on_leader_elected(self, _) -> None:
         """Patch existing k8s service to include read-write and read-only services."""
