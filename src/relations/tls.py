@@ -64,7 +64,7 @@ class _Relation:
 
     @property
     def _peer_relation(self) -> ops.Relation:
-        return self._charm.model.get_relation(constants.PEER)
+        return self._charm.model.get_relation(constants.PEER_RELATION)
 
     @property
     def peer_unit_databag(self) -> _PeerUnitDatabag:
