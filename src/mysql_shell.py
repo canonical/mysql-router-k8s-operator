@@ -22,7 +22,7 @@ class Shell:
         commands.insert(
             0, f"shell.connect('{self._username}:{self._password}@{self._host}:{self._port}"
         )
-        # TODO
+        self._container.exec([])  # TODO
         # TODO: catch exceptions
 
     def _run_sql(self, sql_statements: list[str]) -> None:
