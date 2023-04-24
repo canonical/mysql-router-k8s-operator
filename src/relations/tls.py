@@ -1,4 +1,5 @@
 import base64
+import dataclasses
 import inspect
 import json
 import logging
@@ -13,6 +14,7 @@ import charm
 import constants
 
 logger = logging.getLogger(__name__)
+# TODO: fix logging levels
 
 
 class _PeerUnitDatabag:
@@ -37,32 +39,36 @@ class _PeerUnitDatabag:
         return [name for name in inspect.get_annotations(type(self))]
 
     def __getattr__(self, name: str) -> typing.Optional[str]:
+        assert name in self._attribute_names, f"Invalid attribute {name=}"
         return self._databag.get(self._get_key(name))
 
     def __setattr__(self, name: str, value: str) -> None:
+        assert name in self._attribute_names, f"Invalid attribute {name=}"
         self._databag[self._get_key(name)] = value
 
     def __delattr__(self, name: str) -> None:
+        assert name in self._attribute_names, f"Invalid attribute {name=}"
         self._databag.pop(self._get_key(name), None)
 
     def clear(self) -> None:
         """Delete all items in databag."""
         # Delete all type-annotated class attributes
-        for attribute_name in inspect.get_annotations(type(self)):
-            delattr(self, attribute_name)
+        for name in self._attribute_names:
+            delattr(self, name)
 
 
+@dataclasses.dataclass
 class _Relation:
     _charm: charm.MySQLRouterOperatorCharm
     _interface: tls_certificates.TLSCertificatesRequiresV1
 
     @property
-    def _relation(self) -> ops.Relation:
+    def _peer_relation(self) -> ops.Relation:
         return self._charm.model.get_relation(constants.PEER)
 
     @property
     def peer_unit_databag(self) -> _PeerUnitDatabag:
-        return _PeerUnitDatabag(self._relation.data[self._charm.unit])
+        return _PeerUnitDatabag(self._peer_relation.data[self._charm.unit])
 
     @property
     def certificate_saved(self) -> bool:
@@ -90,6 +96,9 @@ class _Relation:
         self.peer_unit_databag.ca = event.ca
         self.peer_unit_databag.chain = json.dumps(event.chain)
         self.peer_unit_databag.active_csr = self.peer_unit_databag.requested_csr
+        self._charm.workload.enable_tls(
+            self.peer_unit_databag.key, self.peer_unit_databag.certificate
+        )
 
     @staticmethod
     def _parse_tls_key(raw_content: str) -> bytes:
@@ -120,7 +129,7 @@ class _Relation:
             sans=[
                 socket.gethostname(),
                 self._unit_hostname,
-                str(self._charm.model.get_binding(self._relation).network.bind_address),
+                str(self._charm.model.get_binding(self._peer_relation).network.bind_address),
             ],
         )
 
@@ -145,9 +154,9 @@ class _Relation:
 
 
 class RelationEndpoint(ops.Object):
-    def __init__(self, charm: charm.MySQLRouterOperatorCharm):
-        super().__init__(charm, constants.TLS_RELATION)
-        self._charm = charm
+    def __init__(self, charm_: charm.MySQLRouterOperatorCharm):
+        super().__init__(charm_, constants.TLS_RELATION)
+        self._charm = charm_
         self._interface = tls_certificates.TLSCertificatesRequiresV1(
             self._charm, constants.TLS_RELATION
         )
@@ -204,9 +213,6 @@ class RelationEndpoint(ops.Object):
     def _on_certificate_available(self, event: tls_certificates.CertificateAvailableEvent) -> None:
         """Save TLS certificate."""
         self._relation.save_certificate(event)
-        self._charm.workload.enable_tls(
-            self._relation.peer_unit_databag.key, self._relation.peer_unit_databag.certificate
-        )
 
     def _on_certificate_expiring(self, event: tls_certificates.CertificateExpiringEvent) -> None:
         """Request the new certificate when old certificate is expiring."""

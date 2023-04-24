@@ -96,7 +96,6 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
 
     @property
     def _endpoint(self) -> str:
-        # TODO rename
         """The k8s endpoint for the charm."""
         return f"{self.model.app.name}.{self.model.name}.svc.cluster.local"
 
