@@ -30,10 +30,13 @@ class Workload:
 
     @property
     def _service(self) -> typing.Optional[ops.pebble.Service]:
-        service = self._container.get_services(self._service_name).get(self._service_name)
-        if service is not None:
-            assert service.startup == "enabled"
-        return service
+        return self._container.get_services(self._service_name).get(self._service_name)
+
+    @property
+    def _enabled(self) -> bool:
+        if self._service is None:
+            return False
+        return self._service.startup == "enabled"
 
     @property
     def version(self) -> str:
@@ -52,13 +55,14 @@ class AuthenticatedWorkload(Workload):
     _host: str
     _port: str
 
-    @staticmethod
-    def _get_layer(services: dict) -> ops.pebble.Layer:
+    def _get_layer(self, service_info: dict) -> ops.pebble.Layer:
         return ops.pebble.Layer(
             {
                 "summary": "mysql router layer",
                 "description": "the pebble config layer for mysql router",
-                "services": services,
+                "services": {
+                    self._service_name: service_info,
+                },
             }
         )
 
@@ -69,24 +73,29 @@ class AuthenticatedWorkload(Workload):
             command = "/run.sh mysqlrouter"
         return self._get_layer(
             {
-                self._service_name: {
-                    "override": "replace",
-                    "summary": "mysql router",
-                    "command": command,
-                    "startup": "enabled",
-                    "environment": {
-                        "MYSQL_HOST": self._host,
-                        "MYSQL_PORT": self._port,
-                        "MYSQL_USER": MYSQL_ROUTER_USER_NAME,
-                        "MYSQL_PASSWORD": password,
-                    },
+                "override": "replace",
+                "summary": "mysql router",
+                "command": command,
+                "startup": "enabled",
+                "environment": {
+                    "MYSQL_HOST": self._host,
+                    "MYSQL_PORT": self._port,
+                    "MYSQL_USER": MYSQL_ROUTER_USER_NAME,
+                    "MYSQL_PASSWORD": password,
                 },
             }
         )
 
     @property
     def _inactive_layer(self) -> ops.pebble.Layer:
-        return self._get_layer({})
+        return self._get_layer(
+            {
+                "override": "replace",
+                "summary": "mysql router",
+                "command": "",
+                "startup": "disabled",
+            }
+        )
 
     def _update_layer(self, layer: ops.pebble.Layer) -> None:
         self._container.add_layer(self._service_name, layer, combine=True)
@@ -118,7 +127,7 @@ class AuthenticatedWorkload(Workload):
         sock.close()
 
     def enable(self, tls: bool) -> None:
-        if self._service is not None:
+        if self._enabled:
             # If the host or port changes, MySQL Router will receive topology change notifications from MySQL
             # Therefore, if the host or port changes, we do not need to restart MySQL Router
             return
@@ -130,7 +139,7 @@ class AuthenticatedWorkload(Workload):
         # TODO: wait until mysql router ready? https://github.com/canonical/mysql-router-k8s-operator/blob/45cf3be44f27476a0371c67d50d7a0193c0fadc2/src/charm.py#L219
 
     def disable(self) -> None:
-        if self._service is None:
+        if not self._enabled:
             return
         logger.debug("Disabling MySQL Router service")
         self.shell.delete_user(MYSQL_ROUTER_USER_NAME)
@@ -187,7 +196,7 @@ class AuthenticatedWorkload(Workload):
         self._write_file(f"{ROUTER_CONFIG_DIRECTORY}/{TLS_SSL_CONFIG_FILE}", self._tls_config_file)
         self._write_file(f"{ROUTER_CONFIG_DIRECTORY}/{TLS_SSL_KEY_FILE}", key)
         self._write_file(f"{ROUTER_CONFIG_DIRECTORY}/{TLS_SSL_CERT_FILE}", certificate)
-        if self._service is not None:
+        if self._enabled:
             self._restart(True)
         logger.debug("Enabled TLS")
 
@@ -195,6 +204,6 @@ class AuthenticatedWorkload(Workload):
         logger.debug("Disabling TLS")
         for file in [TLS_SSL_CONFIG_FILE, TLS_SSL_KEY_FILE, TLS_SSL_CERT_FILE]:
             self._delete_file(f"{ROUTER_CONFIG_DIRECTORY}/{file}")
-        if self._service is not None:
+        if self._enabled:
             self._restart(False)
         logger.debug("Disabled TLS")
