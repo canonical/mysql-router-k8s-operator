@@ -1,5 +1,8 @@
 # Copyright 2023 Canonical Ltd.
 # See LICENSE file for licensing details.
+
+"""Relation(s) to one or more application charms"""
+
 import dataclasses
 import logging
 
@@ -13,15 +16,18 @@ logger = logging.getLogger(__name__)
 
 @dataclasses.dataclass
 class _Relation:
+    """Relation to one application charm"""
     _relation: ops.Relation
     _interface: data_interfaces.DatabaseProvides
 
     @property
     def _local_databag(self) -> ops.RelationDataContent:
+        """MySQL Router charm databag."""
         return self._relation.data[self._interface.local_app]
 
     @property
     def _remote_databag(self) -> dict:
+        """MySQL charm databag."""
         return self._interface.fetch_relation_data()[self.id]
 
     @property
@@ -30,6 +36,7 @@ class _Relation:
 
     @property
     def user_created(self) -> bool:
+        """Whether database user has been shared with application charm"""
         for key in ["database", "username", "password", "endpoints"]:
             if key not in self._local_databag:
                 return False
@@ -37,13 +44,16 @@ class _Relation:
 
     @property
     def database(self) -> str:
+        """Requested database name"""
         return self._remote_databag["database"]
 
     @property
     def username(self) -> str:
+        """Database username"""
         return f"relation-{self.id}"
 
     def _set_databag(self, password: str, endpoint: str) -> None:
+        """Share connection information with application charm."""
         read_write_endpoint = f"{endpoint}:6446"
         read_only_endpoint = f"{endpoint}:6447"
         logger.debug(
@@ -58,21 +68,25 @@ class _Relation:
         )
 
     def _delete_databag(self) -> None:
+        """Remove connection information from databag."""
         logger.debug(f"Deleting databag {self.id=}")
         self._local_databag.clear()
         logger.debug(f"Deleted databag {self.id=}")
 
     def create_database_and_user(self, endpoint: str, shell: mysql_shell.Shell) -> None:
+        """Create database & user and update databag."""
         password = shell.create_application_database_and_user(self.username, self.database)
         self._set_databag(password, endpoint)
 
     def delete_user(self, shell: mysql_shell.Shell) -> None:
+        """Delete user and update databag."""
         self._delete_databag()
         shell.delete_user(self.username)
 
 
 @dataclasses.dataclass
 class RelationEndpoint:
+    """Relation endpoint for application charm(s)"""
     interface: data_interfaces.DatabaseProvides
 
     NAME = "database"
@@ -82,8 +96,9 @@ class RelationEndpoint:
         return [_Relation(relation, self.interface) for relation in self.interface.relations]
 
     def _requested_users(self, event, event_is_database_requires_broken: bool) -> list[_Relation]:
+        """Related application charms that have requested a database & user"""
         if event_is_database_requires_broken:
-            # Cluster connection is being removed; delete all users
+            # MySQL cluster connection is being removed; delete all users
             return []
         requested_users = []
         for relation in self._relations:
@@ -95,10 +110,12 @@ class RelationEndpoint:
 
     @property
     def _created_users(self) -> list[_Relation]:
+        """Users that have been created and shared with an application charm"""
         return [relation for relation in self._relations if relation.user_created]
 
     @property
     def missing_relation(self) -> bool:
+        """Whether zero relations to application charms exist"""
         return len(self._relations) == 0
 
     def reconcile_users(
@@ -108,6 +125,7 @@ class RelationEndpoint:
         endpoint: str,
         shell: mysql_shell.Shell,
     ) -> None:
+        """Create requested users and delete inactive users."""
         requested_users = self._requested_users(event, event_is_database_requires_broken)
         created_users = self._created_users
         for relation in requested_users:

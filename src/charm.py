@@ -4,7 +4,7 @@
 #
 # Learn more at: https://juju.is/docs/sdk
 
-"""MySQL Router k8s charm."""
+"""MySQL Router kubernetes (k8s) charm"""
 
 import logging
 
@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 class MySQLRouterOperatorCharm(ops.CharmBase):
-    """Operator charm for MySQL Router."""
+    """Operator charm for MySQL Router"""
 
     def __init__(self, *args) -> None:
         super().__init__(*args)
@@ -92,10 +92,11 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
 
     @property
     def _endpoint(self) -> str:
-        """The k8s endpoint for the charm."""
+        """K8s endpoint for the charm"""
         return f"{self.model.app.name}.{self.model.name}.svc.cluster.local"
 
     def _determine_status(self) -> ops.StatusBase:
+        """Report charm status."""
         missing_relations = []
         for relation in [self.database_requires, self.database_provides]:
             if relation.missing_relation:
@@ -109,6 +110,10 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
         return ops.ActiveStatus()
 
     def _set_status(self) -> None:
+        """Set charm status.
+
+        Except if charm is in unrecognized state
+        """
         if isinstance(
             self.unit.status, ops.BlockedStatus
         ) and not self.unit.status.message.startswith("Missing relation"):
@@ -117,8 +122,10 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
 
     def _patch_service(self, name: str, ro_port: int, rw_port: int) -> None:
         """Patch Juju-created k8s service.
+
         The k8s service will be tied to pod-0 so that the service is auto cleaned by
         k8s when the last pod is scaled down.
+
         Args:
             name: The name of the service.
             ro_port: The read only port.

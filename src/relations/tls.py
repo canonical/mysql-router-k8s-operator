@@ -1,5 +1,8 @@
 # Copyright 2023 Canonical Ltd.
 # See LICENSE file for licensing details.
+
+"""Relation to TLS certificate provider"""
+
 import base64
 import dataclasses
 import inspect
@@ -20,6 +23,7 @@ logger = logging.getLogger(__name__)
 
 
 class _PeerUnitDatabag:
+    """Peer relation unit databag"""
     key: str
     requested_csr: str
     active_csr: str
@@ -38,6 +42,7 @@ class _PeerUnitDatabag:
 
     @property
     def _attribute_names(self) -> list[str]:
+        """Class attributes with type annotation"""
         return [name for name in inspect.get_annotations(type(self))]
 
     def __getattr__(self, name: str) -> typing.Optional[str]:
@@ -54,32 +59,36 @@ class _PeerUnitDatabag:
 
     def clear(self) -> None:
         """Delete all items in databag."""
-        # Delete all type-annotated class attributes
         for name in self._attribute_names:
             delattr(self, name)
 
 
 @dataclasses.dataclass
 class _Relation:
+    """Relation to TLS certificate provider"""
     _charm: charm.MySQLRouterOperatorCharm
     _interface: tls_certificates.TLSCertificatesRequiresV1
 
     @property
     def _peer_relation(self) -> ops.Relation:
+        """MySQL Router charm peer relation"""
         return self._charm.model.get_relation(_PEER_RELATION_ENDPOINT_NAME)
 
     @property
     def peer_unit_databag(self) -> _PeerUnitDatabag:
+        """MySQL Router charm peer relation unit databag"""
         return _PeerUnitDatabag(self._peer_relation.data[self._charm.unit])
 
     @property
     def certificate_saved(self) -> bool:
+        """Whether a TLS certificate is available to use"""
         for value in [self.peer_unit_databag.certificate, self.peer_unit_databag.ca]:
             if not value:
                 return False
         return True
 
     def save_certificate(self, event: tls_certificates.CertificateAvailableEvent) -> None:
+        """Save TLS certificate in peer relation unit databag."""
         if (
             event.certificate_signing_request.strip()
             != self.peer_unit_databag.requested_csr.strip()
@@ -116,14 +125,17 @@ class _Relation:
     @property
     def _unit_hostname(self) -> str:
         """Get the hostname.localdomain for a unit.
+
         Translate juju unit name to hostname.localdomain, necessary
         for correct name resolution under k8s.
+
         Returns:
             A string representing the hostname.localdomain of the unit.
         """
         return f"{self._charm.unit.name.replace('/', '-')}.{self._charm.app.name}-endpoints"
 
     def _generate_csr(self, key: bytes) -> bytes:
+        """Generate certificate signing request (CSR)."""
         return tls_certificates.generate_csr(
             private_key=key,
             subject=socket.getfqdn(),
@@ -136,6 +148,7 @@ class _Relation:
         )
 
     def request_certificate_creation(self, internal_key: str = None):
+        """Request new TLS certificate from related provider charm."""
         if internal_key:
             key = self._parse_tls_key(internal_key)
         else:
@@ -146,6 +159,7 @@ class _Relation:
         self.peer_unit_databag.requested_csr = csr.decode("utf-8")
 
     def request_certificate_renewal(self):
+        """Request TLS certificate renewal from related provider charm."""
         old_csr = self.peer_unit_databag.active_csr.encode("utf-8")
         key = self.peer_unit_databag.key.encode("utf-8")
         new_csr = self._generate_csr(key)
@@ -156,6 +170,7 @@ class _Relation:
 
 
 class RelationEndpoint(ops.Object):
+    """Relation endpoint and handlers for TLS certificate provider"""
     NAME = "certificates"
 
     def __init__(self, charm_: charm.MySQLRouterOperatorCharm):
@@ -189,6 +204,7 @@ class RelationEndpoint(ops.Object):
 
     @property
     def certificate_saved(self) -> bool:
+        """Whether a TLS certificate is available to use"""
         if self._relation is None:
             return False
         return self._relation.certificate_saved

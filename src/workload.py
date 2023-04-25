@@ -1,5 +1,8 @@
 # Copyright 2023 Canonical Ltd.
 # See LICENSE file for licensing details.
+
+"""MySQL Router workload"""
+
 import dataclasses
 import logging
 import pathlib
@@ -17,6 +20,7 @@ logger = logging.getLogger(__name__)
 
 @dataclasses.dataclass
 class Workload:
+    """MySQL Router workload"""
     _container: ops.Container
 
     CONTAINER_NAME = "mysql-router"
@@ -28,10 +32,12 @@ class Workload:
 
     @property
     def _service(self) -> typing.Optional[ops.pebble.Service]:
+        """MySQL Router service"""
         return self._container.get_services(self._SERVICE_NAME).get(self._SERVICE_NAME)
 
     @property
     def _enabled(self) -> bool:
+        """Service status"""
         if self._service is None:
             return False
         return self._service.startup == "enabled"
@@ -48,6 +54,7 @@ class Workload:
 
 @dataclasses.dataclass
 class AuthenticatedWorkload(Workload):
+    """Workload with connection to MySQL cluster"""
     _admin_username: str
     _admin_password: str
     _host: str
@@ -60,6 +67,7 @@ class AuthenticatedWorkload(Workload):
     _TLS_CERTIFICATE_FILE = "custom-certificate.pem"
 
     def _get_layer(self, service_info: dict) -> ops.pebble.Layer:
+        """Create layer."""
         return ops.pebble.Layer(
             {
                 "summary": "mysql router layer",
@@ -71,6 +79,12 @@ class AuthenticatedWorkload(Workload):
         )
 
     def _get_active_layer(self, password: str, tls: bool) -> ops.pebble.Layer:
+        """Create layer with startup enabled.
+
+        Args:
+            password: MySQL Router user password
+            tls: Whether TLS is enabled
+        """
         if tls:
             command = f"/run.sh mysqlrouter --extra-config {self._ROUTER_CONFIG_DIRECTORY / self._TLS_CONFIG_FILE}"
         else:
@@ -92,6 +106,7 @@ class AuthenticatedWorkload(Workload):
 
     @property
     def _inactive_layer(self) -> ops.pebble.Layer:
+        """Create layer with startup disabled."""
         return self._get_layer(
             {
                 "override": "replace",
@@ -102,6 +117,7 @@ class AuthenticatedWorkload(Workload):
         )
 
     def _update_layer(self, layer: ops.pebble.Layer) -> None:
+        """Update and restart services."""
         self._container.add_layer(self._SERVICE_NAME, layer, combine=True)
         self._container.replan()
 
@@ -131,6 +147,7 @@ class AuthenticatedWorkload(Workload):
         sock.close()
 
     def enable(self, tls: bool) -> None:
+        """Start and enable MySQL Router service."""
         if self._enabled:
             # If the host or port changes, MySQL Router will receive topology change notifications from MySQL
             # Therefore, if the host or port changes, we do not need to restart MySQL Router
@@ -143,6 +160,7 @@ class AuthenticatedWorkload(Workload):
         # TODO: wait until mysql router ready? https://github.com/canonical/mysql-router-k8s-operator/blob/45cf3be44f27476a0371c67d50d7a0193c0fadc2/src/charm.py#L219
 
     def disable(self) -> None:
+        """Stop and disable MySQL Router service."""
         if not self._enabled:
             return
         logger.debug("Disabling MySQL Router service")
@@ -184,7 +202,7 @@ class AuthenticatedWorkload(Workload):
 
     @property
     def _tls_config_file(self) -> str:
-        """Render TLS template to string.
+        """Render config file template to string.
 
         Config file enables TLS on MySQL Router.
         """
@@ -197,6 +215,7 @@ class AuthenticatedWorkload(Workload):
         return config_string
 
     def enable_tls(self, key: str, certificate: str):
+        """Enable TLS and restart MySQL Router service."""
         logger.debug("Enabling TLS")
         self._write_file(
             self._ROUTER_CONFIG_DIRECTORY / self._TLS_CONFIG_FILE, self._tls_config_file
@@ -208,6 +227,7 @@ class AuthenticatedWorkload(Workload):
         logger.debug("Enabled TLS")
 
     def disable_tls(self) -> None:
+        """Disable TLS and restart MySQL Router service."""
         logger.debug("Disabling TLS")
         for file in [self._TLS_CONFIG_FILE, self._TLS_KEY_FILE, self._TLS_CERTIFICATE_FILE]:
             self._delete_file(self._ROUTER_CONFIG_DIRECTORY / file)

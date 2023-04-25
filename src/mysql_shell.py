@@ -1,5 +1,11 @@
 # Copyright 2023 Canonical Ltd.
 # See LICENSE file for licensing details.
+
+"""MySQL Shell in Python execution mode
+
+https://dev.mysql.com/doc/mysql-shell/8.0/en/
+"""
+
 import dataclasses
 import logging
 import secrets
@@ -13,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 @dataclasses.dataclass
 class Shell:
+    """MySQL Shell connected to MySQL cluster"""
     _container: ops.Container
     _username: str
     _password: str
@@ -20,6 +27,7 @@ class Shell:
     _port: str
 
     def _run_commands(self, commands: list[str]) -> None:
+        """Connect to MySQL cluster and run commands."""
         commands.insert(
             0, f"shell.connect('{self._username}:{self._password}@{self._host}:{self._port}"
         )
@@ -31,6 +39,7 @@ class Shell:
             raise
 
     def _run_sql(self, sql_statements: list[str]) -> None:
+        """Connect to MySQL cluster and execute SQL."""
         commands = []
         for statement in sql_statements:
             # Escape double quote (") characters in statement
@@ -44,6 +53,7 @@ class Shell:
         return "".join([secrets.choice(choices) for _ in range(_PASSWORD_LENGTH)])
 
     def create_application_database_and_user(self, username: str, database: str) -> str:
+        """Create database and user for related database_provides application."""
         logger.debug(f"Creating {database=} and {username=}")
         password = self._generate_password()
         self._run_sql(
@@ -57,6 +67,7 @@ class Shell:
         return password
 
     def create_mysql_router_user(self, username: str) -> str:
+        """Create user to run MySQL Router service."""
         logger.debug(f"Creating router {username=}")
         password = self._generate_password()
         self._run_commands(
