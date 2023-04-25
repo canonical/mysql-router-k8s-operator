@@ -58,12 +58,16 @@ class AuthenticatedWorkload(Workload):
     _charm: charm.MySQLRouterOperatorCharm
 
     _UNIX_USERNAME = "mysql"
-    _ROUTER_USERNAME = "mysqlrouter"
     _ROUTER_CONFIG_DIRECTORY = pathlib.Path("/etc/mysqlrouter")
     _ROUTER_CONFIG_FILE = "mysqlrouter.conf"
     _TLS_CONFIG_FILE = "tls.conf"
     _TLS_KEY_FILE = "custom-key.pem"
     _TLS_CERTIFICATE_FILE = "custom-certificate.pem"
+
+    @property
+    def _router_username(self) -> str:
+        unit_id = self._charm.unit.name.split("/")[1]
+        return f"mysqlrouter_{unit_id}"
 
     def _update_layer(self, *, enabled: bool, tls: bool = None) -> None:
         """Update and restart services.
@@ -119,7 +123,7 @@ class AuthenticatedWorkload(Workload):
                 [
                     "mysqlrouter",
                     "--bootstrap",
-                    f"{self._ROUTER_USERNAME}:{password}@{self._host}:{self._port}",
+                    f"{self._router_username}:{password}@{self._host}:{self._port}",
                     "--user",
                     self._UNIX_USERNAME,
                     "--conf-set-option",
@@ -144,7 +148,7 @@ class AuthenticatedWorkload(Workload):
             # Therefore, if the host or port changes, we do not need to restart MySQL Router.
             return
         logger.debug("Enabling MySQL Router service")
-        router_password = self.shell.create_mysql_router_user(self._ROUTER_USERNAME)
+        router_password = self.shell.create_mysql_router_user(self._router_username)
         self._bootstrap_router(password=router_password, tls=tls)
         logger.debug("Enabled MySQL Router service")
         self._charm.wait_until_mysql_router_ready()
@@ -154,14 +158,14 @@ class AuthenticatedWorkload(Workload):
         if not self._enabled:
             return
         logger.debug("Disabling MySQL Router service")
-        self.shell.delete_user(self._ROUTER_USERNAME)
+        self.shell.delete_user(self._router_username)
         self._update_layer(enabled=False)
         logger.debug("Disabled MySQL Router service")
 
     def _restart(self, *, tls: bool) -> None:
         """Restart MySQL Router to enable or disable TLS."""
         logger.debug("Restarting MySQL Router service")
-        router_password = self.shell.change_mysql_router_user_password(self._ROUTER_USERNAME)
+        router_password = self.shell.change_mysql_router_user_password(self._router_username)
         self._bootstrap_router(password=router_password, tls=tls)
         logger.debug("Restarted MySQL Router service")
         self._charm.wait_until_mysql_router_ready()
