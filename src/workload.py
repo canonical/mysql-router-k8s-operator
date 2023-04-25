@@ -10,7 +10,7 @@ import string
 
 import ops
 
-import charm
+from charm import MySQLRouterOperatorCharm
 import mysql_shell
 
 logger = logging.getLogger(__name__)
@@ -57,7 +57,7 @@ class AuthenticatedWorkload(Workload):
     _admin_password: str
     _host: str
     _port: str
-    _charm: charm.MySQLRouterOperatorCharm
+    _charm: MySQLRouterOperatorCharm
 
     _UNIX_USERNAME = "mysql"
     _ROUTER_CONFIG_DIRECTORY = pathlib.Path("/etc/mysqlrouter")
