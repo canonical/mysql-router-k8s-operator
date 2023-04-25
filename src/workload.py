@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 @dataclasses.dataclass
 class Workload:
     _container: ops.Container
+
     CONTAINER_NAME = "mysql-router"
     _SERVICE_NAME = "mysql_router"
 
@@ -49,6 +50,7 @@ class AuthenticatedWorkload(Workload):
     _admin_password: str
     _host: str
     _port: str
+
     _ROUTER_USERNAME = "mysqlrouter"
     _ROUTER_CONFIG_DIRECTORY = pathlib.Path("/tmp/mysqlrouter")
     _TLS_CONFIG_FILE = "tls.conf"

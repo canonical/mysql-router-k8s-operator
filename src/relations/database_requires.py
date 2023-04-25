@@ -48,6 +48,7 @@ class _Relation:
 @dataclasses.dataclass
 class RelationEndpoint:
     interface: data_interfaces.DatabaseRequires
+
     NAME = "backend-database"
 
     @property

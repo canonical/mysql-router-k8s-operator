@@ -72,6 +72,7 @@ class _Relation:
 @dataclasses.dataclass
 class RelationEndpoint:
     interface: data_interfaces.DatabaseProvides
+
     NAME = "database"
 
     @property
