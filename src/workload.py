@@ -59,63 +59,45 @@ class AuthenticatedWorkload(Workload):
     _port: str
 
     _UNIX_USERNAME = "mysql"
-    _ROUTER_CONFIG_DIRECTORY = pathlib.Path("/tmp/mysqlrouter")
+    _ROUTER_USERNAME = "mysqlrouter"
+    _ROUTER_CONFIG_DIRECTORY = pathlib.Path("/etc/mysqlrouter")
+    _ROUTER_CONFIG_FILE = "mysqlrouter.conf"
     _TLS_CONFIG_FILE = "tls.conf"
     _TLS_KEY_FILE = "custom-key.pem"
     _TLS_CERTIFICATE_FILE = "custom-certificate.pem"
 
-    def _get_layer(self, service_info: dict) -> ops.pebble.Layer:
-        """Create layer."""
-        return ops.pebble.Layer(
+    def _update_layer(self, *, enabled: bool, tls: bool = None) -> None:
+        """Update and restart services.
+
+        Args:
+            enabled: Whether MySQL Router service is enabled
+            tls: Whether TLS is enabled. Required if enabled=True
+        """
+        if enabled:
+            command = (
+                f"mysqlrouter --config {self._ROUTER_CONFIG_DIRECTORY / self._ROUTER_CONFIG_FILE}"
+            )
+            assert tls is not None, "`tls` argument required when enabled=True"
+            if tls:
+                command = f"{command} --extra-config {self._ROUTER_CONFIG_DIRECTORY / self._TLS_CONFIG_FILE}"
+        else:
+            command = ""
+        layer = ops.pebble.Layer(
             {
                 "summary": "mysql router layer",
                 "description": "the pebble config layer for mysql router",
                 "services": {
-                    self._SERVICE_NAME: service_info,
+                    self._SERVICE_NAME: {
+                        "override": "replace",
+                        "summary": "mysql router",
+                        "command": command,
+                        "startup": "enabled" if enabled else "disabled",
+                        "user": self._UNIX_USERNAME,
+                        "group": self._UNIX_USERNAME,
+                    },
                 },
             }
         )
-
-    def _get_active_layer(self, *, password: str, tls: bool) -> ops.pebble.Layer:
-        """Create layer with startup enabled.
-
-        Args:
-            password: MySQL Router user password
-            tls: Whether TLS is enabled
-        """
-        if tls:
-            command = f"/run.sh mysqlrouter --extra-config {self._ROUTER_CONFIG_DIRECTORY / self._TLS_CONFIG_FILE}"
-        else:
-            command = "/run.sh mysqlrouter"
-        return self._get_layer(
-            {
-                "override": "replace",
-                "summary": "mysql router",
-                "command": command,
-                "startup": "enabled",
-                "environment": {
-                    "MYSQL_HOST": self._host,
-                    "MYSQL_PORT": self._port,
-                    "MYSQL_USER": self._UNIX_USERNAME,
-                    "MYSQL_PASSWORD": password,
-                },
-            }
-        )
-
-    @property
-    def _inactive_layer(self) -> ops.pebble.Layer:
-        """Layer with startup disabled"""
-        return self._get_layer(
-            {
-                "override": "replace",
-                "summary": "mysql router",
-                "command": "",
-                "startup": "disabled",
-            }
-        )
-
-    def _update_layer(self, layer: ops.pebble.Layer) -> None:
-        """Update and restart services."""
         self._container.add_layer(self._SERVICE_NAME, layer, combine=True)
         self._container.replan()
 
@@ -149,8 +131,29 @@ class AuthenticatedWorkload(Workload):
         sock.close()
 
     def _bootstrap_router(self, *, password: str, tls: bool) -> None:
+        """Bootstrap MySQL Router and enable service."""
         logger.debug(f"Bootstrapping router {tls=}, {self._host=}, {self._port=}")
-        self._update_layer(self._get_active_layer(password=password, tls=tls))
+        try:
+            # Bootstrap MySQL Router
+            process = self._container.exec(
+                [
+                    "mysqlrouter",
+                    "--bootstrap",
+                    f"{self._ROUTER_USERNAME}:{password}@{self._host}:{self._port}",
+                    "--user",
+                    self._UNIX_USERNAME,
+                    "--conf-set-option",
+                    "http_server.bind_address=127.0.0.1",
+                    "--force",  # TODO: needed?
+                ]
+            )
+            process.wait_output()
+        except ops.pebble.ExecError as e:
+            logger.exception(f"Failed to bootstrap router\nstderr:\n{e.stderr}\n")
+            raise
+        # Enable service
+        self._update_layer(enabled=True, tls=tls)
+
         logger.debug(f"Bootstrapped router {tls=}, {self._host=}, {self._port=}")
 
     def enable(self, *, tls: bool) -> None:
@@ -160,7 +163,7 @@ class AuthenticatedWorkload(Workload):
             # Therefore, if the host or port changes, we do not need to restart MySQL Router
             return
         logger.debug("Enabling MySQL Router service")
-        router_password = self.shell.create_mysql_router_user(self._UNIX_USERNAME)
+        router_password = self.shell.create_mysql_router_user(self._ROUTER_USERNAME)
         self._bootstrap_router(password=router_password, tls=tls)
         logger.debug("Enabled MySQL Router service")
         self._wait_until_mysql_router_ready()
@@ -171,14 +174,14 @@ class AuthenticatedWorkload(Workload):
         if not self._enabled:
             return
         logger.debug("Disabling MySQL Router service")
-        self.shell.delete_user(self._UNIX_USERNAME)
-        self._update_layer(self._inactive_layer)
+        self.shell.delete_user(self._ROUTER_USERNAME)
+        self._update_layer(enabled=False)
         logger.debug("Disabled MySQL Router service")
 
     def _restart(self, *, tls: bool) -> None:
         """Restart MySQL Router to enable or disable TLS."""
         logger.debug("Restarting MySQL Router service")
-        router_password = self.shell.change_mysql_router_user_password(self._UNIX_USERNAME)
+        router_password = self.shell.change_mysql_router_user_password(self._ROUTER_USERNAME)
         self._bootstrap_router(password=router_password, tls=tls)
         logger.debug("Restarted MySQL Router service")
         self._wait_until_mysql_router_ready()
