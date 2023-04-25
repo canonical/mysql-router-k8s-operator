@@ -22,9 +22,10 @@ from ops.framework import Object
 from ops.pebble import Layer, PathError
 
 from constants import (
+    MYSQL_GROUP_NAME,
     MYSQL_ROUTER_CONTAINER_NAME,
     MYSQL_ROUTER_SERVICE_NAME,
-    MYSQL_ROUTER_USER_NAME,
+    MYSQL_USER_NAME,
     ROUTER_CONFIG_DIRECTORY,
     TLS_RELATION,
     TLS_SSL_CERT_FILE,
@@ -256,8 +257,8 @@ class MySQLRouterTLS(Object):
         self._write_content_to_file(
             f"{ROUTER_CONFIG_DIRECTORY}/{TLS_SSL_CONFIG_FILE}",
             config_string,
-            owner=MYSQL_ROUTER_USER_NAME,
-            group=MYSQL_ROUTER_USER_NAME,
+            owner=MYSQL_USER_NAME,
+            group=MYSQL_GROUP_NAME,
             permission=0o600,
         )
 
@@ -268,8 +269,8 @@ class MySQLRouterTLS(Object):
             self._write_content_to_file(
                 f"{ROUTER_CONFIG_DIRECTORY}/{value}",
                 self.charm.get_secret(SCOPE, key),
-                owner=MYSQL_ROUTER_USER_NAME,
-                group=MYSQL_ROUTER_USER_NAME,
+                owner=MYSQL_USER_NAME,
+                group=MYSQL_GROUP_NAME,
                 permission=0o600,
             )
 

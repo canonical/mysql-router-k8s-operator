@@ -25,6 +25,7 @@ from constants import (
     MYSQL_ROUTER_REQUIRES_APPLICATION_DATA,
     MYSQL_ROUTER_REQUIRES_DATA,
     MYSQL_ROUTER_SERVICE_NAME,
+    MYSQL_USER_NAME,
     PASSWORD_LENGTH,
     PEER,
     UNIT_BOOTSTRAPPED,
@@ -157,6 +158,24 @@ class DatabaseRequiresRelation(Object):
 
         if self.charm.app_peer_data.get(MYSQL_DATABASE_CREATED):
             return
+
+        container = self.charm.unit.get_container(MYSQL_ROUTER_CONTAINER_NAME)
+        # force somehow needed because router bootstrapped for "system" already
+        # (maybe because /etc/mysqlrouter/mysqlrouter.conf exists when router
+        # installed from canonical PPA?)
+        bootstrap_mysql_router_command = f"""
+mysqlrouter
+    --user {MYSQL_USER_NAME}
+    --bootstrap {event.username}:{event.password}@{event.endpoints.split(",")[0]}
+    --conf-base-port 6446
+    --conf-set-option DEFAULT.server_ssl_mode=PREFERRED
+    --conf-set-option http_server.bind_address=127.0.0.1
+    --conf-use-gr-notifications
+    --force
+""".split()
+
+        process = container.exec(bootstrap_mysql_router_command)
+        process.wait_output()
 
         self.charm.app_peer_data[MYSQL_ROUTER_REQUIRES_DATA] = json.dumps(
             {
