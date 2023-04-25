@@ -13,6 +13,7 @@ import ops
 @dataclasses.dataclass
 class _Relation:
     """Relation to MySQL charm."""
+
     _interface: data_interfaces.DatabaseRequires
 
     @property
@@ -61,6 +62,7 @@ class _Relation:
 @dataclasses.dataclass
 class RelationEndpoint:
     """Relation endpoint for MySQL charm"""
+
     interface: data_interfaces.DatabaseRequires
 
     NAME = "backend-database"

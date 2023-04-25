@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 @dataclasses.dataclass
 class Shell:
     """MySQL Shell connected to MySQL cluster"""
+
     _container: ops.Container
     _username: str
     _password: str
@@ -52,7 +53,7 @@ class Shell:
         choices = string.ascii_letters + string.digits
         return "".join([secrets.choice(choices) for _ in range(_PASSWORD_LENGTH)])
 
-    def create_application_database_and_user(self, username: str, database: str) -> str:
+    def create_application_database_and_user(self, *, username: str, database: str) -> str:
         """Create database and user for related database_provides application."""
         logger.debug(f"Creating {database=} and {username=}")
         password = self._generate_password()

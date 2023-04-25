@@ -24,6 +24,7 @@ logger = logging.getLogger(__name__)
 
 class _PeerUnitDatabag:
     """Peer relation unit databag"""
+
     key: str
     requested_csr: str
     active_csr: str
@@ -66,6 +67,7 @@ class _PeerUnitDatabag:
 @dataclasses.dataclass
 class _Relation:
     """Relation to TLS certificate provider"""
+
     _charm: charm.MySQLRouterOperatorCharm
     _interface: tls_certificates.TLSCertificatesRequiresV1
 
@@ -171,6 +173,7 @@ class _Relation:
 
 class RelationEndpoint(ops.Object):
     """Relation endpoint and handlers for TLS certificate provider"""
+
     NAME = "certificates"
 
     def __init__(self, charm_: charm.MySQLRouterOperatorCharm):

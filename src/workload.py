@@ -21,6 +21,7 @@ logger = logging.getLogger(__name__)
 @dataclasses.dataclass
 class Workload:
     """MySQL Router workload"""
+
     _container: ops.Container
 
     CONTAINER_NAME = "mysql-router"
@@ -55,6 +56,7 @@ class Workload:
 @dataclasses.dataclass
 class AuthenticatedWorkload(Workload):
     """Workload with connection to MySQL cluster"""
+
     _admin_username: str
     _admin_password: str
     _host: str
@@ -78,7 +80,7 @@ class AuthenticatedWorkload(Workload):
             }
         )
 
-    def _get_active_layer(self, password: str, tls: bool) -> ops.pebble.Layer:
+    def _get_active_layer(self, *, password: str, tls: bool) -> ops.pebble.Layer:
         """Create layer with startup enabled.
 
         Args:
@@ -146,7 +148,7 @@ class AuthenticatedWorkload(Workload):
             raise BaseException()
         sock.close()
 
-    def enable(self, tls: bool) -> None:
+    def enable(self, *, tls: bool) -> None:
         """Start and enable MySQL Router service."""
         if self._enabled:
             # If the host or port changes, MySQL Router will receive topology change notifications from MySQL
@@ -154,7 +156,7 @@ class AuthenticatedWorkload(Workload):
             return
         logger.debug(f"Enabling MySQL Router service {tls=}, {self._host=}, {self._port=}")
         router_password = self.shell.create_mysql_router_user(self._ROUTER_USERNAME)
-        self._update_layer(self._get_active_layer(router_password, tls))
+        self._update_layer(self._get_active_layer(password=router_password, tls=tls))
         logger.debug(f"Enabled MySQL Router service {tls=}, {self._host=}, {self._port=}")
         self._wait_until_mysql_router_ready()
         # TODO: wait until mysql router ready? https://github.com/canonical/mysql-router-k8s-operator/blob/45cf3be44f27476a0371c67d50d7a0193c0fadc2/src/charm.py#L219
@@ -168,11 +170,11 @@ class AuthenticatedWorkload(Workload):
         self._update_layer(self._inactive_layer)
         logger.debug("Disabled MySQL Router service")
 
-    def _restart(self, tls: bool) -> None:
+    def _restart(self, *, tls: bool) -> None:
         """Restart MySQL Router to enable or disable TLS."""
         logger.debug("Restarting MySQL Router service")
         password = self._service.environment["MYSQL_PASSWORD"]
-        self._update_layer(self._get_active_layer(password, tls))
+        self._update_layer(self._get_active_layer(password=password, tls=tls))
         logger.debug("Restarted MySQL Router service")
 
     def _write_file(self, path: pathlib.Path, content: str) -> None:
@@ -214,7 +216,7 @@ class AuthenticatedWorkload(Workload):
         )
         return config_string
 
-    def enable_tls(self, key: str, certificate: str):
+    def enable_tls(self, *, key: str, certificate: str):
         """Enable TLS and restart MySQL Router service."""
         logger.debug("Enabling TLS")
         self._write_file(
@@ -223,7 +225,7 @@ class AuthenticatedWorkload(Workload):
         self._write_file(self._ROUTER_CONFIG_DIRECTORY / self._TLS_KEY_FILE, key)
         self._write_file(self._ROUTER_CONFIG_DIRECTORY / self._TLS_CERTIFICATE_FILE, certificate)
         if self._enabled:
-            self._restart(True)
+            self._restart(tls=True)
         logger.debug("Enabled TLS")
 
     def disable_tls(self) -> None:
@@ -232,5 +234,5 @@ class AuthenticatedWorkload(Workload):
         for file in [self._TLS_CONFIG_FILE, self._TLS_KEY_FILE, self._TLS_CERTIFICATE_FILE]:
             self._delete_file(self._ROUTER_CONFIG_DIRECTORY / file)
         if self._enabled:
-            self._restart(False)
+            self._restart(tls=False)
         logger.debug("Disabled TLS")

@@ -120,7 +120,7 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
             return
         self.unit.status = self._determine_status()
 
-    def _patch_service(self, name: str, ro_port: int, rw_port: int) -> None:
+    def _patch_service(self, *, name: str, ro_port: int, rw_port: int) -> None:
         """Patch Juju-created k8s service.
 
         The k8s service will be tied to pod-0 so that the service is auto cleaned by
@@ -183,17 +183,19 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
             and self.workload.container_ready
         ):
             self.database_provides.reconcile_users(
-                event,
-                self.database_requires.relation.is_breaking(event),
-                self._endpoint,
-                self.workload.shell,
+                event=event,
+                event_is_database_requires_broken=self.database_requires.relation.is_breaking(
+                    event
+                ),
+                endpoint=self._endpoint,
+                shell=self.workload.shell,
             )
         if (
             isinstance(self.workload, workload.AuthenticatedWorkload)
             and not self.database_requires.relation.is_breaking(event)
             and self.workload.container_ready
         ):
-            self.workload.enable(self.tls.certificate_saved)
+            self.workload.enable(tls=self.tls.certificate_saved)
         else:
             self.workload.disable()
         self._set_status()
@@ -205,7 +207,7 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
     def _on_leader_elected(self, _) -> None:
         """Patch existing k8s service to include read-write and read-only services."""
         try:
-            self._patch_service(self.app.name, ro_port=6447, rw_port=6446)
+            self._patch_service(name=self.app.name, ro_port=6447, rw_port=6446)
         except lightkube.ApiError:
             logger.exception("Failed to patch k8s service")
             raise

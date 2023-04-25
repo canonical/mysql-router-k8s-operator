@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 @dataclasses.dataclass
 class _Relation:
     """Relation to one application charm"""
+
     _relation: ops.Relation
     _interface: data_interfaces.DatabaseProvides
 
@@ -52,7 +53,7 @@ class _Relation:
         """Database username"""
         return f"relation-{self.id}"
 
-    def _set_databag(self, password: str, endpoint: str) -> None:
+    def _set_databag(self, *, password: str, endpoint: str) -> None:
         """Share connection information with application charm."""
         read_write_endpoint = f"{endpoint}:6446"
         read_only_endpoint = f"{endpoint}:6447"
@@ -73,12 +74,14 @@ class _Relation:
         self._local_databag.clear()
         logger.debug(f"Deleted databag {self.id=}")
 
-    def create_database_and_user(self, endpoint: str, shell: mysql_shell.Shell) -> None:
+    def create_database_and_user(self, *, endpoint: str, shell: mysql_shell.Shell) -> None:
         """Create database & user and update databag."""
-        password = shell.create_application_database_and_user(self.username, self.database)
-        self._set_databag(password, endpoint)
+        password = shell.create_application_database_and_user(
+            username=self.username, database=self.database
+        )
+        self._set_databag(password=password, endpoint=endpoint)
 
-    def delete_user(self, shell: mysql_shell.Shell) -> None:
+    def delete_user(self, *, shell: mysql_shell.Shell) -> None:
         """Delete user and update databag."""
         self._delete_databag()
         shell.delete_user(self.username)
@@ -87,6 +90,7 @@ class _Relation:
 @dataclasses.dataclass
 class RelationEndpoint:
     """Relation endpoint for application charm(s)"""
+
     interface: data_interfaces.DatabaseProvides
 
     NAME = "database"
@@ -95,7 +99,9 @@ class RelationEndpoint:
     def _relations(self) -> list[_Relation]:
         return [_Relation(relation, self.interface) for relation in self.interface.relations]
 
-    def _requested_users(self, event, event_is_database_requires_broken: bool) -> list[_Relation]:
+    def _requested_users(
+        self, *, event, event_is_database_requires_broken: bool
+    ) -> list[_Relation]:
         """Related application charms that have requested a database & user"""
         if event_is_database_requires_broken:
             # MySQL cluster connection is being removed; delete all users
@@ -120,17 +126,20 @@ class RelationEndpoint:
 
     def reconcile_users(
         self,
+        *,
         event,
         event_is_database_requires_broken: bool,
         endpoint: str,
         shell: mysql_shell.Shell,
     ) -> None:
         """Create requested users and delete inactive users."""
-        requested_users = self._requested_users(event, event_is_database_requires_broken)
+        requested_users = self._requested_users(
+            event=event, event_is_database_requires_broken=event_is_database_requires_broken
+        )
         created_users = self._created_users
         for relation in requested_users:
             if relation not in created_users:
-                relation.create_database_and_user(endpoint, shell)
+                relation.create_database_and_user(endpoint=endpoint, shell=shell)
         for relation in created_users:
             if relation not in requested_users:
-                relation.delete_user(shell)
+                relation.delete_user(shell=shell)
