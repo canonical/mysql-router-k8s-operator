@@ -7,6 +7,7 @@
 """MySQL Router kubernetes (k8s) charm"""
 
 import logging
+import socket
 
 import charms.data_platform_libs.v0.data_interfaces as data_interfaces
 import lightkube
@@ -14,6 +15,7 @@ import lightkube.models.core_v1
 import lightkube.models.meta_v1
 import lightkube.resources.core_v1
 import ops
+import tenacity
 
 import relations.database_provides
 import relations.database_requires
@@ -87,6 +89,7 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
                 _admin_password=self.database_requires.relation.password,
                 _host=self.database_requires.relation.host,
                 _port=self.database_requires.relation.port,
+                _charm=self,
             )
         return workload.Workload(_container=container)
 
@@ -120,6 +123,30 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
             return
         self.unit.status = self._determine_status()
         logger.debug(f"Set status to {self.unit.status}")
+
+    def wait_until_mysql_router_ready(self) -> None:
+        """Wait until a connection to MySQL Router is possible.
+
+        Retry every 5 seconds for up to 360 seconds.
+        """
+        logger.debug("Waiting until MySQL Router is ready")
+        self.unit.status = ops.WaitingStatus("MySQL Router starting")
+        try:
+            for attempt in tenacity.Retrying(
+                reraise=True,
+                stop=tenacity.stop_after_delay(360),  # TODO: adjust timeout
+                wait=tenacity.wait_fixed(5),
+            ):
+                with attempt:
+                    for port in [6446, 6447]:
+                        with socket.socket() as s:
+                            assert s.connect_ex(("localhost", port)) != 0
+        except AssertionError:
+            logger.exception("Unable to connect to MySQL Router")
+            raise
+        else:
+            logger.debug("MySQL Router is ready")
+        self._set_status()
 
     def _patch_service(self, *, name: str, ro_port: int, rw_port: int) -> None:
         """Patch Juju-created k8s service.

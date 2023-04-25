@@ -6,13 +6,11 @@
 import dataclasses
 import logging
 import pathlib
-import socket
 import string
-import typing
 
 import ops
-import tenacity
 
+import charm
 import mysql_shell
 
 logger = logging.getLogger(__name__)
@@ -57,6 +55,7 @@ class AuthenticatedWorkload(Workload):
     _admin_password: str
     _host: str
     _port: str
+    _charm: charm.MySQLRouterOperatorCharm
 
     _UNIX_USERNAME = "mysql"
     _ROUTER_USERNAME = "mysqlrouter"
@@ -111,25 +110,6 @@ class AuthenticatedWorkload(Workload):
             _port=self._port,
         )
 
-    @staticmethod
-    @tenacity.retry(reraise=True, stop=tenacity.stop_after_delay(360), wait=tenacity.wait_fixed(5))
-    def _wait_until_mysql_router_ready() -> None:
-        # TODO: add debug logging
-        """Wait until a connection to MySQL router is possible.
-        Retry every 5 seconds for 30 seconds if there is an issue obtaining a connection.
-        """
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        result = sock.connect_ex(("127.0.0.1", 6446))
-        if result != 0:
-            raise BaseException()
-        sock.close()
-
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        result = sock.connect_ex(("127.0.0.1", 6447))
-        if result != 0:
-            raise BaseException()
-        sock.close()
-
     def _bootstrap_router(self, *, password: str, tls: bool) -> None:
         """Bootstrap MySQL Router and enable service."""
         logger.debug(f"Bootstrapping router {tls=}, {self._host=}, {self._port=}")
@@ -162,8 +142,7 @@ class AuthenticatedWorkload(Workload):
         router_password = self.shell.create_mysql_router_user(self._ROUTER_USERNAME)
         self._bootstrap_router(password=router_password, tls=tls)
         logger.debug("Enabled MySQL Router service")
-        self._wait_until_mysql_router_ready()
-        # TODO: wait until mysql router ready? https://github.com/canonical/mysql-router-k8s-operator/blob/45cf3be44f27476a0371c67d50d7a0193c0fadc2/src/charm.py#L219
+        self._charm.wait_until_mysql_router_ready()
 
     def disable(self) -> None:
         """Stop and disable MySQL Router service."""
@@ -178,7 +157,7 @@ class AuthenticatedWorkload(Workload):
         router_password = self.shell.change_mysql_router_user_password(self._ROUTER_USERNAME)
         self._bootstrap_router(password=router_password, tls=tls)
         logger.debug("Restarted MySQL Router service")
-        self._wait_until_mysql_router_ready()
+        self._charm.wait_until_mysql_router_ready()
 
     def _write_file(self, path: pathlib.Path, content: str) -> None:
         """Write content to file.
