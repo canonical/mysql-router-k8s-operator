@@ -212,8 +212,7 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
             f"{self.unit.is_leader()=}, "
             f"{isinstance(self.workload, workload.AuthenticatedWorkload)=}, "
             f"{self.database_requires.relation and self.database_requires.relation.is_breaking(event)=}, "
-            f"{self.workload.container_ready=}, "
-            f"{self.workload.container_ready and self.workload.enabled=}"
+            f"{self.workload.container_ready=}"
         )
         if (
             self.unit.is_leader()
@@ -230,21 +229,12 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
             )
         if (
             isinstance(self.workload, workload.AuthenticatedWorkload)
-            and not self.database_requires.relation.is_breaking(event)
             and self.workload.container_ready
         ):
-            # Enable workload
-            if self.workload.enabled:
-                # If the host or port changes, MySQL Router will receive topology change
-                # notifications from MySQL.
-                # Therefore, if the host or port changes, we do not need to restart MySQL Router.
-                pass
+            if self.database_requires.relation.is_breaking(event):
+                self.workload.disable()
             else:
                 self.workload.enable(tls=self.tls.certificate_saved)
-        else:
-            # Disable workload
-            if self.workload.enabled:
-                self.workload.disable()
         self._set_status()
 
     def _on_mysql_router_pebble_ready(self, _) -> None:
