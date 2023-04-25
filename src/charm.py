@@ -119,6 +119,7 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
         ) and not self.unit.status.message.startswith("Missing relation"):
             return
         self.unit.status = self._determine_status()
+        logger.debug(f"Set status to {self.unit.status}")
 
     def _patch_service(self, *, name: str, ro_port: int, rw_port: int) -> None:
         """Patch Juju-created k8s service.
@@ -131,6 +132,7 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
             ro_port: The read only port.
             rw_port: The read write port.
         """
+        logger.debug(f"Patching k8s service {name=}, {ro_port=}, {rw_port=}")
         client = lightkube.Client()
         pod0 = client.get(
             res=lightkube.resources.core_v1.Pod,
@@ -170,6 +172,7 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
             force=True,
             field_manager=self.model.app.name,
         )
+        logger.debug(f"Patched k8s service {name=}, {ro_port=}, {rw_port=}")
 
     # =======================
     #  Handlers
@@ -177,6 +180,13 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
 
     def _reconcile_database_relations(self, event=None) -> None:
         """Handle database requires/provides events."""
+        logger.debug(
+            "State of reconcile "
+            f"{self.unit.is_leader()=}, "
+            f"{isinstance(self.workload, workload.AuthenticatedWorkload)=}, "
+            f"{self.database_requires.relation.is_breaking(event)=}, "
+            f"{self.workload.container_ready=}"
+        )
         if (
             self.unit.is_leader()
             and isinstance(self.workload, workload.AuthenticatedWorkload)

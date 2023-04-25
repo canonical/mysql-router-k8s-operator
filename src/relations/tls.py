@@ -106,10 +106,12 @@ class _Relation:
             # Workaround for https://github.com/canonical/tls-certificates-operator/issues/34
             logger.debug("TLS certificate already saved.")
             return
+        logger.debug(f"Saving TLS certificate {event=}")
         self.peer_unit_databag.certificate = event.certificate
         self.peer_unit_databag.ca = event.ca
         self.peer_unit_databag.chain = json.dumps(event.chain)
         self.peer_unit_databag.active_csr = self.peer_unit_databag.requested_csr
+        logger.debug(f"Saved TLS certificate {event=}")
         self._charm.workload.enable_tls(
             self.peer_unit_databag.key, self.peer_unit_databag.certificate
         )
@@ -152,6 +154,7 @@ class _Relation:
 
     def request_certificate_creation(self, internal_key: str = None):
         """Request new TLS certificate from related provider charm."""
+        logger.debug("Requesting TLS certificate creation")
         if internal_key:
             key = self._parse_tls_key(internal_key)
         else:
@@ -160,9 +163,11 @@ class _Relation:
         self._interface.request_certificate_creation(certificate_signing_request=csr)
         self.peer_unit_databag.key = key.decode("utf-8")
         self.peer_unit_databag.requested_csr = csr.decode("utf-8")
+        logger.debug(f"Requested TLS certificate creation {self.peer_unit_databag.requested_csr=}")
 
     def request_certificate_renewal(self):
         """Request TLS certificate renewal from related provider charm."""
+        logger.debug(f"Requesting TLS certificate renewal {self.peer_unit_databag.active_csr=}")
         old_csr = self.peer_unit_databag.active_csr.encode("utf-8")
         key = self.peer_unit_databag.key.encode("utf-8")
         new_csr = self._generate_csr(key)
@@ -170,6 +175,7 @@ class _Relation:
             old_certificate_signing_request=old_csr, new_certificate_signing_request=new_csr
         )
         self.peer_unit_databag.requested_csr = new_csr.decode("utf-8")
+        logger.debug(f"Requested TLS certificate renewal {self.peer_unit_databag.requested_csr=}")
 
 
 class RelationEndpoint(ops.Object):
@@ -215,8 +221,10 @@ class RelationEndpoint(ops.Object):
 
     def _on_set_tls_private_key(self, event: ops.ActionEvent) -> None:
         """Handle action to set unit TLS private key."""
+        logger.debug("Handling set TLS private key action")
         if self._relation is None:
             event.fail("No TLS relation available.")
+            logger.debug("Unable to set TLS private key: no TLS relation available")
             return
         try:
             self._relation.request_certificate_creation(event.params.get("internal-key"))
@@ -224,6 +232,8 @@ class RelationEndpoint(ops.Object):
             event.fail(f"Failed to request certificate: {e}")
             logger.exception("Failed to set TLS private key via action")
             raise
+        else:
+            logger.debug("Handled set TLS private key action")
 
     def _on_tls_relation_joined(self, _) -> None:
         """Request certificate when TLS relation joined."""
@@ -231,8 +241,10 @@ class RelationEndpoint(ops.Object):
 
     def _on_tls_relation_broken(self, _) -> None:
         """Delete TLS certificate."""
+        logger.debug("Deleting TLS certificate")
         self._relation.peer_unit_databag.clear()
         self._charm.workload.disable_tls()
+        logger.debug("Deleted TLS certificate")
 
     def _on_certificate_available(self, event: tls_certificates.CertificateAvailableEvent) -> None:
         """Save TLS certificate."""

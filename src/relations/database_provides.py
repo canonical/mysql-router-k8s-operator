@@ -136,13 +136,20 @@ class RelationEndpoint:
         shell: mysql_shell.Shell,
     ) -> None:
         """Create requested users and delete inactive users."""
+        logger.debug(
+            f"Reconciling users {event=}, {event_is_database_requires_broken=}, {router_endpoint=}"
+        )
         requested_users = self._requested_users(
             event=event, event_is_database_requires_broken=event_is_database_requires_broken
         )
         created_users = self._created_users
+        logger.debug(f"State of reconcile users {requested_users=}, {created_users=}")
         for relation in requested_users:
             if relation not in created_users:
                 relation.create_database_and_user(router_endpoint=router_endpoint, shell=shell)
         for relation in created_users:
             if relation not in requested_users:
                 relation.delete_user(shell=shell)
+        logger.debug(
+            f"Reconciled users {event=}, {event_is_database_requires_broken=}, {router_endpoint=}"
+        )
