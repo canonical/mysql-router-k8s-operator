@@ -19,7 +19,6 @@ import charm
 
 _PEER_RELATION_ENDPOINT_NAME = "mysql-router-peers"
 logger = logging.getLogger(__name__)
-# TODO: fix logging levels
 
 
 class _PeerUnitDatabag:
@@ -253,7 +252,7 @@ class RelationEndpoint(ops.Object):
     def _on_certificate_expiring(self, event: tls_certificates.CertificateExpiringEvent) -> None:
         """Request the new certificate when old certificate is expiring."""
         if event.certificate != self._relation.peer_unit_databag.certificate:
-            logger.error("An unknown certificate expiring.")
+            logger.error("Unknown certificate expiring")
             return
 
         self._relation.request_certificate_renewal()
