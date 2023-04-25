@@ -32,7 +32,7 @@ class Shell:
     def _run_commands(self, commands: list[str]) -> None:
         """Connect to MySQL cluster and run commands."""
         commands.insert(
-            0, f"shell.connect('{self._username}:{self._password}@{self._host}:{self._port}"
+            0, f"shell.connect('{self._username}:{self._password}@{self._host}:{self._port}')"
         )
         self._container.push(self._TEMPORARY_SCRIPT_FILE, "\n".join(commands))
         try:
