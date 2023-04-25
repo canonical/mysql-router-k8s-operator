@@ -186,7 +186,7 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
             f"{isinstance(self.workload, workload.AuthenticatedWorkload)=}, "
             f"{self.database_requires.relation and self.database_requires.relation.is_breaking(event)=}, "
             f"{self.workload.container_ready=}, "
-            f"{self.workload.enabled=}"
+            f"{self.workload.container_ready and self.workload.enabled=}"
         )
         if (
             self.unit.is_leader()
