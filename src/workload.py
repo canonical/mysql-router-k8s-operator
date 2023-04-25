@@ -58,7 +58,7 @@ class AuthenticatedWorkload(Workload):
     _host: str
     _port: str
 
-    _ROUTER_USERNAME = "mysqlrouter"
+    _UNIX_USERNAME = "mysql"
     _ROUTER_CONFIG_DIRECTORY = pathlib.Path("/tmp/mysqlrouter")
     _TLS_CONFIG_FILE = "tls.conf"
     _TLS_KEY_FILE = "custom-key.pem"
@@ -96,7 +96,7 @@ class AuthenticatedWorkload(Workload):
                 "environment": {
                     "MYSQL_HOST": self._host,
                     "MYSQL_PORT": self._port,
-                    "MYSQL_USER": self._ROUTER_USERNAME,
+                    "MYSQL_USER": self._UNIX_USERNAME,
                     "MYSQL_PASSWORD": password,
                 },
             }
@@ -155,7 +155,7 @@ class AuthenticatedWorkload(Workload):
             # Therefore, if the host or port changes, we do not need to restart MySQL Router
             return
         logger.debug(f"Enabling MySQL Router service {tls=}, {self._host=}, {self._port=}")
-        router_password = self.shell.create_mysql_router_user(self._ROUTER_USERNAME)
+        router_password = self.shell.create_mysql_router_user(self._UNIX_USERNAME)
         self._update_layer(self._get_active_layer(password=router_password, tls=tls))
         logger.debug(f"Enabled MySQL Router service {tls=}, {self._host=}, {self._port=}")
         self._wait_until_mysql_router_ready()
@@ -166,14 +166,14 @@ class AuthenticatedWorkload(Workload):
         if not self._enabled:
             return
         logger.debug("Disabling MySQL Router service")
-        self.shell.delete_user(self._ROUTER_USERNAME)
+        self.shell.delete_user(self._UNIX_USERNAME)
         self._update_layer(self._inactive_layer)
         logger.debug("Disabled MySQL Router service")
 
     def _restart(self, *, tls: bool) -> None:
         """Restart MySQL Router to enable or disable TLS."""
         logger.debug(f"Restarting MySQL Router service {tls=}")
-        router_password = self.shell.change_mysql_router_user_password(self._ROUTER_USERNAME)
+        router_password = self.shell.change_mysql_router_user_password(self._UNIX_USERNAME)
         self._update_layer(self._get_active_layer(password=router_password, tls=tls))
         logger.debug(f"Restarted MySQL Router service {tls=}")
 
@@ -188,8 +188,8 @@ class AuthenticatedWorkload(Workload):
             str(path),
             content,
             permissions=0o600,
-            user=self._ROUTER_USERNAME,
-            group=self._ROUTER_USERNAME,
+            user=self._UNIX_USERNAME,
+            group=self._UNIX_USERNAME,
         )
         logger.debug(f"Wrote file {path=}")
 
