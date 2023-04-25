@@ -12,7 +12,7 @@ import ops
 
 @dataclasses.dataclass
 class _Relation:
-    """Relation to MySQL charm."""
+    """Relation to MySQL charm"""
 
     _interface: data_interfaces.DatabaseRequires
 
@@ -24,24 +24,24 @@ class _Relation:
 
     @property
     def _remote_databag(self) -> dict:
-        """MySQL charm databag."""
+        """MySQL charm databag"""
         return self._interface.fetch_relation_data()[self._id]
 
     @property
     def _endpoint(self) -> str:
-        """MySQL cluster primary endpoint."""
+        """MySQL cluster primary endpoint"""
         endpoints = self._remote_databag["endpoints"].split(",")
         assert len(endpoints) == 1
         return endpoints[0]
 
     @property
     def host(self) -> str:
-        """MySQL cluster primary host."""
+        """MySQL cluster primary host"""
         return self._endpoint.split(":")[0]
 
     @property
     def port(self) -> str:
-        """MySQL cluster primary port."""
+        """MySQL cluster primary port"""
         return self._endpoint.split(":")[1]
 
     @property

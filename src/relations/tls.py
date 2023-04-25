@@ -213,7 +213,7 @@ class RelationEndpoint(ops.Object):
         return self._relation.certificate_saved
 
     def _on_set_tls_private_key(self, event: ops.ActionEvent) -> None:
-        """Action for setting a TLS private key."""
+        """Handle action to set unit TLS private key."""
         if self._relation is None:
             event.fail("No TLS relation available.")
             return

@@ -108,7 +108,7 @@ class AuthenticatedWorkload(Workload):
 
     @property
     def _inactive_layer(self) -> ops.pebble.Layer:
-        """Create layer with startup disabled."""
+        """Layer with startup disabled"""
         return self._get_layer(
             {
                 "override": "replace",

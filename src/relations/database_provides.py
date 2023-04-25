@@ -23,12 +23,12 @@ class _Relation:
 
     @property
     def _local_databag(self) -> ops.RelationDataContent:
-        """MySQL Router charm databag."""
+        """MySQL Router charm databag"""
         return self._relation.data[self._interface.local_app]
 
     @property
     def _remote_databag(self) -> dict:
-        """MySQL charm databag."""
+        """MySQL charm databag"""
         return self._interface.fetch_relation_data()[self.id]
 
     @property
