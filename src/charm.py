@@ -184,7 +184,7 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
             "State of reconcile "
             f"{self.unit.is_leader()=}, "
             f"{isinstance(self.workload, workload.AuthenticatedWorkload)=}, "
-            f"{self.database_requires.relation.is_breaking(event)=}, "
+            f"{self.database_requires.relation and self.database_requires.relation.is_breaking(event)=}, "
             f"{self.workload.container_ready=}"
         )
         if (
