@@ -79,6 +79,7 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
 
     @property
     def workload(self):
+        """MySQL Router workload"""
         # Defined as a property instead of an attribute in __init__ since this class is
         # not re-instantiated between events (if there are deferred events)
         container = self.unit.get_container(workload.Workload.CONTAINER_NAME)

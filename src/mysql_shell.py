@@ -100,6 +100,7 @@ class Shell:
         return password
 
     def delete_user(self, username: str) -> None:
+        """Delete user."""
         logger.debug(f"Deleting {username=}")
         self._run_sql([f"DROP USER `{username}`"])
         logger.debug(f"Deleted {username=}")

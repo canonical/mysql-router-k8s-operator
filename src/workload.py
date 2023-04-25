@@ -27,6 +27,7 @@ class Workload:
 
     @property
     def container_ready(self) -> bool:
+        """Whether container is ready"""
         return self._container.can_connect()
 
     @property
@@ -39,6 +40,7 @@ class Workload:
 
     @property
     def version(self) -> str:
+        """MySQL Router version"""
         process = self._container.exec(["mysqlrouter", "--version"])
         raw_version, _ = process.wait_output()
         for version in raw_version.split():
@@ -106,6 +108,7 @@ class AuthenticatedWorkload(Workload):
 
     @property
     def shell(self) -> mysql_shell.Shell:
+        """MySQL Shell"""
         return mysql_shell.Shell(
             _container=self._container,
             _username=self._admin_username,
