@@ -32,7 +32,7 @@ class Workload:
         return self._container.can_connect()
 
     @property
-    def _enabled(self) -> bool:
+    def enabled(self) -> bool:
         """Service status"""
         service = self._container.get_services(self._SERVICE_NAME).get(self._SERVICE_NAME)
         if service is None:
@@ -158,10 +158,6 @@ class AuthenticatedWorkload(Workload):
 
     def enable(self, *, tls: bool) -> None:
         """Start and enable MySQL Router service."""
-        if self._enabled:
-            # If the host or port changes, MySQL Router will receive topology change notifications from MySQL
-            # Therefore, if the host or port changes, we do not need to restart MySQL Router
-            return
         logger.debug("Enabling MySQL Router service")
         router_password = self.shell.create_mysql_router_user(self._ROUTER_USERNAME)
         self._bootstrap_router(password=router_password, tls=tls)
@@ -171,8 +167,6 @@ class AuthenticatedWorkload(Workload):
 
     def disable(self) -> None:
         """Stop and disable MySQL Router service."""
-        if not self._enabled:
-            return
         logger.debug("Disabling MySQL Router service")
         self.shell.delete_user(self._ROUTER_USERNAME)
         self._update_layer(enabled=False)
@@ -235,7 +229,7 @@ class AuthenticatedWorkload(Workload):
         )
         self._write_file(self._ROUTER_CONFIG_DIRECTORY / self._TLS_KEY_FILE, key)
         self._write_file(self._ROUTER_CONFIG_DIRECTORY / self._TLS_CERTIFICATE_FILE, certificate)
-        if self._enabled:
+        if self.enabled:
             self._restart(tls=True)
         logger.debug("Enabled TLS")
 
@@ -244,6 +238,6 @@ class AuthenticatedWorkload(Workload):
         logger.debug("Disabling TLS")
         for file in [self._TLS_CONFIG_FILE, self._TLS_KEY_FILE, self._TLS_CERTIFICATE_FILE]:
             self._delete_file(self._ROUTER_CONFIG_DIRECTORY / file)
-        if self._enabled:
+        if self.enabled:
             self._restart(tls=False)
         logger.debug("Disabled TLS")
