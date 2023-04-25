@@ -201,7 +201,7 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
             self._patch_service(self.app.name, ro_port=6447, rw_port=6446)
         except ApiError:
             logger.exception("Failed to patch k8s service")
-            self.unit.status = ops.BlockedStatus("Failed to patch k8s service")
+            raise
 
 
 if __name__ == "__main__":

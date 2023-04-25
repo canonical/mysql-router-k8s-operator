@@ -200,6 +200,8 @@ class RelationEndpoint(ops.Object):
             self._relation.request_certificate_creation(event.params.get("internal-key"))
         except Exception as e:
             event.fail(f"Failed to request certificate: {e}")
+            logger.exception("Failed to set TLS private key via action")
+            raise
 
     def _on_tls_relation_joined(self, _) -> None:
         """Request certificate when TLS relation joined."""

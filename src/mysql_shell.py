@@ -21,8 +21,12 @@ class Shell:
         commands.insert(
             0, f"shell.connect('{self._username}:{self._password}@{self._host}:{self._port}"
         )
-        self._container.exec([])  # TODO
-        # TODO: catch exceptions
+        try:
+            process = self._container.exec([])  # TODO
+            process.wait_output()
+        except ops.pebble.ExecError as e:
+            logger.exception(f"Failed to run {commands=}\nstderr:\n{e.stderr}\n")
+            raise
 
     def _run_sql(self, sql_statements: list[str]) -> None:
         commands = []
