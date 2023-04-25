@@ -92,7 +92,7 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
 
     @property
     def _endpoint(self) -> str:
-        """K8s endpoint for the charm"""
+        """K8s endpoint for MySQL Router"""
         return f"{self.model.app.name}.{self.model.name}.svc.cluster.local"
 
     def _determine_status(self) -> ops.StatusBase:
@@ -187,7 +187,7 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
                 event_is_database_requires_broken=self.database_requires.relation.is_breaking(
                     event
                 ),
-                endpoint=self._endpoint,
+                router_endpoint=self._endpoint,
                 shell=self.workload.shell,
             )
         if (

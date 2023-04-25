@@ -26,10 +26,11 @@ class _PeerUnitDatabag:
     """Peer relation unit databag"""
 
     key: str
+    # CSR stands for certificate signing request
     requested_csr: str
     active_csr: str
     certificate: str
-    ca: str
+    ca: str  # Certificate authority
     chain: str
 
     def __init__(self, databag: ops.RelationDataContent) -> None:

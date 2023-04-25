@@ -22,6 +22,10 @@ class _Relation:
     _interface: data_interfaces.DatabaseProvides
 
     @property
+    def id(self) -> int:
+        return self._relation.id
+
+    @property
     def _local_databag(self) -> ops.RelationDataContent:
         """MySQL Router charm databag"""
         return self._relation.data[self._interface.local_app]
@@ -30,10 +34,6 @@ class _Relation:
     def _remote_databag(self) -> dict:
         """MySQL charm databag"""
         return self._interface.fetch_relation_data()[self.id]
-
-    @property
-    def id(self) -> int:
-        return self._relation.id
 
     @property
     def user_created(self) -> bool:
@@ -53,10 +53,10 @@ class _Relation:
         """Database username"""
         return f"relation-{self.id}"
 
-    def _set_databag(self, *, password: str, endpoint: str) -> None:
+    def _set_databag(self, *, password: str, router_endpoint: str) -> None:
         """Share connection information with application charm."""
-        read_write_endpoint = f"{endpoint}:6446"
-        read_only_endpoint = f"{endpoint}:6447"
+        read_write_endpoint = f"{router_endpoint}:6446"
+        read_only_endpoint = f"{router_endpoint}:6447"
         logger.debug(
             f"Setting databag {self.id=} {self.database=}, {self.username=}, {read_write_endpoint=}, {read_only_endpoint=}"
         )
@@ -74,12 +74,12 @@ class _Relation:
         self._local_databag.clear()
         logger.debug(f"Deleted databag {self.id=}")
 
-    def create_database_and_user(self, *, endpoint: str, shell: mysql_shell.Shell) -> None:
+    def create_database_and_user(self, *, router_endpoint: str, shell: mysql_shell.Shell) -> None:
         """Create database & user and update databag."""
         password = shell.create_application_database_and_user(
             username=self.username, database=self.database
         )
-        self._set_databag(password=password, endpoint=endpoint)
+        self._set_databag(password=password, router_endpoint=router_endpoint)
 
     def delete_user(self, *, shell: mysql_shell.Shell) -> None:
         """Delete user and update databag."""
@@ -132,7 +132,7 @@ class RelationEndpoint:
         *,
         event,
         event_is_database_requires_broken: bool,
-        endpoint: str,
+        router_endpoint: str,
         shell: mysql_shell.Shell,
     ) -> None:
         """Create requested users and delete inactive users."""
@@ -142,7 +142,7 @@ class RelationEndpoint:
         created_users = self._created_users
         for relation in requested_users:
             if relation not in created_users:
-                relation.create_database_and_user(endpoint=endpoint, shell=shell)
+                relation.create_database_and_user(router_endpoint=router_endpoint, shell=shell)
         for relation in created_users:
             if relation not in requested_users:
                 relation.delete_user(shell=shell)
