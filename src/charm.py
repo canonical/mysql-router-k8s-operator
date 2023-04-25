@@ -9,11 +9,11 @@
 import logging
 
 import charms.data_platform_libs.v0.data_interfaces as data_interfaces
+import lightkube
+import lightkube.models.core_v1
+import lightkube.models.meta_v1
+import lightkube.resources.core_v1
 import ops
-from lightkube import ApiError, Client
-from lightkube.models.core_v1 import ServicePort, ServiceSpec
-from lightkube.models.meta_v1 import ObjectMeta
-from lightkube.resources.core_v1 import Pod, Service
 
 import relations.database_provides
 import relations.database_requires
@@ -116,7 +116,7 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
         self.unit.status = self._determine_status()
 
     def _patch_service(self, name: str, ro_port: int, rw_port: int) -> None:
-        """Patch juju created k8s service.
+        """Patch Juju-created k8s service.
         The k8s service will be tied to pod-0 so that the service is auto cleaned by
         k8s when the last pod is scaled down.
         Args:
@@ -124,14 +124,14 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
             ro_port: The read only port.
             rw_port: The read write port.
         """
-        client = Client()
+        client = lightkube.Client()
         pod0 = client.get(
-            res=Pod,
+            res=lightkube.resources.core_v1.Pod,
             name=self.app.name + "-0",
             namespace=self.model.name,
         )
-        service = Service(
-            metadata=ObjectMeta(
+        service = lightkube.resources.core_v1.Service(
+            metadata=lightkube.models.meta_v1.ObjectMeta(
                 name=name,
                 namespace=self.model.name,
                 ownerReferences=pod0.metadata.ownerReferences,
@@ -139,14 +139,14 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
                     "app.kubernetes.io/name": self.app.name,
                 },
             ),
-            spec=ServiceSpec(
+            spec=lightkube.models.core_v1.ServiceSpec(
                 ports=[
-                    ServicePort(
+                    lightkube.models.core_v1.ServicePort(
                         name="mysql-ro",
                         port=ro_port,
                         targetPort=ro_port,
                     ),
-                    ServicePort(
+                    lightkube.models.core_v1.ServicePort(
                         name="mysql-rw",
                         port=rw_port,
                         targetPort=rw_port,
@@ -156,7 +156,7 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
             ),
         )
         client.patch(
-            res=Service,
+            res=lightkube.resources.core_v1.Service,
             obj=service,
             name=service.metadata.name,
             namespace=service.metadata.namespace,
@@ -199,7 +199,7 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
         """Patch existing k8s service to include read-write and read-only services."""
         try:
             self._patch_service(self.app.name, ro_port=6447, rw_port=6446)
-        except ApiError:
+        except lightkube.ApiError:
             logger.exception("Failed to patch k8s service")
             raise
 
