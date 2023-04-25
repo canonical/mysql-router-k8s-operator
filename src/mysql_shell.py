@@ -84,6 +84,14 @@ class Shell:
         logger.debug(f"Created router {username=}")
         return password
 
+    def change_mysql_router_user_password(self, username: str) -> str:
+        """Change MySQL Router service user password."""
+        logger.debug(f"Changing router password {username=}")
+        password = self._generate_password()
+        self._run_sql([f"ALTER USER `{username}` IDENTIFIED BY '{password}'"])
+        logger.debug(f"Changed router password {username=}")
+        return password
+
     def delete_user(self, username: str) -> None:
         logger.debug(f"Deleting {username=}")
         self._run_sql([f"DROP USER `{username}`"])

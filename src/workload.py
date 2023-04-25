@@ -32,16 +32,12 @@ class Workload:
         return self._container.can_connect()
 
     @property
-    def _service(self) -> typing.Optional[ops.pebble.Service]:
-        """MySQL Router service"""
-        return self._container.get_services(self._SERVICE_NAME).get(self._SERVICE_NAME)
-
-    @property
     def _enabled(self) -> bool:
         """Service status"""
-        if self._service is None:
+        service = self._container.get_services(self._SERVICE_NAME).get(self._SERVICE_NAME)
+        if service is None:
             return False
-        return self._service.startup == "enabled"
+        return service.startup == "enabled"
 
     @property
     def version(self) -> str:
@@ -177,8 +173,8 @@ class AuthenticatedWorkload(Workload):
     def _restart(self, *, tls: bool) -> None:
         """Restart MySQL Router to enable or disable TLS."""
         logger.debug(f"Restarting MySQL Router service {tls=}")
-        password = self._service.environment["MYSQL_PASSWORD"]
-        self._update_layer(self._get_active_layer(password=password, tls=tls))
+        router_password = self.shell.change_mysql_router_user_password(self._ROUTER_USERNAME)
+        self._update_layer(self._get_active_layer(password=router_password, tls=tls))
         logger.debug(f"Restarted MySQL Router service {tls=}")
 
     def _write_file(self, path: pathlib.Path, content: str) -> None:
