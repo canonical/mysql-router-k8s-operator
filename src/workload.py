@@ -148,16 +148,21 @@ class AuthenticatedWorkload(Workload):
             raise BaseException()
         sock.close()
 
+    def _bootstrap_router(self, *, password: str, tls: bool) -> None:
+        logger.debug(f"Bootstrapping router {tls=}, {self._host=}, {self._port=}")
+        self._update_layer(self._get_active_layer(password=password, tls=tls))
+        logger.debug(f"Bootstrapped router {tls=}, {self._host=}, {self._port=}")
+
     def enable(self, *, tls: bool) -> None:
         """Start and enable MySQL Router service."""
         if self._enabled:
             # If the host or port changes, MySQL Router will receive topology change notifications from MySQL
             # Therefore, if the host or port changes, we do not need to restart MySQL Router
             return
-        logger.debug(f"Enabling MySQL Router service {tls=}, {self._host=}, {self._port=}")
+        logger.debug("Enabling MySQL Router service")
         router_password = self.shell.create_mysql_router_user(self._UNIX_USERNAME)
-        self._update_layer(self._get_active_layer(password=router_password, tls=tls))
-        logger.debug(f"Enabled MySQL Router service {tls=}, {self._host=}, {self._port=}")
+        self._bootstrap_router(password=router_password, tls=tls)
+        logger.debug("Enabled MySQL Router service")
         self._wait_until_mysql_router_ready()
         # TODO: wait until mysql router ready? https://github.com/canonical/mysql-router-k8s-operator/blob/45cf3be44f27476a0371c67d50d7a0193c0fadc2/src/charm.py#L219
 
@@ -172,10 +177,10 @@ class AuthenticatedWorkload(Workload):
 
     def _restart(self, *, tls: bool) -> None:
         """Restart MySQL Router to enable or disable TLS."""
-        logger.debug(f"Restarting MySQL Router service {tls=}, {self._host=}, {self._port=}")
+        logger.debug("Restarting MySQL Router service")
         router_password = self.shell.change_mysql_router_user_password(self._UNIX_USERNAME)
-        self._update_layer(self._get_active_layer(password=router_password, tls=tls))
-        logger.debug(f"Restarted MySQL Router service {tls=}, {self._host=}, {self._port=}")
+        self._bootstrap_router(password=router_password, tls=tls)
+        logger.debug("Restarted MySQL Router service")
         self._wait_until_mysql_router_ready()
 
     def _write_file(self, path: pathlib.Path, content: str) -> None:
