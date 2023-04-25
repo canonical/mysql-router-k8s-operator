@@ -5,8 +5,7 @@ import string
 
 import ops
 
-from constants import PASSWORD_LENGTH
-
+_PASSWORD_LENGTH = 24
 logger = logging.getLogger(__name__)
 
 
@@ -36,7 +35,7 @@ class Shell:
     @staticmethod
     def _generate_password() -> str:
         choices = string.ascii_letters + string.digits
-        return "".join([secrets.choice(choices) for _ in range(PASSWORD_LENGTH)])
+        return "".join([secrets.choice(choices) for _ in range(_PASSWORD_LENGTH)])
 
     def create_application_database_and_user(self, username: str, database: str) -> str:
         logger.debug(f"Creating {database=} and {username=}")

@@ -19,12 +19,6 @@ import relations.database_provides
 import relations.database_requires
 import relations.tls
 import workload
-from constants import (
-    DATABASE_PROVIDES_RELATION,
-    DATABASE_REQUIRES_RELATION,
-    MYSQL_ROUTER_CONTAINER_NAME,
-    MYSQL_ROUTER_SERVICE_NAME,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +32,7 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
         self.database_requires = relations.database_requires.RelationEndpoint(
             data_interfaces.DatabaseRequires(
                 self,
-                relation_name=DATABASE_REQUIRES_RELATION,
+                relation_name=relations.database_requires.RelationEndpoint.NAME,
                 # HACK: mysqlrouter needs a user, but not a database
                 # Use the DatabaseRequires interface to get a user; disregard the database
                 database_name="_unused_mysqlrouter_database",
@@ -50,19 +44,22 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
             self._reconcile_database_relations,
         )
         self.framework.observe(
-            self.on[DATABASE_REQUIRES_RELATION].relation_broken,
+            self.on[relations.database_requires.RelationEndpoint.NAME].relation_broken,
             self._reconcile_database_relations,
         )
 
         self.database_provides = relations.database_provides.RelationEndpoint(
-            data_interfaces.DatabaseProvides(self, relation_name=DATABASE_PROVIDES_RELATION)
+            data_interfaces.DatabaseProvides(
+                self, relation_name=relations.database_provides.RelationEndpoint.NAME
+            )
         )
         self.framework.observe(
             self.database_provides.interface.on.database_requested,
             self._reconcile_database_relations,
         )
         self.framework.observe(
-            self.on[DATABASE_PROVIDES_RELATION].relation_broken, self._reconcile_database_relations
+            self.on[relations.database_provides.RelationEndpoint.NAME].relation_broken,
+            self._reconcile_database_relations,
         )
 
         self.framework.observe(
@@ -82,17 +79,16 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
     def workload(self):
         # Defined as a property instead of an attribute in __init__ since this class is
         # not re-instantiated between events (if there are deferred events)
-        container = self.unit.get_container(MYSQL_ROUTER_CONTAINER_NAME)
+        container = self.unit.get_container(workload.Workload.CONTAINER_NAME)
         if self.database_requires.relation:
             return workload.AuthenticatedWorkload(
                 container,
-                MYSQL_ROUTER_SERVICE_NAME,
                 self.database_requires.relation.username,
                 self.database_requires.relation.password,
                 self.database_requires.relation.host,
                 self.database_requires.relation.port,
             )
-        return workload.Workload(container, MYSQL_ROUTER_SERVICE_NAME)
+        return workload.Workload(container)
 
     @property
     def _endpoint(self) -> str:
@@ -101,12 +97,9 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
 
     def _determine_status(self) -> ops.StatusBase:
         missing_relations = []
-        for relation, missing in [
-            (DATABASE_REQUIRES_RELATION, self.database_requires.relation is None),
-            (DATABASE_PROVIDES_RELATION, self.database_provides.missing_relation),
-        ]:
-            if missing:
-                missing_relations.append(relation)
+        for relation in [self.database_requires, self.database_provides]:
+            if relation.missing_relation:
+                missing_relations.append(relation.NAME)
         if missing_relations:
             return ops.BlockedStatus(
                 f"Missing relation{'s' if len(missing_relations) > 1 else ''}: {', '.join(missing_relations)}"

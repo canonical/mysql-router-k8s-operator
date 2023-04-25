@@ -48,9 +48,14 @@ class _Relation:
 @dataclasses.dataclass
 class RelationEndpoint:
     interface: data_interfaces.DatabaseRequires
+    NAME = "backend-database"
 
     @property
     def relation(self) -> typing.Optional[_Relation]:
         if not self.interface.is_resource_created():
             return
         return _Relation(self.interface)
+
+    @property
+    def missing_relation(self) -> bool:
+        return self.relation is None

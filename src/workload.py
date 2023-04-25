@@ -1,5 +1,6 @@
 import dataclasses
 import logging
+import pathlib
 import socket
 import string
 import typing
@@ -8,13 +9,6 @@ import ops
 import tenacity
 
 import mysql_shell
-from constants import (
-    MYSQL_ROUTER_USER_NAME,
-    ROUTER_CONFIG_DIRECTORY,
-    TLS_SSL_CERT_FILE,
-    TLS_SSL_CONFIG_FILE,
-    TLS_SSL_KEY_FILE,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +16,8 @@ logger = logging.getLogger(__name__)
 @dataclasses.dataclass
 class Workload:
     _container: ops.Container
-    _service_name: str
+    CONTAINER_NAME = "mysql-router"
+    _SERVICE_NAME = "mysql_router"
 
     @property
     def container_ready(self) -> bool:
@@ -30,7 +25,7 @@ class Workload:
 
     @property
     def _service(self) -> typing.Optional[ops.pebble.Service]:
-        return self._container.get_services(self._service_name).get(self._service_name)
+        return self._container.get_services(self._SERVICE_NAME).get(self._SERVICE_NAME)
 
     @property
     def _enabled(self) -> bool:
@@ -54,6 +49,11 @@ class AuthenticatedWorkload(Workload):
     _admin_password: str
     _host: str
     _port: str
+    _ROUTER_USERNAME = "mysqlrouter"
+    _ROUTER_CONFIG_DIRECTORY = pathlib.Path("/tmp/mysqlrouter")
+    _TLS_CONFIG_FILE = "tls.conf"
+    _TLS_KEY_FILE = "custom-key.pem"
+    _TLS_CERTIFICATE_FILE = "custom-certificate.pem"
 
     def _get_layer(self, service_info: dict) -> ops.pebble.Layer:
         return ops.pebble.Layer(
@@ -61,14 +61,14 @@ class AuthenticatedWorkload(Workload):
                 "summary": "mysql router layer",
                 "description": "the pebble config layer for mysql router",
                 "services": {
-                    self._service_name: service_info,
+                    self._SERVICE_NAME: service_info,
                 },
             }
         )
 
     def _get_active_layer(self, password: str, tls: bool) -> ops.pebble.Layer:
         if tls:
-            command = f"/run.sh mysqlrouter --extra-config {ROUTER_CONFIG_DIRECTORY}/{TLS_SSL_CONFIG_FILE}"
+            command = f"/run.sh mysqlrouter --extra-config {self._ROUTER_CONFIG_DIRECTORY / self._TLS_CONFIG_FILE}"
         else:
             command = "/run.sh mysqlrouter"
         return self._get_layer(
@@ -80,7 +80,7 @@ class AuthenticatedWorkload(Workload):
                 "environment": {
                     "MYSQL_HOST": self._host,
                     "MYSQL_PORT": self._port,
-                    "MYSQL_USER": MYSQL_ROUTER_USER_NAME,
+                    "MYSQL_USER": self._ROUTER_USERNAME,
                     "MYSQL_PASSWORD": password,
                 },
             }
@@ -98,7 +98,7 @@ class AuthenticatedWorkload(Workload):
         )
 
     def _update_layer(self, layer: ops.pebble.Layer) -> None:
-        self._container.add_layer(self._service_name, layer, combine=True)
+        self._container.add_layer(self._SERVICE_NAME, layer, combine=True)
         self._container.replan()
 
     @property
@@ -132,7 +132,7 @@ class AuthenticatedWorkload(Workload):
             # Therefore, if the host or port changes, we do not need to restart MySQL Router
             return
         logger.debug(f"Enabling MySQL Router service {tls=}, {self._host=}, {self._port=}")
-        router_password = self.shell.create_mysql_router_user(MYSQL_ROUTER_USER_NAME)
+        router_password = self.shell.create_mysql_router_user(self._ROUTER_USERNAME)
         self._update_layer(self._get_active_layer(router_password, tls))
         logger.debug(f"Enabled MySQL Router service {tls=}, {self._host=}, {self._port=}")
         self._wait_until_mysql_router_ready()
@@ -142,7 +142,7 @@ class AuthenticatedWorkload(Workload):
         if not self._enabled:
             return
         logger.debug("Disabling MySQL Router service")
-        self.shell.delete_user(MYSQL_ROUTER_USER_NAME)
+        self.shell.delete_user(self._ROUTER_USERNAME)
         self._update_layer(self._inactive_layer)
         logger.debug("Disabled MySQL Router service")
 
@@ -153,7 +153,7 @@ class AuthenticatedWorkload(Workload):
         self._update_layer(self._get_active_layer(password, tls))
         logger.debug("Restarted MySQL Router service")
 
-    def _write_file(self, path: str, content: str) -> None:
+    def _write_file(self, path: pathlib.Path, content: str) -> None:
         """Write content to file.
 
         Args:
@@ -161,19 +161,20 @@ class AuthenticatedWorkload(Workload):
             content: File content
         """
         self._container.push(
-            path,
+            str(path),
             content,
             permissions=0o600,
-            user=MYSQL_ROUTER_USER_NAME,
-            group=MYSQL_ROUTER_USER_NAME,
+            user=self._ROUTER_USERNAME,
+            group=self._ROUTER_USERNAME,
         )
 
-    def _delete_file(self, path: str) -> None:
+    def _delete_file(self, path: pathlib.Path) -> None:
         """Delete file.
 
         Args:
             path: Full filesystem path (with filename)
         """
+        path = str(path)
         if self._container.exists(path):
             self._container.remove_path(path)
 
@@ -186,24 +187,26 @@ class AuthenticatedWorkload(Workload):
         with open("templates/tls.cnf", "r") as template_file:
             template = string.Template(template_file.read())
         config_string = template.substitute(
-            tls_ssl_key_file=f"{ROUTER_CONFIG_DIRECTORY}/{TLS_SSL_KEY_FILE}",
-            tls_ssl_cert_file=f"{ROUTER_CONFIG_DIRECTORY}/{TLS_SSL_CERT_FILE}",
+            tls_ssl_key_file=self._ROUTER_CONFIG_DIRECTORY / self._TLS_KEY_FILE,
+            tls_ssl_cert_file=self._ROUTER_CONFIG_DIRECTORY / self._TLS_CERTIFICATE_FILE,
         )
         return config_string
 
     def enable_tls(self, key: str, certificate: str):
         logger.debug("Enabling TLS")
-        self._write_file(f"{ROUTER_CONFIG_DIRECTORY}/{TLS_SSL_CONFIG_FILE}", self._tls_config_file)
-        self._write_file(f"{ROUTER_CONFIG_DIRECTORY}/{TLS_SSL_KEY_FILE}", key)
-        self._write_file(f"{ROUTER_CONFIG_DIRECTORY}/{TLS_SSL_CERT_FILE}", certificate)
+        self._write_file(
+            self._ROUTER_CONFIG_DIRECTORY / self._TLS_CONFIG_FILE, self._tls_config_file
+        )
+        self._write_file(self._ROUTER_CONFIG_DIRECTORY / self._TLS_KEY_FILE, key)
+        self._write_file(self._ROUTER_CONFIG_DIRECTORY / self._TLS_CERTIFICATE_FILE, certificate)
         if self._enabled:
             self._restart(True)
         logger.debug("Enabled TLS")
 
     def disable_tls(self) -> None:
         logger.debug("Disabling TLS")
-        for file in [TLS_SSL_CONFIG_FILE, TLS_SSL_KEY_FILE, TLS_SSL_CERT_FILE]:
-            self._delete_file(f"{ROUTER_CONFIG_DIRECTORY}/{file}")
+        for file in [self._TLS_CONFIG_FILE, self._TLS_KEY_FILE, self._TLS_CERTIFICATE_FILE]:
+            self._delete_file(self._ROUTER_CONFIG_DIRECTORY / file)
         if self._enabled:
             self._restart(False)
         logger.debug("Disabled TLS")

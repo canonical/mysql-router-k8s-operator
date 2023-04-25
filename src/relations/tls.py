@@ -11,8 +11,8 @@ import charms.tls_certificates_interface.v1.tls_certificates as tls_certificates
 import ops
 
 import charm
-import constants
 
+_PEER_RELATION_ENDPOINT_NAME = "mysql-router-peers"
 logger = logging.getLogger(__name__)
 # TODO: fix logging levels
 
@@ -64,7 +64,7 @@ class _Relation:
 
     @property
     def _peer_relation(self) -> ops.Relation:
-        return self._charm.model.get_relation(constants.PEER_RELATION)
+        return self._charm.model.get_relation(_PEER_RELATION_ENDPOINT_NAME)
 
     @property
     def peer_unit_databag(self) -> _PeerUnitDatabag:
@@ -154,22 +154,22 @@ class _Relation:
 
 
 class RelationEndpoint(ops.Object):
+    NAME = "certificates"
+
     def __init__(self, charm_: charm.MySQLRouterOperatorCharm):
-        super().__init__(charm_, constants.TLS_RELATION)
+        super().__init__(charm_, self.NAME)
         self._charm = charm_
-        self._interface = tls_certificates.TLSCertificatesRequiresV1(
-            self._charm, constants.TLS_RELATION
-        )
+        self._interface = tls_certificates.TLSCertificatesRequiresV1(self._charm, self.NAME)
 
         self.framework.observe(
             self._charm.on.set_tls_private_key_action,
             self._on_set_tls_private_key,
         )
         self.framework.observe(
-            self._charm.on[constants.TLS_RELATION].relation_joined, self._on_tls_relation_joined
+            self._charm.on[self.NAME].relation_joined, self._on_tls_relation_joined
         )
         self.framework.observe(
-            self._charm.on[constants.TLS_RELATION].relation_broken, self._on_tls_relation_broken
+            self._charm.on[self.NAME].relation_broken, self._on_tls_relation_broken
         )
 
         self.framework.observe(
@@ -181,7 +181,7 @@ class RelationEndpoint(ops.Object):
 
     @property
     def _relation(self) -> typing.Optional[_Relation]:
-        if not self._charm.model.get_relation(constants.TLS_RELATION):
+        if not self._charm.model.get_relation(self.NAME):
             return
         return _Relation(self._charm, self._interface)
 
