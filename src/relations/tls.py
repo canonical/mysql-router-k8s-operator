@@ -64,7 +64,7 @@ class _PeerUnitDatabag:
             delattr(self, name)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(kw_only=True)
 class _Relation:
     """Relation to TLS certificate provider"""
 
@@ -203,7 +203,7 @@ class RelationEndpoint(ops.Object):
     def _relation(self) -> typing.Optional[_Relation]:
         if not self._charm.model.get_relation(self.NAME):
             return
-        return _Relation(self._charm, self._interface)
+        return _Relation(_charm=self._charm, _interface=self._interface)
 
     @property
     def certificate_saved(self) -> bool:

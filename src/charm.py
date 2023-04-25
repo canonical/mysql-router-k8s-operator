@@ -33,7 +33,7 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
             data_interfaces.DatabaseRequires(
                 self,
                 relation_name=relations.database_requires.RelationEndpoint.NAME,
-                # HACK: mysqlrouter needs a user, but not a database
+                # HACK: MySQL Router needs a user, but not a database
                 # Use the DatabaseRequires interface to get a user; disregard the database
                 database_name="_unused_mysqlrouter_database",
                 extra_user_roles="mysqlrouter",
@@ -82,13 +82,13 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
         container = self.unit.get_container(workload.Workload.CONTAINER_NAME)
         if self.database_requires.relation:
             return workload.AuthenticatedWorkload(
-                container,
-                self.database_requires.relation.username,
-                self.database_requires.relation.password,
-                self.database_requires.relation.host,
-                self.database_requires.relation.port,
+                _container=container,
+                _admin_username=self.database_requires.relation.username,
+                _admin_password=self.database_requires.relation.password,
+                _host=self.database_requires.relation.host,
+                _port=self.database_requires.relation.port,
             )
-        return workload.Workload(container)
+        return workload.Workload(_container=container)
 
     @property
     def _endpoint(self) -> str:

@@ -17,7 +17,7 @@ _PASSWORD_LENGTH = 24
 logger = logging.getLogger(__name__)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(kw_only=True)
 class Shell:
     """MySQL Shell connected to MySQL cluster"""
 

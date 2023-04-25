@@ -14,7 +14,7 @@ import mysql_shell
 logger = logging.getLogger(__name__)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(kw_only=True)
 class _Relation:
     """Relation to one application charm"""
 
@@ -97,7 +97,10 @@ class RelationEndpoint:
 
     @property
     def _relations(self) -> list[_Relation]:
-        return [_Relation(relation, self.interface) for relation in self.interface.relations]
+        return [
+            _Relation(_relation=relation, _interface=self.interface)
+            for relation in self.interface.relations
+        ]
 
     def _requested_users(
         self, *, event, event_is_database_requires_broken: bool

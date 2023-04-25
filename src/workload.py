@@ -18,7 +18,7 @@ import mysql_shell
 logger = logging.getLogger(__name__)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(kw_only=True)
 class Workload:
     """MySQL Router workload"""
 
@@ -53,7 +53,7 @@ class Workload:
         return ""
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(kw_only=True)
 class AuthenticatedWorkload(Workload):
     """Workload with connection to MySQL cluster"""
 
@@ -126,7 +126,11 @@ class AuthenticatedWorkload(Workload):
     @property
     def shell(self) -> mysql_shell.Shell:
         return mysql_shell.Shell(
-            self._container, self._admin_username, self._admin_password, self._host, self._port
+            _container=self._container,
+            _username=self._admin_username,
+            _password=self._admin_password,
+            _host=self._host,
+            _port=self._port,
         )
 
     @staticmethod
