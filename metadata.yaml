@@ -5,6 +5,7 @@ display-name: MySQL Router
 maintainers:
   - Paulo Machado <paulo.machado@canonical.com>
   - Shayan Patel <shayan.patel@canonical.com>
+  - Carl Csaposs <carl.csaposs@canonical.com>
 description: |
   K8S charmed operator for mysql-router.
 summary: |
