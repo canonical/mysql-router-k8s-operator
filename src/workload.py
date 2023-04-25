@@ -172,10 +172,11 @@ class AuthenticatedWorkload(Workload):
 
     def _restart(self, *, tls: bool) -> None:
         """Restart MySQL Router to enable or disable TLS."""
-        logger.debug(f"Restarting MySQL Router service {tls=}")
+        logger.debug(f"Restarting MySQL Router service {tls=}, {self._host=}, {self._port=}")
         router_password = self.shell.change_mysql_router_user_password(self._UNIX_USERNAME)
         self._update_layer(self._get_active_layer(password=router_password, tls=tls))
-        logger.debug(f"Restarted MySQL Router service {tls=}")
+        logger.debug(f"Restarted MySQL Router service {tls=}, {self._host=}, {self._port=}")
+        self._wait_until_mysql_router_ready()
 
     def _write_file(self, path: pathlib.Path, content: str) -> None:
         """Write content to file.
