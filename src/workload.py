@@ -144,7 +144,7 @@ class AuthenticatedWorkload(Workload):
                     self._UNIX_USERNAME,
                     "--conf-set-option",
                     "http_server.bind_address=127.0.0.1",
-                    "--force",  # TODO: needed?
+                    "--force",  # TODO: Remove after https://github.com/canonical/charmed-mysql-snap/pull/23 is merged
                 ]
             )
             process.wait_output()
