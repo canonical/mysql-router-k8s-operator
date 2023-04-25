@@ -27,17 +27,24 @@ class Shell:
     _host: str
     _port: str
 
+    _TEMPORARY_SCRIPT_FILE = "/tmp/script.py"
+
     def _run_commands(self, commands: list[str]) -> None:
         """Connect to MySQL cluster and run commands."""
         commands.insert(
             0, f"shell.connect('{self._username}:{self._password}@{self._host}:{self._port}"
         )
+        self._container.push(self._TEMPORARY_SCRIPT_FILE, "\n".join(commands))
         try:
-            process = self._container.exec([])  # TODO
+            process = self._container.exec(
+                ["mysqlsh", "--no-wizard", "--python", "--file", self._TEMPORARY_SCRIPT_FILE]
+            )
             process.wait_output()
         except ops.pebble.ExecError as e:
             logger.exception(f"Failed to run {commands=}\nstderr:\n{e.stderr}\n")
             raise
+        finally:
+            self._container.remove_path(self._TEMPORARY_SCRIPT_FILE)
 
     def _run_sql(self, sql_statements: list[str]) -> None:
         """Connect to MySQL cluster and execute SQL."""
