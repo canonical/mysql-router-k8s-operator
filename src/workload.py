@@ -138,7 +138,8 @@ class AuthenticatedWorkload(Workload):
                     "--conf-set-option",
                     "http_server.bind_address=127.0.0.1",
                     "--force",  # TODO: Remove after https://github.com/canonical/charmed-mysql-snap/pull/23 is merged
-                ]
+                ],
+                timeout=5 * 60,
             )
             process.wait_output()
         except ops.pebble.ExecError as e:
