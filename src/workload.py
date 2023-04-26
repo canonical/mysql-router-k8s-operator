@@ -142,9 +142,9 @@ class AuthenticatedWorkload(Workload):
                 timeout=2 * 60,  # todo: adjust?
             )
             process.wait_output()
-        except ops.pebble.ExecError as e:
+        except (ops.pebble.ExecError, ops.pebble.ChangeError) as e:
             logger.exception(f"Failed to bootstrap router\nstderr:\n{e.stderr}\n")
-            logger.debug(f"\nstdout:\n{e.stdout}\n") # TODO: remove
+            logger.debug(f"\nstdout:\n{e.stdout}\n")  # TODO: remove
             raise
         # Enable service
         self._update_layer(enabled=True, tls=tls)
