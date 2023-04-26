@@ -70,7 +70,7 @@ class AuthenticatedWorkload(Workload):
 
     @property
     def _router_username(self) -> str:
-        return f"mysqlrouter_{self._charm.unit.name}"
+        return f"mysqlrouter_{self._charm.unit.name.replace('/', '_')}"
 
     def _update_layer(self, *, enabled: bool, tls: bool = None) -> None:
         """Update and restart services.
