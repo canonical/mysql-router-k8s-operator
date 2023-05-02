@@ -3,6 +3,7 @@
 
 """MySQL Router workload"""
 
+import configparser
 import dataclasses
 import logging
 import pathlib
@@ -55,6 +56,10 @@ class Workload:
 class AuthenticatedWorkload(Workload):
     """Workload with connection to MySQL cluster"""
 
+    # Admin user with permission to:
+    # - Create databases & users
+    # - Grant all privileges on a database to a user
+    # (Different from user that MySQL Router runs with after bootstrap.)
     _admin_username: str
     _admin_password: str
     _host: str
@@ -67,10 +72,6 @@ class AuthenticatedWorkload(Workload):
     _TLS_CONFIG_FILE = "tls.conf"
     _TLS_KEY_FILE = "custom-key.pem"
     _TLS_CERTIFICATE_FILE = "custom-certificate.pem"
-
-    @property
-    def _router_username(self) -> str:
-        return f"mysqlrouter_{self._charm.unit.name.replace('/', '_')}"
 
     def _update_layer(self, *, enabled: bool, tls: bool = None) -> None:
         """Update and restart services.
@@ -118,7 +119,7 @@ class AuthenticatedWorkload(Workload):
             _port=self._port,
         )
 
-    def _bootstrap_router(self, *, password: str, tls: bool) -> None:
+    def _bootstrap_router(self, *, tls: bool) -> None:
         """Bootstrap MySQL Router and enable service."""
         logger.debug(f"Bootstrapping router {tls=}, {self._host=}, {self._port=}")
         try:
@@ -127,24 +128,19 @@ class AuthenticatedWorkload(Workload):
                 [
                     "mysqlrouter",
                     "--bootstrap",
-                    f"{self._router_username}:{password}@{self._host}:{self._port}",
-                    "--strict",
-                    "--account",
-                    self._router_username,
-                    "--account-create",
-                    "never",
+                    f"{self._admin_username}:{self._admin_password}@{self._host}:{self._port}",
+                    "--strict", # todo: does this do anything without `--account`?
                     "--user",
                     self._UNIX_USERNAME,
                     "--conf-set-option",
                     "http_server.bind_address=127.0.0.1",
                     "--force",  # TODO: Remove after https://github.com/canonical/charmed-mysql-snap/pull/23 is merged
                 ],
-                timeout=2 * 60,  # todo: adjust?
+                timeout=30,
             )
             process.wait_output()
-        except (ops.pebble.ExecError, ops.pebble.ChangeError) as e:
+        except ops.pebble.ExecError as e:
             logger.exception(f"Failed to bootstrap router\nstderr:\n{e.stderr}\n")
-            logger.debug(f"\nstdout:\n{e.stdout}\n")  # TODO: remove
             raise
         # Enable service
         self._update_layer(enabled=True, tls=tls)
@@ -159,27 +155,38 @@ class AuthenticatedWorkload(Workload):
             # Therefore, if the host or port changes, we do not need to restart MySQL Router.
             return
         logger.debug("Enabling MySQL Router service")
-        router_password = self.shell.create_mysql_router_user(self._router_username)
-        self._bootstrap_router(password=router_password, tls=tls)
+        self._bootstrap_router(tls=tls)
         logger.debug("Enabled MySQL Router service")
         self._charm.wait_until_mysql_router_ready()
+
+    @property
+    def _router_username(self) -> str:
+        """Read MySQL Router username from config file.
+
+        During bootstrap, MySQL Router creates a config file at
+        `/etc/mysqlrouter/mysqlrouter.conf`. This file contains the username that was created
+        during bootstrap.
+        """
+        config = configparser.ConfigParser()
+        config.read_file(self._container.pull("/etc/mysqlrouter/mysqlrouter.conf"))
+        return config["metadata_cache:bootstrap"]["user"]
 
     def disable(self) -> None:
         """Stop and disable MySQL Router service."""
         if not self._enabled:
             return
         logger.debug("Disabling MySQL Router service")
-        self.shell.delete_user(self._router_username)
         self._update_layer(enabled=False)
+        self.shell.delete_user(self._router_username)
         logger.debug("Disabled MySQL Router service")
 
     def _restart(self, *, tls: bool) -> None:
         """Restart MySQL Router to enable or disable TLS."""
-        logger.debug("Restarting MySQL Router service")
-        router_password = self.shell.change_mysql_router_user_password(self._router_username)
-        self._bootstrap_router(password=router_password, tls=tls)
-        logger.debug("Restarted MySQL Router service")
-        self._charm.wait_until_mysql_router_ready()
+        logger.debug("Restarting MySQL Router")
+        assert self._enabled is True
+        self.disable()
+        self.enable(tls=tls)
+        logger.debug("Restarted MySQL Router")
 
     def _write_file(self, path: pathlib.Path, content: str) -> None:
         """Write content to file.
@@ -223,7 +230,7 @@ class AuthenticatedWorkload(Workload):
         return config_string
 
     def enable_tls(self, *, key: str, certificate: str):
-        """Enable TLS and restart MySQL Router service."""
+        """Enable TLS and restart MySQL Router."""
         logger.debug("Enabling TLS")
         self._write_file(
             self._ROUTER_CONFIG_DIRECTORY / self._TLS_CONFIG_FILE, self._tls_config_file
@@ -235,7 +242,7 @@ class AuthenticatedWorkload(Workload):
         logger.debug("Enabled TLS")
 
     def disable_tls(self) -> None:
-        """Disable TLS and restart MySQL Router service."""
+        """Disable TLS and restart MySQL Router."""
         logger.debug("Disabling TLS")
         for file in [self._TLS_CONFIG_FILE, self._TLS_KEY_FILE, self._TLS_CERTIFICATE_FILE]:
             self._delete_file(self._ROUTER_CONFIG_DIRECTORY / file)

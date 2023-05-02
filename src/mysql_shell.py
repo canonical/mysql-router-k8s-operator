@@ -74,31 +74,6 @@ class Shell:
         logger.debug(f"Created {database=} and {username=}")
         return password
 
-    def create_mysql_router_user(self, username: str) -> str:
-        """Create user to run MySQL Router service."""
-        logger.debug(f"Creating router {username=}")
-        password = self._generate_password()
-        self._run_commands(
-            [
-                "cluster = dba.get_cluster()",
-                "cluster.setup_router_account('"
-                + username
-                + "', {'password': '"
-                + password
-                + "'})",
-            ]
-        )
-        logger.debug(f"Created router {username=}")
-        return password
-
-    def change_mysql_router_user_password(self, username: str) -> str:
-        """Change MySQL Router service user password."""
-        logger.debug(f"Changing router password {username=}")
-        password = self._generate_password()
-        self._run_sql([f"ALTER USER `{username}` IDENTIFIED BY '{password}'"])
-        logger.debug(f"Changed router password {username=}")
-        return password
-
     def delete_user(self, username: str) -> None:
         """Delete user."""
         logger.debug(f"Deleting {username=}")
