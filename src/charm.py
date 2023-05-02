@@ -128,14 +128,14 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
     def wait_until_mysql_router_ready(self) -> None:
         """Wait until a connection to MySQL Router is possible.
 
-        Retry every 5 seconds for up to 360 seconds.
+        Retry every 5 seconds for up to 30 seconds.
         """
         logger.debug("Waiting until MySQL Router is ready")
         self.unit.status = ops.WaitingStatus("MySQL Router starting")
         try:
             for attempt in tenacity.Retrying(
                 reraise=True,
-                stop=tenacity.stop_after_delay(360),  # TODO: adjust timeout
+                stop=tenacity.stop_after_delay(30),
                 wait=tenacity.wait_fixed(5),
             ):
                 with attempt:
