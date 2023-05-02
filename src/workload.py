@@ -121,10 +121,6 @@ class AuthenticatedWorkload(Workload):
 
     def _bootstrap_router(self, *, tls: bool) -> None:
         """Bootstrap MySQL Router and enable service."""
-        # TODO: remove when https://github.com/canonical/charmed-mysql-rock/pull/23 merged
-        self._container.exec(["mkdir", "-p", "/var/log/mysqlrouter"])
-        self._container.exec(["chown", "-R", "584788", "/var/log/mysqlrouter"])
-
         logger.debug(f"Bootstrapping router {tls=}, {self._host=}, {self._port=}")
         try:
             # Bootstrap MySQL Router
