@@ -141,7 +141,7 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
                 with attempt:
                     for port in [6446, 6447]:
                         with socket.socket() as s:
-                            assert s.connect_ex(("localhost", port)) != 0
+                            assert s.connect_ex(("localhost", port)) == 0
         except AssertionError:
             logger.exception("Unable to connect to MySQL Router")
             raise
