@@ -39,7 +39,7 @@ class Workload:
         service = self._container.get_services(self._SERVICE_NAME).get(self._SERVICE_NAME)
         if service is None:
             return False
-        return service.startup == "enabled"
+        return service.startup == ops.pebble.ServiceStartup.ENABLED
 
     @property
     def version(self) -> str:
