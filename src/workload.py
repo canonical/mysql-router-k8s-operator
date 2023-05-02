@@ -129,7 +129,7 @@ class AuthenticatedWorkload(Workload):
                     "mysqlrouter",
                     "--bootstrap",
                     f"{self._admin_username}:{self._admin_password}@{self._host}:{self._port}",
-                    "--strict",  # todo: does this do anything without `--account`?
+                    "--strict",
                     "--user",
                     self._UNIX_USERNAME,
                     "--conf-set-option",
