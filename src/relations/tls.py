@@ -112,7 +112,7 @@ class _Relation:
         self.peer_unit_databag.active_csr = self.peer_unit_databag.requested_csr
         logger.debug(f"Saved TLS certificate {event=}")
         self._charm.workload.enable_tls(
-            self.peer_unit_databag.key, self.peer_unit_databag.certificate
+            key=self.peer_unit_databag.key, certificate=self.peer_unit_databag.certificate
         )
 
     @staticmethod
