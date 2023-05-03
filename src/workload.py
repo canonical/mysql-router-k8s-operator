@@ -88,7 +88,7 @@ class AuthenticatedWorkload(Workload):
             if tls:
                 command = f"{command} --extra-config {self._ROUTER_CONFIG_DIRECTORY / self._TLS_CONFIG_FILE}"
         else:
-            command = ""
+            command = "exit 1" # command should not run TODO
         layer = ops.pebble.Layer(
             {
                 "summary": "mysql router layer",
@@ -106,7 +106,7 @@ class AuthenticatedWorkload(Workload):
             }
         )
         self._container.add_layer(self._SERVICE_NAME, layer, combine=True)
-        self._container.replan()
+        self._container.replan() # don't replan? TODO
 
     @property
     def shell(self) -> mysql_shell.Shell:
