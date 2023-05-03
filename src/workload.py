@@ -86,8 +86,13 @@ class AuthenticatedWorkload(Workload):
             f"mysqlrouter --config {self._ROUTER_CONFIG_DIRECTORY / self._ROUTER_CONFIG_FILE}"
         )
         if tls:
-            command = f"{command} --extra-config {self._ROUTER_CONFIG_DIRECTORY / self._TLS_CONFIG_FILE}"
-        startup = ops.pebble.ServiceStartup.ENABLED.value if enabled else ops.pebble.ServiceStartup.DISABLED.value
+            command = (
+                f"{command} --extra-config {self._ROUTER_CONFIG_DIRECTORY / self._TLS_CONFIG_FILE}"
+            )
+        if enabled:
+            startup = ops.pebble.ServiceStartup.ENABLED.value
+        else:
+            startup = ops.pebble.ServiceStartup.DISABLED.value
         layer = ops.pebble.Layer(
             {
                 "summary": "mysql router layer",
