@@ -105,7 +105,7 @@ class AuthenticatedWorkload(Workload):
             }
         )
         self._container.add_layer(self._SERVICE_NAME, layer, combine=True)
-        self._container.replan() # don't replan? TODO
+        self._container.replan()
 
     @property
     def shell(self) -> mysql_shell.Shell:
