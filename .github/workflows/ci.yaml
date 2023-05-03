@@ -52,6 +52,9 @@ jobs:
           - integration-database
     name: ${{ matrix.tox-environments }}
     needs:
+      - lint
+      # TODO: re-enable after adding unit tests
+      #- unit-test
       - build
     runs-on: ubuntu-latest
     timeout-minutes: 120
@@ -81,15 +84,9 @@ jobs:
           fi
       - name: Run integration tests
         # set a predictable model name so it can be consumed by charm-logdump-action
-        run: sg microk8s -c "tox run -e ${{ matrix.tox-environments }} -- -m '${{ steps.select-tests.outputs.mark_expression }}' --model testing --keep-models"
+        run: sg microk8s -c "tox run -e ${{ matrix.tox-environments }} -- -m '${{ steps.select-tests.outputs.mark_expression }}' --model testing"
         env:
           CI_PACKED_CHARMS: ${{ needs.build.outputs.charms }}
-      - name: Juju status
-        if: always()
-        run: juju status --model testing
-      - name: Juju debug log
-        if: always()
-        run: juju debug-log --model testing --replay --no-tail
       - name: Dump logs
         uses: canonical/charm-logdump-action@main
         if: failure()
