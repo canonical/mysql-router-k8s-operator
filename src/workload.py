@@ -81,14 +81,13 @@ class AuthenticatedWorkload(Workload):
             tls: Whether TLS is enabled. Required if enabled=True
         """
         if enabled:
-            command = (
-                f"mysqlrouter --config {self._ROUTER_CONFIG_DIRECTORY / self._ROUTER_CONFIG_FILE}"
-            )
             assert tls is not None, "`tls` argument required when enabled=True"
-            if tls:
-                command = f"{command} --extra-config {self._ROUTER_CONFIG_DIRECTORY / self._TLS_CONFIG_FILE}"
-        else:
-            command = "exit 1" # command should not run TODO
+        command = (
+            f"mysqlrouter --config {self._ROUTER_CONFIG_DIRECTORY / self._ROUTER_CONFIG_FILE}"
+        )
+        if tls:
+            command = f"{command} --extra-config {self._ROUTER_CONFIG_DIRECTORY / self._TLS_CONFIG_FILE}"
+        startup = ops.pebble.ServiceStartup.ENABLED.value if enabled else ops.pebble.ServiceStartup.DISABLED.value
         layer = ops.pebble.Layer(
             {
                 "summary": "mysql router layer",
@@ -98,7 +97,7 @@ class AuthenticatedWorkload(Workload):
                         "override": "replace",
                         "summary": "mysql router",
                         "command": command,
-                        "startup": "enabled" if enabled else "disabled",
+                        "startup": startup,
                         "user": self._UNIX_USERNAME,
                         "group": self._UNIX_USERNAME,
                     },
@@ -158,6 +157,14 @@ class AuthenticatedWorkload(Workload):
         logger.debug("Enabled MySQL Router service")
         self._charm.wait_until_mysql_router_ready()
 
+    def _restart(self, *, tls: bool) -> None:
+        """Restart MySQL Router to enable or disable TLS."""
+        logger.debug("Restarting MySQL Router")
+        assert self._enabled is True
+        self._bootstrap_router(tls=tls)
+        logger.debug("Restarted MySQL Router")
+        self._charm.wait_until_mysql_router_ready()
+
     @property
     def _router_username(self) -> str:
         """Read MySQL Router username from config file.
@@ -178,14 +185,6 @@ class AuthenticatedWorkload(Workload):
         self._update_layer(enabled=False)
         self.shell.delete_user(self._router_username)
         logger.debug("Disabled MySQL Router service")
-
-    def _restart(self, *, tls: bool) -> None:
-        """Restart MySQL Router to enable or disable TLS."""
-        logger.debug("Restarting MySQL Router")
-        assert self._enabled is True
-        self.disable()
-        self.enable(tls=tls)
-        logger.debug("Restarted MySQL Router")
 
     def _write_file(self, path: pathlib.Path, content: str) -> None:
         """Write content to file.
