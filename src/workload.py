@@ -121,7 +121,20 @@ class AuthenticatedWorkload(Workload):
             _password=self._admin_password,
             _host=self._host,
             _port=self._port,
+            _mysql_relation_id=self._charm.database_requires.relation.id,
         )
+
+    @property
+    def _router_username(self) -> str:
+        """Read MySQL Router username from config file.
+
+        During bootstrap, MySQL Router creates a config file at
+        `/etc/mysqlrouter/mysqlrouter.conf`. This file contains the username that was created
+        during bootstrap.
+        """
+        config = configparser.ConfigParser()
+        config.read_file(self._container.pull("/etc/mysqlrouter/mysqlrouter.conf"))
+        return config["metadata_cache:bootstrap"]["user"]
 
     def _bootstrap_router(self, *, tls: bool) -> None:
         """Bootstrap MySQL Router and enable service."""
@@ -145,6 +158,8 @@ class AuthenticatedWorkload(Workload):
         except ops.pebble.ExecError as e:
             logger.exception(f"Failed to bootstrap router\nstderr:\n{e.stderr}\n")
             raise
+        # TODO: test that this can safely run more than once
+        self.shell.add_attributes_to_mysql_router_user(self._router_username)
         # Enable service
         self._update_layer(enabled=True, tls=tls)
 
@@ -170,25 +185,12 @@ class AuthenticatedWorkload(Workload):
         logger.debug("Restarted MySQL Router")
         self._charm.wait_until_mysql_router_ready()
 
-    @property
-    def _router_username(self) -> str:
-        """Read MySQL Router username from config file.
-
-        During bootstrap, MySQL Router creates a config file at
-        `/etc/mysqlrouter/mysqlrouter.conf`. This file contains the username that was created
-        during bootstrap.
-        """
-        config = configparser.ConfigParser()
-        config.read_file(self._container.pull("/etc/mysqlrouter/mysqlrouter.conf"))
-        return config["metadata_cache:bootstrap"]["user"]
-
     def disable(self) -> None:
         """Stop and disable MySQL Router service."""
         if not self._enabled:
             return
         logger.debug("Disabling MySQL Router service")
         self._update_layer(enabled=False)
-        self.shell.delete_user(self._router_username)
         logger.debug("Disabled MySQL Router service")
 
     def _write_file(self, path: pathlib.Path, content: str) -> None:

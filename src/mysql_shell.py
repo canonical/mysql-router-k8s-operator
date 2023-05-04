@@ -7,6 +7,7 @@ https://dev.mysql.com/doc/mysql-shell/8.0/en/
 """
 
 import dataclasses
+import json
 import logging
 import secrets
 import string
@@ -26,6 +27,7 @@ class Shell:
     _password: str
     _host: str
     _port: str
+    _mysql_relation_id: int
 
     _TEMPORARY_SCRIPT_FILE = "/tmp/script.py"
 
@@ -60,6 +62,14 @@ class Shell:
         choices = string.ascii_letters + string.digits
         return "".join([secrets.choice(choices) for _ in range(_PASSWORD_LENGTH)])
 
+    @property
+    def _user_attributes(self) -> str:
+        # TODO: docstring
+        # TODO: explain that mysql will clean up users
+        # TODO update foo
+        # TODO: check int values accepted
+        return json.dumps({"mysql_relation_id": self._mysql_relation_id})
+
     def create_application_database_and_user(self, *, username: str, database: str) -> str:
         """Create database and user for related database_provides application."""
         logger.debug(f"Creating {database=} and {username=}")
@@ -67,12 +77,16 @@ class Shell:
         self._run_sql(
             [
                 f"CREATE DATABASE IF NOT EXISTS `{database}`",
-                f"CREATE USER `{username}` IDENTIFIED BY '{password}'",
+                f"CREATE USER `{username}` IDENTIFIED BY '{password}' ATTRIBUTE '{self._user_attributes}'"
                 f"GRANT ALL PRIVILEGES ON `{database}`.* TO `{username}`",
             ]
         )
         logger.debug(f"Created {database=} and {username=}")
         return password
+
+    def add_attributes_to_mysql_router_user(self, username: str) -> None:
+        # TODO: docstring
+        self._run_sql([f"ALTER USER `{username}` ATTRIBUTE '{self._user_attributes}'"])
 
     def delete_user(self, username: str) -> None:
         """Delete user."""

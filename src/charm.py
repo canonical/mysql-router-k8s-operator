@@ -231,11 +231,11 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
         if (
             isinstance(self.workload, workload.AuthenticatedWorkload)
             and self.workload.container_ready
+            and not self.database_requires.relation.is_breaking(event)
         ):
-            if self.database_requires.relation.is_breaking(event):
-                self.workload.disable()
-            else:
-                self.workload.enable(tls=self.tls.certificate_saved)
+            self.workload.enable(tls=self.tls.certificate_saved)
+        else:
+            self.workload.disable()
         self._set_status()
 
     def _on_mysql_router_pebble_ready(self, _) -> None:
