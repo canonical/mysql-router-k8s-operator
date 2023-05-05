@@ -64,10 +64,11 @@ class Shell:
 
     @property
     def _user_attributes(self) -> str:
-        # TODO: docstring
-        # TODO: explain that mysql will clean up users
-        # TODO update foo
-        # TODO: check int values accepted
+        """Attributes for (MySQL) users created by this charm.
+
+        If the relation with the MySQL charm is broken, the MySQL charm will use this attribute
+        to delete all users created by this charm.
+        """
         return json.dumps({"mysql_relation_id": self._mysql_relation_id})
 
     def create_application_database_and_user(self, *, username: str, database: str) -> str:
@@ -85,7 +86,7 @@ class Shell:
         return password
 
     def add_attributes_to_mysql_router_user(self, username: str) -> None:
-        # TODO: docstring
+        """Add attributes to user created during MySQL Router bootstrap."""
         self._run_sql([f"ALTER USER `{username}` ATTRIBUTE '{self._user_attributes}'"])
 
     def delete_user(self, username: str) -> None:
