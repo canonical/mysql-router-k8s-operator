@@ -9,7 +9,6 @@
 import logging
 import socket
 
-import charms.data_platform_libs.v0.data_interfaces as data_interfaces
 import lightkube
 import lightkube.models.core_v1
 import lightkube.models.meta_v1
