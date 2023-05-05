@@ -27,6 +27,10 @@ class Workload:
 
     CONTAINER_NAME = "mysql-router"
     _SERVICE_NAME = "mysql_router"
+    _UNIX_USERNAME = "mysql"
+    _ROUTER_CONFIG_DIRECTORY = pathlib.Path("/etc/mysqlrouter")
+    _ROUTER_CONFIG_FILE = "mysqlrouter.conf"
+    _TLS_CONFIG_FILE = "tls.conf"
 
     @property
     def container_ready(self) -> bool:
@@ -50,28 +54,6 @@ class Workload:
             if version.startswith("8"):
                 return version
         return ""
-
-
-@dataclasses.dataclass(kw_only=True)
-class AuthenticatedWorkload(Workload):
-    """Workload with connection to MySQL cluster"""
-
-    # Admin user with permission to:
-    # - Create databases & users
-    # - Grant all privileges on a database to a user
-    # (Different from user that MySQL Router runs with after bootstrap.)
-    _admin_username: str
-    _admin_password: str
-    _host: str
-    _port: str
-    _charm: "charm.MySQLRouterOperatorCharm"
-
-    _UNIX_USERNAME = "mysql"
-    _ROUTER_CONFIG_DIRECTORY = pathlib.Path("/etc/mysqlrouter")
-    _ROUTER_CONFIG_FILE = "mysqlrouter.conf"
-    _TLS_CONFIG_FILE = "tls.conf"
-    _TLS_KEY_FILE = "custom-key.pem"
-    _TLS_CERTIFICATE_FILE = "custom-certificate.pem"
 
     def _update_layer(self, *, enabled: bool, tls: bool = None) -> None:
         """Update and restart services.
@@ -111,6 +93,32 @@ class AuthenticatedWorkload(Workload):
         )
         self._container.add_layer(self._SERVICE_NAME, layer, combine=True)
         self._container.replan()
+
+    def disable(self) -> None:
+        """Stop and disable MySQL Router service."""
+        if not self._enabled:
+            return
+        logger.debug("Disabling MySQL Router service")
+        self._update_layer(enabled=False)
+        logger.debug("Disabled MySQL Router service")
+
+
+@dataclasses.dataclass(kw_only=True)
+class AuthenticatedWorkload(Workload):
+    """Workload with connection to MySQL cluster"""
+
+    # Admin user with permission to:
+    # - Create databases & users
+    # - Grant all privileges on a database to a user
+    # (Different from user that MySQL Router runs with after bootstrap.)
+    _admin_username: str
+    _admin_password: str
+    _host: str
+    _port: str
+    _charm: "charm.MySQLRouterOperatorCharm"
+
+    _TLS_KEY_FILE = "custom-key.pem"
+    _TLS_CERTIFICATE_FILE = "custom-certificate.pem"
 
     @property
     def shell(self) -> mysql_shell.Shell:
@@ -184,14 +192,6 @@ class AuthenticatedWorkload(Workload):
         self._bootstrap_router(tls=tls)
         logger.debug("Restarted MySQL Router")
         self._charm.wait_until_mysql_router_ready()
-
-    def disable(self) -> None:
-        """Stop and disable MySQL Router service."""
-        if not self._enabled:
-            return
-        logger.debug("Disabling MySQL Router service")
-        self._update_layer(enabled=False)
-        logger.debug("Disabled MySQL Router service")
 
     def _write_file(self, path: pathlib.Path, content: str) -> None:
         """Write content to file.
