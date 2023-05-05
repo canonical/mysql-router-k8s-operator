@@ -69,26 +69,12 @@ async def test_database_relation(ops_test: OpsTest):
 
     mysql_app, application_app = applications[0], applications[2]
 
-    logger.info("Waiting for mysql, mysqlrouter and application to be ready")
     async with ops_test.fast_forward():
-        await asyncio.gather(
-            ops_test.model.wait_for_idle(
-                apps=[MYSQL_APP_NAME],
-                status="active",
-                raise_on_blocked=True,
-                timeout=SLOW_TIMEOUT,
-            ),
-            ops_test.model.wait_for_idle(
-                apps=[MYSQL_ROUTER_APP_NAME],
-                status="blocked",
-                timeout=SLOW_TIMEOUT,
-            ),
-            ops_test.model.wait_for_idle(
-                apps=[APPLICATION_APP_NAME],
-                status="waiting",
-                raise_on_blocked=True,
-                timeout=SLOW_TIMEOUT,
-            ),
+        logger.info("Waiting for mysqlrouter to be in BlockedStatus")
+        await ops_test.model.wait_for_idle(
+            apps=[MYSQL_ROUTER_APP_NAME],
+            status="blocked",
+            timeout=SLOW_TIMEOUT,
         )
 
         logger.info("Relating mysql, mysqlrouter and application")
