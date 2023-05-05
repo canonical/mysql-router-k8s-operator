@@ -166,7 +166,6 @@ class AuthenticatedWorkload(Workload):
         except ops.pebble.ExecError as e:
             logger.exception(f"Failed to bootstrap router\nstderr:\n{e.stderr}\n")
             raise
-        # TODO: test that this can safely run more than once
         self.shell.add_attributes_to_mysql_router_user(self._router_username)
         # Enable service
         self._update_layer(enabled=True, tls=tls)
