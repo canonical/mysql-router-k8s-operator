@@ -77,7 +77,7 @@ class Shell:
         self._run_sql(
             [
                 f"CREATE DATABASE IF NOT EXISTS `{database}`",
-                f"CREATE USER `{username}` IDENTIFIED BY '{password}' ATTRIBUTE '{self._user_attributes}'"
+                f"CREATE USER `{username}` IDENTIFIED BY '{password}' ATTRIBUTE '{self._user_attributes}'",
                 f"GRANT ALL PRIVILEGES ON `{database}`.* TO `{username}`",
             ]
         )
