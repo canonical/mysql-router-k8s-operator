@@ -43,7 +43,7 @@ jobs:
   build:
     name: Build charms
     # TODO: revert
-    uses: canonical/data-platform-workflows/.github/workflows/build_charms_with_cache.yaml@charmcraft-2.3
+    uses: canonical/data-platform-workflows/.github/workflows/build_charms_with_cache.yaml@charmcraft-2.3-debug
 
   integration-test:
     strategy:
