@@ -31,38 +31,9 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
     def __init__(self, *args) -> None:
         super().__init__(*args)
 
-        self.database_requires = relations.database_requires.RelationEndpoint(
-            data_interfaces.DatabaseRequires(
-                self,
-                relation_name=relations.database_requires.RelationEndpoint.NAME,
-                # HACK: MySQL Router needs a user, but not a database
-                # Use the DatabaseRequires interface to get a user; disregard the database
-                database_name="_unused_mysqlrouter_database",
-                extra_user_roles="mysqlrouter",
-            )
-        )
-        self.framework.observe(
-            self.database_requires.interface.on.database_created,
-            self._reconcile_database_relations,
-        )
-        self.framework.observe(
-            self.on[relations.database_requires.RelationEndpoint.NAME].relation_broken,
-            self._reconcile_database_relations,
-        )
+        self.database_requires = relations.database_requires.RelationEndpoint(self)
 
-        self.database_provides = relations.database_provides.RelationEndpoint(
-            data_interfaces.DatabaseProvides(
-                self, relation_name=relations.database_provides.RelationEndpoint.NAME
-            )
-        )
-        self.framework.observe(
-            self.database_provides.interface.on.database_requested,
-            self._reconcile_database_relations,
-        )
-        self.framework.observe(
-            self.on[relations.database_provides.RelationEndpoint.NAME].relation_broken,
-            self._reconcile_database_relations,
-        )
+        self.database_provides = relations.database_provides.RelationEndpoint(self)
 
         self.framework.observe(
             getattr(self.on, "mysql_router_pebble_ready"), self._on_mysql_router_pebble_ready
@@ -71,7 +42,7 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
         # Start workload after pod churn or charm upgrade
         # (https://juju.is/docs/sdk/start-event#heading--emission-sequence)
         # Also, set status on first start if no relations active
-        self.framework.observe(self.on.start, self._reconcile_database_relations)
+        self.framework.observe(self.on.start, self.reconcile_database_relations)
 
         self.framework.observe(self.on.leader_elected, self._on_leader_elected)
 
@@ -206,7 +177,7 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
     #  Handlers
     # =======================
 
-    def _reconcile_database_relations(self, event=None) -> None:
+    def reconcile_database_relations(self, event=None) -> None:
         """Handle database requires/provides events."""
         logger.debug(
             "State of reconcile "
@@ -240,7 +211,7 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
 
     def _on_mysql_router_pebble_ready(self, _) -> None:
         self.unit.set_workload_version(self.workload.version)
-        self._reconcile_database_relations()
+        self.reconcile_database_relations()
 
     def _on_leader_elected(self, _) -> None:
         """Patch existing k8s service to include read-write and read-only services."""

@@ -5,11 +5,15 @@
 
 import dataclasses
 import logging
+import typing
 
 import charms.data_platform_libs.v0.data_interfaces as data_interfaces
 import ops
 
 import mysql_shell
+
+if typing.TYPE_CHECKING:
+    import charm
 
 logger = logging.getLogger(__name__)
 
@@ -87,19 +91,27 @@ class _Relation:
         shell.delete_user(self.username)
 
 
-@dataclasses.dataclass
 class RelationEndpoint:
     """Relation endpoint for application charm(s)"""
 
-    interface: data_interfaces.DatabaseProvides
-
     NAME = "database"
+
+    def __init__(self, charm_: "charm.MySQLRouterOperatorCharm") -> None:
+        self._interface = data_interfaces.DatabaseProvides(charm_, relation_name=self.NAME)
+        charm_.framework.observe(
+            self._interface.on.database_requested,
+            charm_.reconcile_database_relations,
+        )
+        charm_.framework.observe(
+            charm_.on[self.NAME].relation_broken,
+            charm_.reconcile_database_relations,
+        )
 
     @property
     def _relations(self) -> list[_Relation]:
         return [
-            _Relation(_relation=relation, _interface=self.interface)
-            for relation in self.interface.relations
+            _Relation(_relation=relation, _interface=self._interface)
+            for relation in self._interface.relations
         ]
 
     def _requested_users(

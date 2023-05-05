@@ -15,7 +15,8 @@ import typing
 import charms.tls_certificates_interface.v1.tls_certificates as tls_certificates
 import ops
 
-import charm
+if typing.TYPE_CHECKING:
+    import charm
 
 _PEER_RELATION_ENDPOINT_NAME = "mysql-router-peers"
 logger = logging.getLogger(__name__)
@@ -68,7 +69,7 @@ class _PeerUnitDatabag:
 class _Relation:
     """Relation to TLS certificate provider"""
 
-    _charm: charm.MySQLRouterOperatorCharm
+    _charm: "charm.MySQLRouterOperatorCharm"
     _interface: tls_certificates.TLSCertificatesRequiresV1
 
     @property
@@ -182,7 +183,7 @@ class RelationEndpoint(ops.Object):
 
     NAME = "certificates"
 
-    def __init__(self, charm_: charm.MySQLRouterOperatorCharm):
+    def __init__(self, charm_: "charm.MySQLRouterOperatorCharm"):
         super().__init__(charm_, self.NAME)
         self._charm = charm_
         self._interface = tls_certificates.TLSCertificatesRequiresV1(self._charm, self.NAME)

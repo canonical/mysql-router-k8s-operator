@@ -9,6 +9,9 @@ import typing
 import charms.data_platform_libs.v0.data_interfaces as data_interfaces
 import ops
 
+if typing.TYPE_CHECKING:
+    import charm
+
 
 @dataclasses.dataclass
 class _Relation:
@@ -59,20 +62,35 @@ class _Relation:
         return isinstance(event, ops.RelationBrokenEvent) and event.relation.id == self.id
 
 
-@dataclasses.dataclass
 class RelationEndpoint:
     """Relation endpoint for MySQL charm"""
 
-    interface: data_interfaces.DatabaseRequires
-
     NAME = "backend-database"
+
+    def __init__(self, charm_: "charm.MySQLRouterOperatorCharm") -> None:
+        self._interface = data_interfaces.DatabaseRequires(
+            charm_,
+            relation_name=self.NAME,
+            # HACK: MySQL Router needs a user, but not a database
+            # Use the DatabaseRequires interface to get a user; disregard the database
+            database_name="_unused_mysqlrouter_database",
+            extra_user_roles="mysqlrouter",
+        )
+        charm_.framework.observe(
+            self._interface.on.database_created,
+            charm_.reconcile_database_relations,
+        )
+        charm_.framework.observe(
+            charm_.on[self.NAME].relation_broken,
+            charm_.reconcile_database_relations,
+        )
 
     @property
     def relation(self) -> typing.Optional[_Relation]:
         """Relation to MySQL charm"""
-        if not self.interface.is_resource_created():
+        if not self._interface.is_resource_created():
             return
-        return _Relation(self.interface)
+        return _Relation(self._interface)
 
     @property
     def missing_relation(self) -> bool:
