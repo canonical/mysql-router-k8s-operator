@@ -94,7 +94,8 @@ class RelationEndpoint:
 
     def is_missing_relation(self, event) -> bool:
         """Whether relation to MySQL charm does (or will) not exist"""
-        if self.relation is not None and self.relation.is_breaking(event):
+        # Cannot use `self.relation.is_breaking()` in case relation exists but resource not created
+        if self._interface.relations and _Relation(self._interface).is_breaking(event):
             return True
         return len(self._interface.relations) == 0
 
