@@ -80,7 +80,9 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
                 f"Missing relation{'s' if len(missing_relations) > 1 else ''}: {', '.join(missing_relations)}"
             )
         if self.database_requires.waiting_for_resource:
-            return ops.WaitingStatus(f"Waiting for related application: {self.database_requires.NAME}")
+            return ops.WaitingStatus(
+                f"Waiting for related application: {self.database_requires.NAME}"
+            )
         if not self.workload.container_ready:
             return ops.MaintenanceStatus("Waiting for container")
         return ops.ActiveStatus()
