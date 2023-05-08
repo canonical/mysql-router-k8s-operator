@@ -95,4 +95,9 @@ class RelationEndpoint:
     @property
     def missing_relation(self) -> bool:
         """Whether relation to MySQL charm does not exist"""
+        return len(self._interface.relations) == 0
+
+    @property
+    def waiting_for_resource(self) -> bool:
+        """Whether resource (database & user) has not been created by the MySQL charm"""
         return self.relation is None
