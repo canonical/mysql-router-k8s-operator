@@ -114,13 +114,8 @@ class RelationEndpoint:
             for relation in self._interface.relations
         ]
 
-    def _requested_users(
-        self, *, event, event_is_database_requires_broken: bool
-    ) -> list[_Relation]:
+    def _requested_users(self, *, event) -> list[_Relation]:
         """Related application charms that have requested a database & user"""
-        if event_is_database_requires_broken:
-            # MySQL cluster connection is being removed; delete all users
-            return []
         requested_users = []
         for relation in self._relations:
             if isinstance(event, ops.RelationBrokenEvent) and event.relation.id == relation.id:
@@ -143,17 +138,17 @@ class RelationEndpoint:
         self,
         *,
         event,
-        event_is_database_requires_broken: bool,
         router_endpoint: str,
         shell: mysql_shell.Shell,
     ) -> None:
-        """Create requested users and delete inactive users."""
-        logger.debug(
-            f"Reconciling users {event=}, {event_is_database_requires_broken=}, {router_endpoint=}"
-        )
-        requested_users = self._requested_users(
-            event=event, event_is_database_requires_broken=event_is_database_requires_broken
-        )
+        """Create requested users and delete inactive users.
+
+        When the relation to the MySQL charm is broken, the MySQL charm will delete all users
+        created by this charm. Therefore, this charm does not need to delete users when that
+        relation is broken.
+        """
+        logger.debug(f"Reconciling users {event=}, {router_endpoint=}")
+        requested_users = self._requested_users(event=event)
         created_users = self._created_users
         logger.debug(f"State of reconcile users {requested_users=}, {created_users=}")
         for relation in requested_users:
@@ -162,6 +157,4 @@ class RelationEndpoint:
         for relation in created_users:
             if relation not in requested_users:
                 relation.delete_user(shell=shell)
-        logger.debug(
-            f"Reconciled users {event=}, {event_is_database_requires_broken=}, {router_endpoint=}"
-        )
+        logger.debug(f"Reconciled users {event=}, {router_endpoint=}")

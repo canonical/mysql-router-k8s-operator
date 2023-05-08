@@ -192,9 +192,6 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
         ):
             self.database_provides.reconcile_users(
                 event=event,
-                event_is_database_requires_broken=self.database_requires.relation.is_breaking(
-                    event
-                ),
                 router_endpoint=self._endpoint,
                 shell=self.workload.shell,
             )
