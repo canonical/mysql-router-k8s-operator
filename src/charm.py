@@ -69,12 +69,12 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
         """K8s endpoint for MySQL Router"""
         return f"{self.model.app.name}.{self.model.name}.svc.cluster.local"
 
-    def _determine_status(self) -> ops.StatusBase:
+    def _determine_status(self, event) -> ops.StatusBase:
         """Report charm status."""
         missing_relations = []
-        for relation in [self.database_requires, self.database_provides]:
-            if relation.missing_relation:
-                missing_relations.append(relation.NAME)
+        for endpoint in [self.database_requires, self.database_provides]:
+            if endpoint.is_missing_relation(event):
+                missing_relations.append(endpoint.NAME)
         if missing_relations:
             return ops.BlockedStatus(
                 f"Missing relation{'s' if len(missing_relations) > 1 else ''}: {', '.join(missing_relations)}"
@@ -87,7 +87,7 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
             return ops.MaintenanceStatus("Waiting for container")
         return ops.ActiveStatus()
 
-    def _set_status(self) -> None:
+    def set_status(self, event) -> None:
         """Set charm status.
 
         Except if charm is in unrecognized state
@@ -96,7 +96,7 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
             self.unit.status, ops.BlockedStatus
         ) and not self.unit.status.message.startswith("Missing relation"):
             return
-        self.unit.status = self._determine_status()
+        self.unit.status = self._determine_status(event)
         logger.debug(f"Set status to {self.unit.status}")
 
     def wait_until_mysql_router_ready(self) -> None:
@@ -121,7 +121,6 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
             raise
         else:
             logger.debug("MySQL Router is ready")
-        self._set_status()
 
     def _patch_service(self, *, name: str, ro_port: int, rw_port: int) -> None:
         """Patch Juju-created k8s service.
@@ -207,7 +206,7 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
             self.workload.enable(tls=self.tls.certificate_saved)
         elif self.workload.container_ready:
             self.workload.disable()
-        self._set_status()
+        self.set_status(event)
 
     def _on_mysql_router_pebble_ready(self, _) -> None:
         self.unit.set_workload_version(self.workload.version)

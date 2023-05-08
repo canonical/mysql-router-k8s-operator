@@ -92,9 +92,10 @@ class RelationEndpoint:
             return
         return _Relation(self._interface)
 
-    @property
-    def missing_relation(self) -> bool:
-        """Whether relation to MySQL charm does not exist"""
+    def is_missing_relation(self, event) -> bool:
+        """Whether relation to MySQL charm does (or will) not exist"""
+        if self.relation.is_breaking(event):
+            return True
         return len(self._interface.relations) == 0
 
     @property

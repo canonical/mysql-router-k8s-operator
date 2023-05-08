@@ -191,6 +191,8 @@ class AuthenticatedWorkload(Workload):
         self._bootstrap_router(tls=tls)
         logger.debug("Restarted MySQL Router")
         self._charm.wait_until_mysql_router_ready()
+        # wait_until_mysql_router_ready will set WaitingStatus—override it with current charm status
+        self._charm.set_status(event=None)
 
     def _write_file(self, path: pathlib.Path, content: str) -> None:
         """Write content to file.

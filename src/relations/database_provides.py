@@ -90,6 +90,10 @@ class _Relation:
         self._delete_databag()
         shell.delete_user(self.username)
 
+    def is_breaking(self, event):
+        """Whether relation will be broken after the current event is handled"""
+        return isinstance(event, ops.RelationBrokenEvent) and event.relation.id == self.id
+
 
 class RelationEndpoint:
     """Relation endpoint for application charm(s)"""
@@ -129,10 +133,12 @@ class RelationEndpoint:
         """Users that have been created and shared with an application charm"""
         return [relation for relation in self._relations if relation.user_created]
 
-    @property
-    def missing_relation(self) -> bool:
-        """Whether zero relations to application charms exist"""
-        return len(self._relations) == 0
+    def is_missing_relation(self, event) -> bool:
+        """Whether zero relations to application charms (will) exist"""
+        for relation in self._relations:
+            if not relation.is_breaking(event):
+                return False
+        return True
 
     def reconcile_users(
         self,
