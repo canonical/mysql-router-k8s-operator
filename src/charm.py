@@ -204,7 +204,7 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
             and not self.database_requires.relation.is_breaking(event)
         ):
             self.workload.enable(tls=self.tls.certificate_saved)
-        else:
+        elif self.workload.container_ready:
             self.workload.disable()
         self._set_status()
 
