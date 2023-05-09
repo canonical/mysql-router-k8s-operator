@@ -20,7 +20,7 @@ class _Relation:
     _interface: data_interfaces.DatabaseRequires
 
     @property
-    def id(self) -> int:
+    def _id(self) -> int:
         relations = self._interface.relations
         assert len(relations) == 1
         return relations[0].id
@@ -28,7 +28,7 @@ class _Relation:
     @property
     def _remote_databag(self) -> dict:
         """MySQL charm databag"""
-        return self._interface.fetch_relation_data()[self.id]
+        return self._interface.fetch_relation_data()[self._id]
 
     @property
     def _endpoint(self) -> str:
@@ -59,7 +59,7 @@ class _Relation:
 
     def is_breaking(self, event):
         """Whether relation will be broken after the current event is handled"""
-        return isinstance(event, ops.RelationBrokenEvent) and event.relation.id == self.id
+        return isinstance(event, ops.RelationBrokenEvent) and event.relation.id == self._id
 
 
 class RelationEndpoint:
