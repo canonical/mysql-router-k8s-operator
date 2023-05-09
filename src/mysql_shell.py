@@ -68,7 +68,7 @@ class Shell:
         If the relation with the MySQL charm is broken, the MySQL charm will use this attribute
         to delete all users created by this charm.
         """
-        return json.dumps({"mysql_relation_user": self.username})
+        return json.dumps({"created_by_user": self.username})
 
     def create_application_database_and_user(self, *, username: str, database: str) -> str:
         """Create database and user for related database_provides application."""
