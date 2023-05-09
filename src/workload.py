@@ -125,11 +125,10 @@ class AuthenticatedWorkload(Workload):
         """MySQL Shell"""
         return mysql_shell.Shell(
             _container=self._container,
-            _username=self._admin_username,
+            username=self._admin_username,
             _password=self._admin_password,
             _host=self._host,
             _port=self._port,
-            _mysql_relation_id=self._charm.database_requires.relation.id,
         )
 
     @property

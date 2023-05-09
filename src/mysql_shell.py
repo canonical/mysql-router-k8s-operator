@@ -23,18 +23,17 @@ class Shell:
     """MySQL Shell connected to MySQL cluster"""
 
     _container: ops.Container
-    _username: str
+    username: str
     _password: str
     _host: str
     _port: str
-    _mysql_relation_id: int
 
     _TEMPORARY_SCRIPT_FILE = "/tmp/script.py"
 
     def _run_commands(self, commands: list[str]) -> None:
         """Connect to MySQL cluster and run commands."""
         commands.insert(
-            0, f"shell.connect('{self._username}:{self._password}@{self._host}:{self._port}')"
+            0, f"shell.connect('{self.username}:{self._password}@{self._host}:{self._port}')"
         )
         self._container.push(self._TEMPORARY_SCRIPT_FILE, "\n".join(commands))
         try:
@@ -69,7 +68,7 @@ class Shell:
         If the relation with the MySQL charm is broken, the MySQL charm will use this attribute
         to delete all users created by this charm.
         """
-        return json.dumps({"mysql_relation_id": self._mysql_relation_id})
+        return json.dumps({"mysql_relation_user": self.username})
 
     def create_application_database_and_user(self, *, username: str, database: str) -> str:
         """Create database and user for related database_provides application."""

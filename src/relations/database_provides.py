@@ -53,27 +53,27 @@ class _Relation:
         """Requested database name"""
         return self._remote_databag["database"]
 
-    @property
-    def _username(self) -> str:
+    def _get_username(self, database_requires_username: str) -> str:
         """Database username"""
-        # Model name is necessary to create a unique username if MySQL Router is deployed in a
-        # different Juju model from MySQL.
+        # Prefix username with username from database requires relation.
+        # This ensures a unique username if MySQL Router is deployed in a different Juju model
+        # from MySQL.
         # (Relation IDs are only unique within a Juju model.)
-        return f"relation-{self._model_name}-{self.id}"
+        return f"{database_requires_username}-{self.id}"
 
-    def _set_databag(self, *, password: str, router_endpoint: str) -> None:
+    def _set_databag(self, *, username: str, password: str, router_endpoint: str) -> None:
         """Share connection information with application charm."""
         read_write_endpoint = f"{router_endpoint}:6446"
         read_only_endpoint = f"{router_endpoint}:6447"
         logger.debug(
-            f"Setting databag {self.id=} {self._database=}, {self._username=}, {read_write_endpoint=}, {read_only_endpoint=}"
+            f"Setting databag {self.id=} {self._database=}, {username=}, {read_write_endpoint=}, {read_only_endpoint=}"
         )
         self._interface.set_database(self.id, self._database)
-        self._interface.set_credentials(self.id, self._username, password)
+        self._interface.set_credentials(self.id, username, password)
         self._interface.set_endpoints(self.id, read_write_endpoint)
         self._interface.set_read_only_endpoints(self.id, read_only_endpoint)
         logger.debug(
-            f"Set databag {self.id=} {self._database=}, {self._username=}, {read_write_endpoint=}, {read_only_endpoint=}"
+            f"Set databag {self.id=} {self._database=}, {username=}, {read_write_endpoint=}, {read_only_endpoint=}"
         )
 
     def _delete_databag(self) -> None:
@@ -84,15 +84,16 @@ class _Relation:
 
     def create_database_and_user(self, *, router_endpoint: str, shell: mysql_shell.Shell) -> None:
         """Create database & user and update databag."""
+        username = self._get_username(shell.username)
         password = shell.create_application_database_and_user(
-            username=self._username, database=self._database
+            username=username, database=self._database
         )
-        self._set_databag(password=password, router_endpoint=router_endpoint)
+        self._set_databag(username=username, password=password, router_endpoint=router_endpoint)
 
     def delete_user(self, *, shell: mysql_shell.Shell) -> None:
         """Delete user and update databag."""
         self._delete_databag()
-        shell.delete_user(self._username)
+        shell.delete_user(self._get_username(shell.username))
 
     def is_breaking(self, event):
         """Whether relation will be broken after the current event is handled"""
