@@ -24,6 +24,7 @@ class _Relation:
 
     _relation: ops.Relation
     _interface: data_interfaces.DatabaseProvides
+    _model_name: str
 
     @property
     def id(self) -> int:
@@ -55,7 +56,10 @@ class _Relation:
     @property
     def username(self) -> str:
         """Database username"""
-        return f"relation-{self.id}"
+        # Model name is necessary to create a unique username if MySQL Router is deployed in a
+        # different Juju model from MySQL.
+        # (Relation IDs are only unique within a Juju model.)
+        return f"relation-{self._model_name}-{self.id}"
 
     def _set_databag(self, *, password: str, router_endpoint: str) -> None:
         """Share connection information with application charm."""
@@ -102,6 +106,7 @@ class RelationEndpoint:
 
     def __init__(self, charm_: "charm.MySQLRouterOperatorCharm") -> None:
         self._interface = data_interfaces.DatabaseProvides(charm_, relation_name=self.NAME)
+        self._model_name = charm_.model.name
         charm_.framework.observe(
             self._interface.on.database_requested,
             charm_.reconcile_database_relations,
@@ -114,7 +119,7 @@ class RelationEndpoint:
     @property
     def _relations(self) -> list[_Relation]:
         return [
-            _Relation(_relation=relation, _interface=self._interface)
+            _Relation(_relation=relation, _interface=self._interface, _model_name=self._model_name)
             for relation in self._interface.relations
         ]
 
