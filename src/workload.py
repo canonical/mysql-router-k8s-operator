@@ -114,7 +114,7 @@ class AuthenticatedWorkload(Workload):
     # - Create databases & users
     # - Grant all privileges on a database to a user
     # (Different from user that MySQL Router runs with after bootstrap.)
-    _database_requires_relation: relations.database_requires.Relation
+    _database_requires_relation: "relations.database_requires.Relation"
     _charm: "charm.MySQLRouterOperatorCharm"
 
     _TLS_KEY_FILE = "custom-key.pem"
