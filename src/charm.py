@@ -56,7 +56,7 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
         if self.database_requires.relation:
             return workload.AuthenticatedWorkload(
                 _container=container,
-                _database_requires_relation=self.database_requires,
+                _database_requires_relation=self.database_requires.relation,
                 _charm=self,
             )
         return workload.Workload(_container=container)
