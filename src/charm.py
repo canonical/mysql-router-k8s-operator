@@ -34,16 +34,16 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
 
         self.database_provides = relations.database_provides.RelationEndpoint(self)
 
+        # Set status on first start if no relations active
+        self.framework.observe(self.on.start, self.reconcile_database_relations)
+
         self.framework.observe(
             getattr(self.on, "mysql_router_pebble_ready"), self._on_mysql_router_pebble_ready
         )
-
-        # Start workload after pod churn or charm upgrade
-        # (https://juju.is/docs/sdk/start-event#heading--emission-sequence)
-        # Also, set status on first start if no relations active
-        self.framework.observe(self.on.start, self.reconcile_database_relations)
-
         self.framework.observe(self.on.leader_elected, self._on_leader_elected)
+
+        # Start workload after pod restart
+        self.framework.observe(self.on.upgrade_charm, self.reconcile_database_relations)
 
         self.tls = relations.tls.RelationEndpoint(self)
 
@@ -56,10 +56,7 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
         if self.database_requires.relation:
             return workload.AuthenticatedWorkload(
                 _container=container,
-                _admin_username=self.database_requires.relation.username,
-                _admin_password=self.database_requires.relation.password,
-                _host=self.database_requires.relation.host,
-                _port=self.database_requires.relation.port,
+                _database_requires_relation=self.database_requires,
                 _charm=self,
             )
         return workload.Workload(_container=container)
@@ -186,7 +183,8 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
             f"{self.unit.is_leader()=}, "
             f"{isinstance(self.workload, workload.AuthenticatedWorkload)=}, "
             f"{self.database_requires.relation and self.database_requires.relation.is_breaking(event)=}, "
-            f"{self.workload.container_ready=}"
+            f"{self.workload.container_ready=}, "
+            f"{isinstance(event, ops.UpgradeCharmEvent)=}"
         )
         if (
             self.unit.is_leader()
@@ -203,6 +201,9 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
             and self.workload.container_ready
             and not self.database_requires.relation.is_breaking(event)
         ):
+            if isinstance(event, ops.UpgradeCharmEvent):
+                # Pod restart (https://juju.is/docs/sdk/start-event#heading--emission-sequence)
+                self.workload.remove_router_from_cluster_metadata()
             self.workload.enable(tls=self.tls.certificate_saved)
         elif self.workload.container_ready:
             self.workload.disable()

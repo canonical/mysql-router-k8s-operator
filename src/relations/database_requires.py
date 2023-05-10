@@ -14,16 +14,20 @@ if typing.TYPE_CHECKING:
 
 
 @dataclasses.dataclass
-class _Relation:
+class Relation:
     """Relation to MySQL charm"""
 
     _interface: data_interfaces.DatabaseRequires
 
     @property
-    def _id(self) -> int:
+    def _relation(self) -> ops.Relation:
         relations = self._interface.relations
         assert len(relations) == 1
-        return relations[0].id
+        return relations[0]
+
+    @property
+    def _id(self) -> int:
+        return self._relation.id
 
     @property
     def _remote_databag(self) -> dict:
@@ -61,6 +65,19 @@ class _Relation:
         """Whether relation will be broken after the current event is handled"""
         return isinstance(event, ops.RelationBrokenEvent) and event.relation.id == self._id
 
+    @property
+    def _local_unit_databag(self) -> ops.RelationDataContent:
+        """Unit databag"""
+        return self._relation.data[self._interface.local_unit]
+
+    def set_router_id_in_unit_databag(self, router_id: str) -> None:
+        """Set router ID in unit databag.
+
+        Used by MySQL charm to remove router metadata from InnoDB cluster when a MySQL Router unit
+        departs the relation
+        """
+        self._local_unit_databag["router_id"] = router_id
+
 
 class RelationEndpoint:
     """Relation endpoint for MySQL charm"""
@@ -86,16 +103,16 @@ class RelationEndpoint:
         )
 
     @property
-    def relation(self) -> typing.Optional[_Relation]:
+    def relation(self) -> typing.Optional[Relation]:
         """Relation to MySQL charm"""
         if not self._interface.is_resource_created():
             return
-        return _Relation(self._interface)
+        return Relation(self._interface)
 
     def is_missing_relation(self, event) -> bool:
         """Whether relation to MySQL charm does (or will) not exist"""
         # Cannot use `self.relation.is_breaking()` in case relation exists but resource not created
-        if self._interface.relations and _Relation(self._interface).is_breaking(event):
+        if self._interface.relations and Relation(self._interface).is_breaking(event):
             return True
         return len(self._interface.relations) == 0
 

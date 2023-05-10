@@ -7,6 +7,7 @@ import configparser
 import dataclasses
 import logging
 import pathlib
+import socket
 import string
 import typing
 
@@ -16,6 +17,8 @@ import mysql_shell
 
 if typing.TYPE_CHECKING:
     import charm
+    import relations.database_requires
+
 logger = logging.getLogger(__name__)
 
 
@@ -107,14 +110,11 @@ class Workload:
 class AuthenticatedWorkload(Workload):
     """Workload with connection to MySQL cluster"""
 
-    # Admin user with permission to:
+    # Database requires relation provides an admin user with permission to:
     # - Create databases & users
     # - Grant all privileges on a database to a user
     # (Different from user that MySQL Router runs with after bootstrap.)
-    _admin_username: str
-    _admin_password: str
-    _host: str
-    _port: str
+    _database_requires_relation: relations.database_requires.Relation
     _charm: "charm.MySQLRouterOperatorCharm"
 
     _TLS_KEY_FILE = "custom-key.pem"
@@ -125,10 +125,64 @@ class AuthenticatedWorkload(Workload):
         """MySQL Shell"""
         return mysql_shell.Shell(
             _container=self._container,
-            username=self._admin_username,
-            _password=self._admin_password,
-            _host=self._host,
-            _port=self._port,
+            username=self._database_requires_relation.username,
+            _password=self._database_requires_relation.password,
+            _host=self._database_requires_relation.host,
+            _port=self._database_requires_relation.port,
+        )
+
+    @property
+    def _router_id(self) -> str:
+        """MySQL Router ID in InnoDB Cluster metadata
+
+        Used to remove MySQL Router metadata from InnoDB cluster
+        """
+        # MySQL Router is bootstrapped without `--directory`—there is one system-wide instance.
+        return f"{socket.getfqdn()}::system"
+
+    def remove_router_from_cluster_metadata(self) -> None:
+        """Remove MySQL Router from InnoDB Cluster metadata.
+
+        On pod restart, MySQL Router bootstrap will fail without `--force` if cluster metadata
+        already exists for the router ID.
+        """
+        self.shell.remove_router_from_cluster_metadata(self._router_id)
+
+    def _bootstrap_router(self, *, tls: bool) -> None:
+        """Bootstrap MySQL Router and enable service."""
+        logger.debug(
+            f"Bootstrapping router {tls=}, {self._database_requires_relation.host=}, {self._database_requires_relation.port=}"
+        )
+        try:
+            # Bootstrap MySQL Router
+            process = self._container.exec(
+                [
+                    "mysqlrouter",
+                    "--bootstrap",
+                    self._database_requires_relation.username
+                    + ":"
+                    + self._database_requires_relation.password
+                    + "@"
+                    + self._database_requires_relation.host
+                    + ":"
+                    + self._database_requires_relation.port,
+                    "--strict",
+                    "--user",
+                    self._UNIX_USERNAME,
+                    "--conf-set-option",
+                    "http_server.bind_address=127.0.0.1",
+                ],
+                timeout=30,
+            )
+            process.wait_output()
+        except ops.pebble.ExecError as e:
+            logger.exception(f"Failed to bootstrap router\nstderr:\n{e.stderr}\n")
+            raise
+        # Enable service
+        self._update_layer(enabled=True, tls=tls)
+
+        logger.debug(
+            f"Bootstrapped router {tls=}, {self._database_requires_relation.host=}, {self._database_requires_relation.port=}"
         )
 
     @property
@@ -143,34 +197,6 @@ class AuthenticatedWorkload(Workload):
         config.read_file(self._container.pull("/etc/mysqlrouter/mysqlrouter.conf"))
         return config["metadata_cache:bootstrap"]["user"]
 
-    def _bootstrap_router(self, *, tls: bool) -> None:
-        """Bootstrap MySQL Router and enable service."""
-        logger.debug(f"Bootstrapping router {tls=}, {self._host=}, {self._port=}")
-        try:
-            # Bootstrap MySQL Router
-            process = self._container.exec(
-                [
-                    "mysqlrouter",
-                    "--bootstrap",
-                    f"{self._admin_username}:{self._admin_password}@{self._host}:{self._port}",
-                    "--strict",
-                    "--user",
-                    self._UNIX_USERNAME,
-                    "--conf-set-option",
-                    "http_server.bind_address=127.0.0.1",
-                ],
-                timeout=30,
-            )
-            process.wait_output()
-        except ops.pebble.ExecError as e:
-            logger.exception(f"Failed to bootstrap router\nstderr:\n{e.stderr}\n")
-            raise
-        self.shell.add_attributes_to_mysql_router_user(self._router_username)
-        # Enable service
-        self._update_layer(enabled=True, tls=tls)
-
-        logger.debug(f"Bootstrapped router {tls=}, {self._host=}, {self._port=}")
-
     def enable(self, *, tls: bool) -> None:
         """Start and enable MySQL Router service."""
         if self._enabled:
@@ -180,6 +206,8 @@ class AuthenticatedWorkload(Workload):
             return
         logger.debug("Enabling MySQL Router service")
         self._bootstrap_router(tls=tls)
+        self.shell.add_attributes_to_mysql_router_user(self._router_username)
+        self._database_requires_relation.set_router_id_in_unit_databag(self._router_id)
         logger.debug("Enabled MySQL Router service")
         self._charm.wait_until_mysql_router_ready()
 

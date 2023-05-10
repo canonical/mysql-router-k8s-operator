@@ -72,7 +72,7 @@ class Shell:
 
     def create_application_database_and_user(self, *, username: str, database: str) -> str:
         """Create database and user for related database_provides application."""
-        logger.debug(f"Creating {database=} and {username=}")
+        logger.debug(f"Creating {database=} and {username=} with {self._user_attributes=}")
         password = self._generate_password()
         self._run_sql(
             [
@@ -81,15 +81,29 @@ class Shell:
                 f"GRANT ALL PRIVILEGES ON `{database}`.* TO `{username}`",
             ]
         )
-        logger.debug(f"Created {database=} and {username=}")
+        logger.debug(f"Created {database=} and {username=} with {self._user_attributes=}")
         return password
 
     def add_attributes_to_mysql_router_user(self, username: str) -> None:
         """Add attributes to user created during MySQL Router bootstrap."""
+        logger.debug(f"Adding {self._user_attributes=} to {username=}")
         self._run_sql([f"ALTER USER `{username}` ATTRIBUTE '{self._user_attributes}'"])
+        logger.debug(f"Added {self._user_attributes=} to {username=}")
 
     def delete_user(self, username: str) -> None:
         """Delete user."""
         logger.debug(f"Deleting {username=}")
         self._run_sql([f"DROP USER `{username}`"])
         logger.debug(f"Deleted {username=}")
+
+    def remove_router_from_cluster_metadata(self, router_id: str) -> None:
+        """Remove MySQL Router from InnoDB Cluster metadata.
+
+        On pod restart, MySQL Router bootstrap will fail without `--force` if cluster metadata
+        already exists for the router ID.
+        """
+        logger.debug(f"Removing {router_id=} from cluster metadata")
+        self._run_commands(
+            ["cluster = dba.get_cluster()", f'cluster.remove_router_metadata("{router_id}")']
+        )
+        logger.debug(f"Removed {router_id=} from cluster metadata")
