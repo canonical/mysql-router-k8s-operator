@@ -41,6 +41,8 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
             getattr(self.on, "mysql_router_pebble_ready"), self._on_mysql_router_pebble_ready
         )
         self.framework.observe(self.on.leader_elected, self._on_leader_elected)
+        self.framework.observe(self.on.leader_elected, self._on_leadership_change)
+        self.framework.observe(self.on.leader_settings_changed, self._on_leadership_change)
 
         # Start workload after pod restart
         self.framework.observe(self.on.upgrade_charm, self.reconcile_database_relations)
@@ -68,18 +70,23 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
 
     def _determine_status(self, event) -> ops.StatusBase:
         """Report charm status."""
-        missing_relations = []
-        for endpoint in [self.database_requires, self.database_provides]:
-            if endpoint.is_missing_relation(event):
-                missing_relations.append(endpoint.NAME)
-        if missing_relations:
-            return ops.BlockedStatus(
-                f"Missing relation{'s' if len(missing_relations) > 1 else ''}: {', '.join(missing_relations)}"
-            )
-        if self.database_requires.waiting_for_resource:
-            return ops.WaitingStatus(
-                f"Waiting for related application: {self.database_requires.NAME}"
-            )
+        if self.unit.is_leader():
+            # Only report status about related applications on leader unit
+            # (The `data_interfaces.DatabaseProvides` `on.database_requested` event is only
+            # emitted on the leader unit—non-leader units may not have a chance to update status
+            # when the status about related applications changes.)
+            missing_relations = []
+            for endpoint in [self.database_requires, self.database_provides]:
+                if endpoint.is_missing_relation(event):
+                    missing_relations.append(endpoint.NAME)
+            if missing_relations:
+                return ops.BlockedStatus(
+                    f"Missing relation{'s' if len(missing_relations) > 1 else ''}: {', '.join(missing_relations)}"
+                )
+            if self.database_requires.waiting_for_resource:
+                return ops.WaitingStatus(
+                    f"Waiting for related application: {self.database_requires.NAME}"
+                )
         if not self.workload.container_ready:
             return ops.MaintenanceStatus("Waiting for container")
         return ops.ActiveStatus()
@@ -212,6 +219,11 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
     def _on_mysql_router_pebble_ready(self, _) -> None:
         self.unit.set_workload_version(self.workload.version)
         self.reconcile_database_relations()
+
+    def _on_leadership_change(self, _) -> None:
+        # The leader unit is responsible for reporting status about related applications.
+        # If leadership changes, all units should update status.
+        self.set_status(event=None)
 
     def _on_leader_elected(self, _) -> None:
         """Patch existing k8s service to include read-write and read-only services."""
