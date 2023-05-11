@@ -110,10 +110,10 @@ class Shell:
         logger.debug(f"Deleting MySQL Router user {router_id=} created by {self.username=}")
         self._run_sql(
             [
-                f"session.run_sql(\"SELECT CONCAT('DROP USER ', GROUP_CONCAT(QUOTE(USER), '@', QUOTE(HOST))) INTO @sql FROM INFORMATION_SCHEMA.USER_ATTRIBUTES WHERE ATTRIBUTE->'$.created_by_user'='{self.username}' AND ATTRIBUTE->'$.router_id'='{router_id}'\")",
-                'session.run_sql("PREPARE stmt FROM @sql")',
-                'session.run_sql("EXECUTE stmt")',
-                'session.run_sql("DEALLOCATE PREPARE stmt")',
+                f"SELECT CONCAT('DROP USER ', GROUP_CONCAT(QUOTE(USER), '@', QUOTE(HOST))) INTO @sql FROM INFORMATION_SCHEMA.USER_ATTRIBUTES WHERE ATTRIBUTE->'$.created_by_user'='{self.username}' AND ATTRIBUTE->'$.router_id'='{router_id}'",
+                "PREPARE stmt FROM @sql",
+                "EXECUTE stmt",
+                "DEALLOCATE PREPARE stmt",
             ]
         )
         logger.debug(f"Deleted MySQL Router user {router_id=} created by {self.username=}")
