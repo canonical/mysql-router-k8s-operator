@@ -140,13 +140,10 @@ class AuthenticatedWorkload(Workload):
         # MySQL Router is bootstrapped without `--directory`—there is one system-wide instance.
         return f"{socket.getfqdn()}::system"
 
-    def remove_router_from_cluster_metadata(self) -> None:
-        """Remove MySQL Router from InnoDB Cluster metadata.
-
-        On pod restart, MySQL Router bootstrap will fail without `--force` if cluster metadata
-        already exists for the router ID.
-        """
+    def cleanup_after_pod_restart(self) -> None:
+        """Remove MySQL Router cluster metadata & user after pod restart."""
         self.shell.remove_router_from_cluster_metadata(self._router_id)
+        self.shell.delete_router_user_after_pod_restart(self._router_id)
 
     def _bootstrap_router(self, *, tls: bool) -> None:
         """Bootstrap MySQL Router and enable service."""
@@ -206,7 +203,9 @@ class AuthenticatedWorkload(Workload):
             return
         logger.debug("Enabling MySQL Router service")
         self._bootstrap_router(tls=tls)
-        self.shell.add_attributes_to_mysql_router_user(self._router_username)
+        self.shell.add_attributes_to_mysql_router_user(
+            username=self._router_username, router_id=self._router_id
+        )
         self._database_requires_relation.set_router_id_in_unit_databag(self._router_id)
         logger.debug("Enabled MySQL Router service")
         self._charm.wait_until_mysql_router_ready()

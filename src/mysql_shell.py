@@ -61,40 +61,60 @@ class Shell:
         choices = string.ascii_letters + string.digits
         return "".join([secrets.choice(choices) for _ in range(_PASSWORD_LENGTH)])
 
-    @property
-    def _user_attributes(self) -> str:
-        """Attributes for (MySQL) users created by this charm.
+    def _get_attributes(self, additional_attributes: dict = None) -> str:
+        """Attributes for (MySQL) users created by this charm
 
         If the relation with the MySQL charm is broken, the MySQL charm will use this attribute
         to delete all users created by this charm.
         """
-        return json.dumps({"created_by_user": self.username})
+        attributes = {"created_by_user": self.username}
+        if additional_attributes:
+            attributes.update(additional_attributes)
+        return json.dumps(attributes)
 
     def create_application_database_and_user(self, *, username: str, database: str) -> str:
         """Create database and user for related database_provides application."""
-        logger.debug(f"Creating {database=} and {username=} with {self._user_attributes=}")
+        attributes = self._get_attributes()
+        logger.debug(f"Creating {database=} and {username=} with {attributes=}")
         password = self._generate_password()
         self._run_sql(
             [
                 f"CREATE DATABASE IF NOT EXISTS `{database}`",
-                f"CREATE USER `{username}` IDENTIFIED BY '{password}' ATTRIBUTE '{self._user_attributes}'",
+                f"CREATE USER `{username}` IDENTIFIED BY '{password}' ATTRIBUTE '{attributes}'",
                 f"GRANT ALL PRIVILEGES ON `{database}`.* TO `{username}`",
             ]
         )
-        logger.debug(f"Created {database=} and {username=} with {self._user_attributes=}")
+        logger.debug(f"Created {database=} and {username=} with {attributes=}")
         return password
 
-    def add_attributes_to_mysql_router_user(self, username: str) -> None:
+    def add_attributes_to_mysql_router_user(self, *, username: str, router_id: str) -> None:
         """Add attributes to user created during MySQL Router bootstrap."""
-        logger.debug(f"Adding {self._user_attributes=} to {username=}")
-        self._run_sql([f"ALTER USER `{username}` ATTRIBUTE '{self._user_attributes}'"])
-        logger.debug(f"Added {self._user_attributes=} to {username=}")
+        attributes = self._get_attributes({"router_id": router_id})
+        logger.debug(f"Adding {attributes=} to {username=}")
+        self._run_sql([f"ALTER USER `{username}` ATTRIBUTE '{attributes}'"])
+        logger.debug(f"Added {attributes=} to {username=}")
 
     def delete_user(self, username: str) -> None:
         """Delete user."""
         logger.debug(f"Deleting {username=}")
         self._run_sql([f"DROP USER `{username}`"])
         logger.debug(f"Deleted {username=}")
+
+    def delete_router_user_after_pod_restart(self, router_id: str) -> None:
+        """Delete MySQL Router user created by a previous instance of this unit.
+
+        Before pod restart, the charm does not have an opportunity to delete the MySQL Router user.
+        During MySQL Router bootstrap, a new user is created. Before bootstrap, the old user
+        should be deleted.
+        """
+        self._run_sql(
+            [
+                f"session.run_sql(\"SELECT CONCAT('DROP USER ', GROUP_CONCAT(QUOTE(USER), '@', QUOTE(HOST))) INTO @sql FROM INFORMATION_SCHEMA.USER_ATTRIBUTES WHERE ATTRIBUTE->'$.created_by_user'='{self.username}' AND ATTRIBUTE->'$.router_id'='{router_id}'\")",
+                'session.run_sql("PREPARE stmt FROM @sql")',
+                'session.run_sql("EXECUTE stmt")',
+                'session.run_sql("DEALLOCATE PREPARE stmt")',
+            ]
+        )
 
     def remove_router_from_cluster_metadata(self, router_id: str) -> None:
         """Remove MySQL Router from InnoDB Cluster metadata.

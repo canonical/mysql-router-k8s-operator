@@ -203,7 +203,7 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
         ):
             if isinstance(event, ops.UpgradeCharmEvent):
                 # Pod restart (https://juju.is/docs/sdk/start-event#heading--emission-sequence)
-                self.workload.remove_router_from_cluster_metadata()
+                self.workload.cleanup_after_pod_restart()
             self.workload.enable(tls=self.tls.certificate_saved)
         elif self.workload.container_ready:
             self.workload.disable()
