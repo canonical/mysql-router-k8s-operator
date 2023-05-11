@@ -253,7 +253,7 @@ class RelationEndpoint(ops.Object):
     def _on_certificate_expiring(self, event: tls_certificates.CertificateExpiringEvent) -> None:
         """Request the new certificate when old certificate is expiring."""
         if event.certificate != self._relation.peer_unit_databag.certificate:
-            logger.error("Unknown certificate expiring")
+            logger.warning("Unknown certificate expiring")
             return
 
         self._relation.request_certificate_renewal()
