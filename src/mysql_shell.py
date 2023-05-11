@@ -107,6 +107,7 @@ class Shell:
         During MySQL Router bootstrap, a new user is created. Before bootstrap, the old user
         should be deleted.
         """
+        logger.debug(f"Deleting MySQL Router user {router_id=} created by {self.username=}")
         self._run_sql(
             [
                 f"session.run_sql(\"SELECT CONCAT('DROP USER ', GROUP_CONCAT(QUOTE(USER), '@', QUOTE(HOST))) INTO @sql FROM INFORMATION_SCHEMA.USER_ATTRIBUTES WHERE ATTRIBUTE->'$.created_by_user'='{self.username}' AND ATTRIBUTE->'$.router_id'='{router_id}'\")",
@@ -115,6 +116,7 @@ class Shell:
                 'session.run_sql("DEALLOCATE PREPARE stmt")',
             ]
         )
+        logger.debug(f"Deleted MySQL Router user {router_id=} created by {self.username=}")
 
     def remove_router_from_cluster_metadata(self, router_id: str) -> None:
         """Remove MySQL Router from InnoDB Cluster metadata.
