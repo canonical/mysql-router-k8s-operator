@@ -194,7 +194,7 @@ class AuthenticatedWorkload(Workload):
         config.read_file(self._container.pull("/etc/mysqlrouter/mysqlrouter.conf"))
         return config["metadata_cache:bootstrap"]["user"]
 
-    def enable(self, *, tls: bool) -> None:
+    def enable(self, *, tls: bool, unit_name: str) -> None:
         """Start and enable MySQL Router service."""
         if self._enabled:
             # If the host or port changes, MySQL Router will receive topology change
@@ -204,7 +204,7 @@ class AuthenticatedWorkload(Workload):
         logger.debug("Enabling MySQL Router service")
         self._bootstrap_router(tls=tls)
         self.shell.add_attributes_to_mysql_router_user(
-            username=self._router_username, router_id=self._router_id
+            username=self._router_username, router_id=self._router_id, unit_name=unit_name
         )
         self._database_requires_relation.set_router_id_in_unit_databag(self._router_id)
         logger.debug("Enabled MySQL Router service")

@@ -209,7 +209,7 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
             if isinstance(event, ops.UpgradeCharmEvent):
                 # Pod restart (https://juju.is/docs/sdk/start-event#heading--emission-sequence)
                 self.workload.cleanup_after_pod_restart()
-            self.workload.enable(tls=self.tls.certificate_saved)
+            self.workload.enable(tls=self.tls.certificate_saved, unit_name=self.unit.name)
         elif self.workload.container_ready:
             self.workload.disable()
         self.set_status(event)
