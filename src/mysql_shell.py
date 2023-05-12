@@ -87,9 +87,13 @@ class Shell:
         logger.debug(f"Created {database=} and {username=} with {attributes=}")
         return password
 
-    def add_attributes_to_mysql_router_user(self, *, username: str, router_id: str, unit_name: str) -> None:
+    def add_attributes_to_mysql_router_user(
+        self, *, username: str, router_id: str, unit_name: str
+    ) -> None:
         """Add attributes to user created during MySQL Router bootstrap."""
-        attributes = self._get_attributes({"router_id": router_id, "created_by_juju_unit": unit_name})
+        attributes = self._get_attributes(
+            {"router_id": router_id, "created_by_juju_unit": unit_name}
+        )
         logger.debug(f"Adding {attributes=} to {username=}")
         self._run_sql([f"ALTER USER `{username}` ATTRIBUTE '{attributes}'"])
         logger.debug(f"Added {attributes=} to {username=}")
