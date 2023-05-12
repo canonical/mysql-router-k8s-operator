@@ -85,7 +85,7 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
                 )
             if self.database_requires.waiting_for_resource:
                 return ops.WaitingStatus(
-                    f"Waiting for related application: {self.database_requires.NAME}"
+                    f"Waiting for related app: {self.database_requires.NAME}"
                 )
         if not self.workload.container_ready:
             return ops.MaintenanceStatus("Waiting for container")
