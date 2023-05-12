@@ -192,7 +192,9 @@ class AuthenticatedWorkload(Workload):
         during bootstrap.
         """
         config = configparser.ConfigParser()
-        config.read_file(self._container.pull("/etc/mysqlrouter/mysqlrouter.conf"))
+        config.read_file(
+            self._container.pull(self._ROUTER_CONFIG_DIRECTORY / self._ROUTER_CONFIG_FILE)
+        )
         return config["metadata_cache:bootstrap"]["user"]
 
     def enable(self, *, tls: bool, unit_name: str) -> None:
