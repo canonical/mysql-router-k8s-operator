@@ -66,7 +66,13 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
     @property
     def _endpoint(self) -> str:
         """K8s endpoint for MySQL Router"""
-        return f"{self.model.app.name}.{self.model.name}.svc.cluster.local"
+        # Example: "mysql-router-k8s-0.mysql-router-k8s-endpoints.my-model.svc.cluster.local"
+        fqdn = socket.getfqdn()
+        # Example: "mysql-router-k8s-0.mysql-router-k8s-endpoints."
+        prefix = f"{self.unit.name.replace('/', '-')}.{self.app.name}-endpoints."
+        assert fqdn.startswith(f"{prefix}{self.model.name}.")
+        # Example: mysql-router-k8s.my-model.svc.cluster.local
+        return f"{self.app.name}.{fqdn.removeprefix(prefix)}"
 
     def _determine_status(self, event) -> ops.StatusBase:
         """Report charm status."""
