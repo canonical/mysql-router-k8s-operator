@@ -129,14 +129,21 @@ class _Relation:
 
     def _generate_csr(self, key: bytes) -> bytes:
         """Generate certificate signing request (CSR)."""
+        unit_name = self._charm.unit.name.replace("/", "-")
         return tls_certificates.generate_csr(
             private_key=key,
             subject=socket.getfqdn(),
             organization=self._charm.app.name,
             sans_dns=[
-                socket.gethostname(),
-                f"{socket.gethostname()}.{self._charm.app.name}-endpoints",
-                socket.getfqdn(),
+                unit_name,
+                f"{unit_name}.{self._charm.app.name}-endpoints",
+                f"{unit_name}.{self._charm.app.name}-endpoints.{self._charm.model_service_domain}",
+                f"{self._charm.app.name}-endpoints",
+                f"{self._charm.app.name}-endpoints.{self._charm.model_service_domain}",
+                f"{unit_name}.{self._charm.app.name}",
+                f"{unit_name}.{self._charm.app.name}.{self._charm.model_service_domain}",
+                self._charm.app.name,
+                f"{self._charm.app.name}.{self._charm.model_service_domain}",
             ],
             sans_ip=[
                 str(self._charm.model.get_binding(self._peer_relation).network.bind_address),
