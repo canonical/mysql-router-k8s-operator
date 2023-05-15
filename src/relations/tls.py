@@ -127,27 +127,18 @@ class _Relation:
             ).encode("utf-8")
         return base64.b64decode(raw_content)
 
-    @property
-    def _unit_hostname(self) -> str:
-        """Get the hostname.localdomain for a unit.
-
-        Translate juju unit name to hostname.localdomain, necessary
-        for correct name resolution under k8s.
-
-        Returns:
-            A string representing the hostname.localdomain of the unit.
-        """
-        return f"{self._charm.unit.name.replace('/', '-')}.{self._charm.app.name}-endpoints"
-
     def _generate_csr(self, key: bytes) -> bytes:
         """Generate certificate signing request (CSR)."""
         return tls_certificates.generate_csr(
             private_key=key,
             subject=socket.getfqdn(),
             organization=self._charm.app.name,
-            sans=[
+            sans_dns=[
                 socket.gethostname(),
-                self._unit_hostname,
+                f"{socket.gethostname()}.{self._charm.app.name}-endpoints",
+                socket.getfqdn(),
+            ],
+            sans_ip=[
                 str(self._charm.model.get_binding(self._peer_relation).network.bind_address),
             ],
         )
