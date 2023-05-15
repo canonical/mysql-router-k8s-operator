@@ -37,10 +37,10 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
         # Set status on first start if no relations active
         self.framework.observe(self.on.start, self.reconcile_database_relations)
 
+        self.framework.observe(self.on.install, self._on_install)
         self.framework.observe(
             getattr(self.on, "mysql_router_pebble_ready"), self._on_mysql_router_pebble_ready
         )
-        self.framework.observe(self.on.leader_elected, self._on_leader_elected)
         self.framework.observe(self.on.leader_elected, self._on_leadership_change)
         self.framework.observe(self.on.leader_settings_changed, self._on_leadership_change)
 
@@ -229,8 +229,10 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
         # If leadership changes, all units should update status.
         self.set_status(event=None)
 
-    def _on_leader_elected(self, _) -> None:
+    def _on_install(self, _) -> None:
         """Patch existing k8s service to include read-write and read-only services."""
+        if not self.unit.is_leader():
+            return
         try:
             self._patch_service(name=self.app.name, ro_port=6447, rw_port=6446)
         except lightkube.ApiError:
