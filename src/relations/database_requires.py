@@ -89,7 +89,7 @@ class RelationEndpoint:
             charm_,
             relation_name=self.NAME,
             # Database name disregarded by MySQL charm if "mysqlrouter" extra user role requested
-            database_name="_unused_mysqlrouter_database",
+            database_name="mysql_innodb_cluster_metadata",
             extra_user_roles="mysqlrouter",
         )
         charm_.framework.observe(
