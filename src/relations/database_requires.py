@@ -88,8 +88,8 @@ class RelationEndpoint:
         self._interface = data_interfaces.DatabaseRequires(
             charm_,
             relation_name=self.NAME,
-            # HACK: MySQL Router needs a user, but not a database
-            # Use the DatabaseRequires interface to get a user; disregard the database
+            # HACK: The MySQL Router charm needs a new user, but not a new database
+            # Use the DatabaseRequires interface to get a user; disregard the created database
             database_name="_unused_mysqlrouter_database",
             extra_user_roles="mysqlrouter",
         )
