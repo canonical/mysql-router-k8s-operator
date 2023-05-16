@@ -65,19 +65,6 @@ class Relation:
         """Whether relation will be broken after the current event is handled"""
         return isinstance(event, ops.RelationBrokenEvent) and event.relation.id == self._id
 
-    @property
-    def _local_unit_databag(self) -> ops.RelationDataContent:
-        """Unit databag"""
-        return self._relation.data[self._interface.local_unit]
-
-    def set_router_id_in_unit_databag(self, router_id: str) -> None:
-        """Set router ID in unit databag.
-
-        Used by MySQL charm to remove router metadata from InnoDB cluster when a MySQL Router unit
-        departs the relation
-        """
-        self._local_unit_databag["router_id"] = router_id
-
 
 class RelationEndpoint:
     """Relation endpoint for MySQL charm"""

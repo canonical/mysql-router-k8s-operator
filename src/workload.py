@@ -209,7 +209,6 @@ class AuthenticatedWorkload(Workload):
         self.shell.add_attributes_to_mysql_router_user(
             username=self._router_username, router_id=self._router_id, unit_name=unit_name
         )
-        self._database_requires_relation.set_router_id_in_unit_databag(self._router_id)
         logger.debug("Enabled MySQL Router service")
         self._charm.wait_until_mysql_router_ready()
 
