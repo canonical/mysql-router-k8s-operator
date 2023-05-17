@@ -235,7 +235,9 @@ class RelationEndpoint(ops.Object):
         event.log("Saved TLS private key")
         logger.debug("Saved TLS private key")
         if self._relation is None:
-            event.log("No TLS certificate relation active. Relate a certificate provider charm to enable TLS.")
+            event.log(
+                "No TLS certificate relation active. Relate a certificate provider charm to enable TLS."
+            )
             logger.debug("No TLS certificate relation active. Skipped certificate request")
         else:
             try:
