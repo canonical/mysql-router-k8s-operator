@@ -230,7 +230,7 @@ class RelationEndpoint(ops.Object):
         if self.peer_unit_databag.private_key:
             event.log("Warning: Deleted existing TLS private key")
             logger.warning("Deleted existing TLS private key")
-        self.peer_unit_databag.private_key = self._parse_tls_key(event.params.get("internal-key"))
+        self.peer_unit_databag.private_key = self._parse_tls_key(event.params["internal-key"])
         event.log("Saved TLS private key")
         logger.debug("Saved TLS private key")
         if self._relation is None:
