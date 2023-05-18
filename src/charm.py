@@ -82,6 +82,7 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
 
     def _determine_status(self, event) -> ops.StatusBase:
         """Report charm status."""
+        statuses = []
         if self.unit.is_leader():
             # Only report status about related applications on leader unit
             # (The `data_interfaces.DatabaseProvides` `on.database_requested` event is only
@@ -89,9 +90,22 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
             # when the status about related applications changes.)
             for endpoint in [self.database_requires, self.database_provides]:
                 if status := endpoint.get_status(event):
-                    return status
+                    statuses.append(status)
         if not self.workload.container_ready:
-            return ops.MaintenanceStatus("Waiting for container")
+            statuses.append(ops.MaintenanceStatus("Waiting for container"))
+        # Report the highest priority status
+        # (Statuses of the same type are reported in the order they were added to `statuses`)
+        status_priority = (
+            ops.BlockedStatus,
+            ops.WaitingStatus,
+            ops.MaintenanceStatus,
+            # Catch any unknown status type
+            ops.StatusBase,
+        )
+        for status_type in status_priority:
+            for status in statuses:
+                if isinstance(status, status_type):
+                    return status
         return ops.ActiveStatus()
 
     def set_status(self, event) -> None:
