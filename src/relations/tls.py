@@ -210,12 +210,18 @@ class RelationEndpoint(ops.Object):
             self._interface.on.certificate_expiring, self._on_certificate_expiring
         )
 
+    @property
+    def _peer_unit_raw_databag(self) -> ops.RelationDataContent:
         peer_relation = self._charm.model.get_relation(_PEER_RELATION_ENDPOINT_NAME)
-        # Peer relation does not exist during install event
-        if peer_relation:
-            peer_unit_databag = peer_relation.data[self._charm.unit]
-            self._peer_unit_databag = _PeerUnitDatabag(peer_unit_databag)
-            self._unit_secrets = _UnitSecrets(peer_unit_databag)
+        return peer_relation.data[self._charm.unit]
+
+    @property
+    def _peer_unit_databag(self) -> _PeerUnitDatabag:
+        return _PeerUnitDatabag(self._peer_unit_raw_databag)
+
+    @property
+    def _unit_secrets(self) -> _UnitSecrets:
+        return _UnitSecrets(self._peer_unit_raw_databag)
 
     @property
     def _relation(self) -> typing.Optional[_Relation]:
