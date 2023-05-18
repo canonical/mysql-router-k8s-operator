@@ -80,6 +80,10 @@ class RelationEndpoint:
             extra_user_roles="mysqlrouter",
         )
         charm_.framework.observe(
+            charm_.on[self.NAME].relation_created,
+            charm_.reconcile_database_relations,
+        )
+        charm_.framework.observe(
             self._interface.on.database_created,
             charm_.reconcile_database_relations,
         )
