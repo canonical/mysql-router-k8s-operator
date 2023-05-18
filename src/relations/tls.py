@@ -211,9 +211,11 @@ class RelationEndpoint(ops.Object):
         )
 
         peer_relation = self._charm.model.get_relation(_PEER_RELATION_ENDPOINT_NAME)
-        peer_unit_databag = peer_relation.data[self._charm.unit]
-        self._peer_unit_databag = _PeerUnitDatabag(peer_unit_databag)
-        self._unit_secrets = _UnitSecrets(peer_unit_databag)
+        # Peer relation does not exist during install event
+        if peer_relation:
+            peer_unit_databag = peer_relation.data[self._charm.unit]
+            self._peer_unit_databag = _PeerUnitDatabag(peer_unit_databag)
+            self._unit_secrets = _UnitSecrets(peer_unit_databag)
 
     @property
     def _relation(self) -> typing.Optional[_Relation]:
