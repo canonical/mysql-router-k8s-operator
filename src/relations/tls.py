@@ -22,10 +22,38 @@ _PEER_RELATION_ENDPOINT_NAME = "mysql-router-peers"
 logger = logging.getLogger(__name__)
 
 
+@dataclasses.dataclass
+class _UnitSecrets:
+    """Secrets for charm unit
+
+    Stored in peer unit databag (to support Juju 2.9)
+    """
+
+    _peer_unit_databag: ops.RelationDataContent
+
+    @property
+    def private_key(self) -> str:
+        """TLS private key
+
+        Generate & save key if it doesn't exist.
+        """
+        return self._peer_unit_databag.setdefault(
+            "secrets.tls_private_key", self.generate_private_key()
+        )
+
+    @private_key.setter
+    def private_key(self, value: str) -> None:
+        self._peer_unit_databag["secrets.tls_private_key"] = value
+
+    @staticmethod
+    def generate_private_key() -> str:
+        """Generate TLS private key."""
+        return tls_certificates.generate_private_key().decode("utf-8")
+
+
 class _PeerUnitDatabag:
     """Peer relation unit databag"""
 
-    private_key: str
     # CSR stands for certificate signing request
     requested_csr: str
     active_csr: str
@@ -60,12 +88,9 @@ class _PeerUnitDatabag:
         self._databag.pop(self._get_key(name), None)
 
     def clear(self) -> None:
-        """Delete all items in databag except for private key."""
-        del self.requested_csr
-        del self.active_csr
-        del self.certificate
-        del self.ca
-        del self.chain
+        """Delete all items in databag."""
+        for name in self._attribute_names:
+            delattr(self, name)
 
 
 @dataclasses.dataclass(kw_only=True)
@@ -75,6 +100,7 @@ class _Relation:
     _charm: "charm.MySQLRouterOperatorCharm"
     _interface: tls_certificates.TLSCertificatesRequiresV1
     _peer_unit_databag: _PeerUnitDatabag
+    _unit_secrets: _UnitSecrets
 
     @property
     def certificate_saved(self) -> bool:
@@ -107,7 +133,7 @@ class _Relation:
         self._peer_unit_databag.active_csr = self._peer_unit_databag.requested_csr
         logger.debug(f"Saved TLS certificate {event=}")
         self._charm.workload.enable_tls(
-            key=self._peer_unit_databag.private_key,
+            key=self._unit_secrets.private_key,
             certificate=self._peer_unit_databag.certificate,
         )
 
@@ -137,12 +163,7 @@ class _Relation:
     def request_certificate_creation(self):
         """Request new TLS certificate from related provider charm."""
         logger.debug("Requesting TLS certificate creation")
-        if key := self._peer_unit_databag.private_key:
-            key = key.encode("utf-8")
-        else:
-            key = tls_certificates.generate_private_key()
-            self._peer_unit_databag.private_key = key.decode("utf-8")
-        csr = self._generate_csr(key)
+        csr = self._generate_csr(self._unit_secrets.private_key.encode("utf-8"))
         self._interface.request_certificate_creation(certificate_signing_request=csr)
         self._peer_unit_databag.requested_csr = csr.decode("utf-8")
         logger.debug(
@@ -153,8 +174,7 @@ class _Relation:
         """Request TLS certificate renewal from related provider charm."""
         logger.debug(f"Requesting TLS certificate renewal {self._peer_unit_databag.active_csr=}")
         old_csr = self._peer_unit_databag.active_csr.encode("utf-8")
-        key = self._peer_unit_databag.private_key.encode("utf-8")
-        new_csr = self._generate_csr(key)
+        new_csr = self._generate_csr(self._unit_secrets.private_key.encode("utf-8"))
         self._interface.request_certificate_renewal(
             old_certificate_signing_request=old_csr, new_certificate_signing_request=new_csr
         )
@@ -190,11 +210,10 @@ class RelationEndpoint(ops.Object):
             self._interface.on.certificate_expiring, self._on_certificate_expiring
         )
 
-    @property
-    def peer_unit_databag(self) -> _PeerUnitDatabag:
-        """MySQL Router charm peer relation unit databag"""
         peer_relation = self._charm.model.get_relation(_PEER_RELATION_ENDPOINT_NAME)
-        return _PeerUnitDatabag(peer_relation.data[self._charm.unit])
+        peer_unit_databag = peer_relation.data[self._charm.unit]
+        self._peer_unit_databag = _PeerUnitDatabag(peer_unit_databag)
+        self._unit_secrets = _UnitSecrets(peer_unit_databag)
 
     @property
     def _relation(self) -> typing.Optional[_Relation]:
@@ -203,7 +222,8 @@ class RelationEndpoint(ops.Object):
         return _Relation(
             _charm=self._charm,
             _interface=self._interface,
-            _peer_unit_databag=self.peer_unit_databag,
+            _peer_unit_databag=self._peer_unit_databag,
+            _unit_secrets=self._unit_secrets,
         )
 
     @property
@@ -227,11 +247,13 @@ class RelationEndpoint(ops.Object):
     def _on_set_tls_private_key(self, event: ops.ActionEvent) -> None:
         """Handle action to set unit TLS private key."""
         logger.debug("Handling set TLS private key action")
-        key = self._parse_tls_key(event.params["internal-key"])
-        if self.peer_unit_databag.private_key:
-            event.log("Warning: Deleted existing TLS private key")
-            logger.warning("Deleted existing TLS private key")
-        self.peer_unit_databag.private_key = key
+        if key := event.params.get("internal-key"):
+            key = self._parse_tls_key(key)
+        else:
+            key = self._unit_secrets.generate_private_key()
+            event.log("No key provided. Generated new key.")
+            logger.debug("No TLS key provided via action. Generated new key.")
+        self._unit_secrets.private_key = key
         event.log("Saved TLS private key")
         logger.debug("Saved TLS private key")
         if self._relation is None:
@@ -257,7 +279,7 @@ class RelationEndpoint(ops.Object):
     def _on_tls_relation_broken(self, _) -> None:
         """Delete TLS certificate."""
         logger.debug("Deleting TLS certificate")
-        self.peer_unit_databag.clear()
+        self._peer_unit_databag.clear()
         self._charm.workload.disable_tls()
         logger.debug("Deleted TLS certificate")
 
@@ -267,7 +289,7 @@ class RelationEndpoint(ops.Object):
 
     def _on_certificate_expiring(self, event: tls_certificates.CertificateExpiringEvent) -> None:
         """Request the new certificate when old certificate is expiring."""
-        if event.certificate != self.peer_unit_databag.certificate:
+        if event.certificate != self._peer_unit_databag.certificate:
             logger.warning("Unknown certificate expiring")
             return
 
