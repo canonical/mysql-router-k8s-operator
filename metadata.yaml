@@ -3,6 +3,7 @@
 name: mysql-router-k8s
 display-name: MySQL Router
 maintainers:
+  - Carl Csaposs <carl.csaposs@canonical.com>
   - Paulo Machado <paulo.machado@canonical.com>
   - Shayan Patel <shayan.patel@canonical.com>
 description: |
@@ -30,7 +31,6 @@ resources:
   mysql-router-image:
     type: oci-image
     description: OCI image for mysql-router
-    # TODO: replace with canonical maintained image
-    upstream-source: dataplatformoci/mysql-router:8.0-22.04_edge
+    upstream-source: ghcr.io/canonical/charmed-mysql@sha256:017605f168fcc569d10372bb74b29ef9041256bd066013dec39e9ceee8c88539
 assumes:
   - k8s-api

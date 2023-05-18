@@ -4,106 +4,140 @@
 #
 # Learn more at: https://juju.is/docs/sdk
 
-"""MySQL-Router k8s charm."""
+"""MySQL Router kubernetes (k8s) charm"""
 
-import json
 import logging
-from typing import Optional, Set
+import socket
 
-from lightkube import ApiError, Client
-from lightkube.models.core_v1 import ServicePort, ServiceSpec
-from lightkube.models.meta_v1 import ObjectMeta
-from lightkube.resources.core_v1 import Pod, Service
-from ops.charm import CharmBase
-from ops.main import main
-from ops.model import ActiveStatus, BlockedStatus, Relation, WaitingStatus
-from ops.pebble import Layer
+import lightkube
+import lightkube.models.core_v1
+import lightkube.models.meta_v1
+import lightkube.resources.core_v1
+import ops
+import tenacity
 
-from constants import (
-    DATABASE_PROVIDES_RELATION,
-    DATABASE_REQUIRES_RELATION,
-    MYSQL_DATABASE_CREATED,
-    MYSQL_ROUTER_CONTAINER_NAME,
-    MYSQL_ROUTER_REQUIRES_DATA,
-    MYSQL_ROUTER_SERVICE_NAME,
-    NUM_UNITS_BOOTSTRAPPED,
-    PEER,
-    UNIT_BOOTSTRAPPED,
-)
-from mysql_router_helpers import MySQLRouter
-from relations.database_provides import DatabaseProvidesRelation
-from relations.database_requires import DatabaseRequiresRelation
-from relations.tls import MySQLRouterTLS
+import relations.database_provides
+import relations.database_requires
+import relations.tls
+import workload
 
 logger = logging.getLogger(__name__)
 
 
-class MySQLRouterOperatorCharm(CharmBase):
-    """Operator charm for MySQLRouter."""
+class MySQLRouterOperatorCharm(ops.CharmBase):
+    """Operator charm for MySQL Router"""
 
-    def __init__(self, *args):
+    def __init__(self, *args) -> None:
         super().__init__(*args)
 
+        self.database_requires = relations.database_requires.RelationEndpoint(self)
+
+        self.database_provides = relations.database_provides.RelationEndpoint(self)
+
+        # Set status on first start if no relations active
+        self.framework.observe(self.on.start, self.reconcile_database_relations)
+
         self.framework.observe(self.on.install, self._on_install)
-        self.framework.observe(self.on.leader_elected, self._on_leader_elected)
         self.framework.observe(
             getattr(self.on, "mysql_router_pebble_ready"), self._on_mysql_router_pebble_ready
         )
-        self.framework.observe(self.on[PEER].relation_changed, self._on_peer_relation_changed)
-        self.framework.observe(self.on.update_status, self._on_update_status)
+        self.framework.observe(self.on.leader_elected, self._on_leadership_change)
+        self.framework.observe(self.on.leader_settings_changed, self._on_leadership_change)
 
-        self.database_provides = DatabaseProvidesRelation(self)
-        self.database_requires = DatabaseRequiresRelation(self)
-        self.tls = MySQLRouterTLS(self)
+        # Start workload after pod restart
+        self.framework.observe(self.on.upgrade_charm, self.reconcile_database_relations)
 
-    # =======================
-    #  Properties
-    # =======================
+        self.tls = relations.tls.RelationEndpoint(self)
 
     @property
-    def peers(self) -> Optional[Relation]:
-        """Fetch the peer relation."""
-        return self.model.get_relation(PEER)
+    def workload(self):
+        """MySQL Router workload"""
+        # Defined as a property instead of an attribute in __init__ since this class is
+        # not re-instantiated between events (if there are deferred events)
+        container = self.unit.get_container(workload.Workload.CONTAINER_NAME)
+        if self.database_requires.relation:
+            return workload.AuthenticatedWorkload(
+                _container=container,
+                _database_requires_relation=self.database_requires.relation,
+                _charm=self,
+            )
+        return workload.Workload(_container=container)
 
     @property
-    def app_peer_data(self):
-        """Application peer data object."""
-        if not self.peers:
-            return {}
-
-        return self.peers.data[self.app]
-
-    @property
-    def unit_peer_data(self):
-        """Unit peer data object."""
-        if not self.peers:
-            return {}
-
-        return self.peers.data[self.unit]
+    def model_service_domain(self):
+        """K8s service domain for Juju model"""
+        # Example: "mysql-router-k8s-0.mysql-router-k8s-endpoints.my-model.svc.cluster.local"
+        fqdn = socket.getfqdn()
+        # Example: "mysql-router-k8s-0.mysql-router-k8s-endpoints."
+        prefix = f"{self.unit.name.replace('/', '-')}.{self.app.name}-endpoints."
+        assert fqdn.startswith(f"{prefix}{self.model.name}.")
+        # Example: my-model.svc.cluster.local
+        return fqdn.removeprefix(prefix)
 
     @property
-    def endpoint(self):
-        """The k8s endpoint for the charm."""
-        return f"{self.model.app.name}.{self.model.name}.svc.cluster.local"
+    def _endpoint(self) -> str:
+        """K8s endpoint for MySQL Router"""
+        # Example: mysql-router-k8s.my-model.svc.cluster.local
+        return f"{self.app.name}.{self.model_service_domain}"
 
-    @property
-    def unit_hostname(self) -> str:
-        """Get the hostname.localdomain for a unit.
+    def _determine_status(self, event) -> ops.StatusBase:
+        """Report charm status."""
+        if self.unit.is_leader():
+            # Only report status about related applications on leader unit
+            # (The `data_interfaces.DatabaseProvides` `on.database_requested` event is only
+            # emitted on the leader unit—non-leader units may not have a chance to update status
+            # when the status about related applications changes.)
+            missing_relations = []
+            for endpoint in [self.database_requires, self.database_provides]:
+                if endpoint.is_missing_relation(event):
+                    missing_relations.append(endpoint.NAME)
+            if missing_relations:
+                return ops.BlockedStatus(
+                    f"Missing relation{'s' if len(missing_relations) > 1 else ''}: {', '.join(missing_relations)}"
+                )
+            if self.database_requires.waiting_for_resource:
+                return ops.WaitingStatus(f"Waiting for related app: {self.database_requires.NAME}")
+        if not self.workload.container_ready:
+            return ops.MaintenanceStatus("Waiting for container")
+        return ops.ActiveStatus()
 
-        Translate juju unit name to hostname.localdomain, necessary
-        for correct name resolution under k8s.
+    def set_status(self, event) -> None:
+        """Set charm status.
 
-        Returns:
-            A string representing the hostname.localdomain of the unit.
+        Except if charm is in unrecognized state
         """
-        return f"{self.unit.name.replace('/', '-')}.{self.app.name}-endpoints"
+        if isinstance(
+            self.unit.status, ops.BlockedStatus
+        ) and not self.unit.status.message.startswith("Missing relation"):
+            return
+        self.unit.status = self._determine_status(event)
+        logger.debug(f"Set status to {self.unit.status}")
 
-    # =======================
-    #  Helpers
-    # =======================
+    def wait_until_mysql_router_ready(self) -> None:
+        """Wait until a connection to MySQL Router is possible.
 
-    def _patch_service(self, name: str, ro_port: int, rw_port: int) -> None:
-        """Patch juju created k8s service.
+        Retry every 5 seconds for up to 30 seconds.
+        """
+        logger.debug("Waiting until MySQL Router is ready")
+        self.unit.status = ops.WaitingStatus("MySQL Router starting")
+        try:
+            for attempt in tenacity.Retrying(
+                reraise=True,
+                stop=tenacity.stop_after_delay(30),
+                wait=tenacity.wait_fixed(5),
+            ):
+                with attempt:
+                    for port in [6446, 6447]:
+                        with socket.socket() as s:
+                            assert s.connect_ex(("localhost", port)) == 0
+        except AssertionError:
+            logger.exception("Unable to connect to MySQL Router")
+            raise
+        else:
+            logger.debug("MySQL Router is ready")
+
+    def _patch_service(self, *, name: str, ro_port: int, rw_port: int) -> None:
+        """Patch Juju-created k8s service.
 
         The k8s service will be tied to pod-0 so that the service is auto cleaned by
         k8s when the last pod is scaled down.
@@ -113,14 +147,15 @@ class MySQLRouterOperatorCharm(CharmBase):
             ro_port: The read only port.
             rw_port: The read write port.
         """
-        client = Client()
+        logger.debug(f"Patching k8s service {name=}, {ro_port=}, {rw_port=}")
+        client = lightkube.Client()
         pod0 = client.get(
-            res=Pod,
+            res=lightkube.resources.core_v1.Pod,
             name=self.app.name + "-0",
             namespace=self.model.name,
         )
-        service = Service(
-            metadata=ObjectMeta(
+        service = lightkube.resources.core_v1.Service(
+            metadata=lightkube.models.meta_v1.ObjectMeta(
                 name=name,
                 namespace=self.model.name,
                 ownerReferences=pod0.metadata.ownerReferences,
@@ -128,14 +163,14 @@ class MySQLRouterOperatorCharm(CharmBase):
                     "app.kubernetes.io/name": self.app.name,
                 },
             ),
-            spec=ServiceSpec(
+            spec=lightkube.models.core_v1.ServiceSpec(
                 ports=[
-                    ServicePort(
+                    lightkube.models.core_v1.ServicePort(
                         name="mysql-ro",
                         port=ro_port,
                         targetPort=ro_port,
                     ),
-                    ServicePort(
+                    lightkube.models.core_v1.ServicePort(
                         name="mysql-rw",
                         port=rw_port,
                         targetPort=rw_port,
@@ -145,155 +180,71 @@ class MySQLRouterOperatorCharm(CharmBase):
             ),
         )
         client.patch(
-            res=Service,
+            res=lightkube.resources.core_v1.Service,
             obj=service,
             name=service.metadata.name,
             namespace=service.metadata.namespace,
             force=True,
             field_manager=self.model.app.name,
         )
-
-    def get_secret(self, scope: str, key: str) -> Optional[str]:
-        """Get secret from the peer relation databag."""
-        if scope == "unit":
-            return self.unit_peer_data.get(key, None)
-        elif scope == "app":
-            return self.app_peer_data.get(key, None)
-        else:
-            raise RuntimeError("Unknown secret scope")
-
-    def set_secret(self, scope: str, key: str, value: Optional[str]) -> None:
-        """Set secret in the peer relation databag."""
-        if scope == "unit":
-            if not value:
-                del self.unit_peer_data[key]
-                return
-            self.unit_peer_data.update({key: value})
-        elif scope == "app":
-            if not value:
-                del self.app_peer_data[key]
-                return
-            self.app_peer_data.update({key: value})
-        else:
-            raise RuntimeError("Unknown secret scope")
-
-    @property
-    def mysql_router_layer(self) -> Layer:
-        """Return a layer configuration for the mysql router service."""
-        requires_data = json.loads(self.app_peer_data[MYSQL_ROUTER_REQUIRES_DATA])
-        host, port = requires_data["endpoints"].split(",")[0].split(":")
-        return Layer(
-            {
-                "summary": "mysql router layer",
-                "description": "the pebble config layer for mysql router",
-                "services": {
-                    MYSQL_ROUTER_SERVICE_NAME: {
-                        "override": "replace",
-                        "summary": "mysql router",
-                        "command": "/run.sh mysqlrouter",
-                        "startup": "enabled",
-                        "environment": {
-                            "MYSQL_HOST": host,
-                            "MYSQL_PORT": port,
-                            "MYSQL_USER": requires_data["username"],
-                            "MYSQL_PASSWORD": self.get_secret("app", "database-password") or "",
-                        },
-                    },
-                },
-            }
-        )
-
-    def _bootstrap_mysqlrouter(self) -> bool:
-        if not self.app_peer_data.get(MYSQL_DATABASE_CREATED):
-            return False
-
-        pebble_layer = self.mysql_router_layer
-
-        container = self.unit.get_container(MYSQL_ROUTER_CONTAINER_NAME)
-        plan = container.get_plan()
-
-        if plan.services != pebble_layer.services:
-            container.add_layer(MYSQL_ROUTER_SERVICE_NAME, pebble_layer, combine=True)
-            container.start(MYSQL_ROUTER_SERVICE_NAME)
-
-            MySQLRouter.wait_until_mysql_router_ready()
-
-            self.unit_peer_data[UNIT_BOOTSTRAPPED] = "true"
-
-            return True
-
-        return False
-
-    @property
-    def missing_relations(self) -> Set[str]:
-        """Return a set of missing relations."""
-        missing_relations = set()
-        for relation_name in [DATABASE_REQUIRES_RELATION, DATABASE_PROVIDES_RELATION]:
-            if not self.model.get_relation(relation_name):
-                missing_relations.add(relation_name)
-        return missing_relations
+        logger.debug(f"Patched k8s service {name=}, {ro_port=}, {rw_port=}")
 
     # =======================
     #  Handlers
     # =======================
 
-    def _on_install(self, _) -> None:
-        """Handle the install event."""
-        self.unit.status = WaitingStatus()
-        # Try set workload version
-        container = self.unit.get_container(MYSQL_ROUTER_CONTAINER_NAME)
-        if container.can_connect():
-            if version := MySQLRouter.get_version(container):
-                self.unit.set_workload_version(version)
-
-    def _on_leader_elected(self, _) -> None:
-        """Handle the leader elected event.
-
-        Patch existing k8s service to include read-write and read-only services.
-        """
-        # Create the read-write and read-only services
-        try:
-            self._patch_service(f"{self.app.name}", ro_port=6447, rw_port=6446)
-        except ApiError:
-            logger.exception("Failed to patch k8s service")
-            self.unit.status = BlockedStatus("Failed to patch k8s service")
-            return
+    def reconcile_database_relations(self, event=None) -> None:
+        """Handle database requires/provides events."""
+        logger.debug(
+            "State of reconcile "
+            f"{self.unit.is_leader()=}, "
+            f"{isinstance(self.workload, workload.AuthenticatedWorkload)=}, "
+            f"{self.database_requires.relation and self.database_requires.relation.is_breaking(event)=}, "
+            f"{self.workload.container_ready=}, "
+            f"{isinstance(event, ops.UpgradeCharmEvent)=}"
+        )
+        if (
+            self.unit.is_leader()
+            and isinstance(self.workload, workload.AuthenticatedWorkload)
+            and self.workload.container_ready
+        ):
+            self.database_provides.reconcile_users(
+                event=event,
+                router_endpoint=self._endpoint,
+                shell=self.workload.shell,
+            )
+        if (
+            isinstance(self.workload, workload.AuthenticatedWorkload)
+            and self.workload.container_ready
+            and not self.database_requires.relation.is_breaking(event)
+        ):
+            if isinstance(event, ops.UpgradeCharmEvent):
+                # Pod restart (https://juju.is/docs/sdk/start-event#heading--emission-sequence)
+                self.workload.cleanup_after_pod_restart()
+            self.workload.enable(tls=self.tls.certificate_saved, unit_name=self.unit.name)
+        elif self.workload.container_ready:
+            self.workload.disable()
+        self.set_status(event)
 
     def _on_mysql_router_pebble_ready(self, _) -> None:
-        """Handle the mysql-router pebble ready event."""
-        if self._bootstrap_mysqlrouter():
-            self.unit.status = ActiveStatus()
+        self.unit.set_workload_version(self.workload.version)
+        self.reconcile_database_relations()
 
-    def _on_peer_relation_changed(self, _) -> None:
-        """Handle the peer relation changed event.
+    def _on_leadership_change(self, _) -> None:
+        # The leader unit is responsible for reporting status about related applications.
+        # If leadership changes, all units should update status.
+        self.set_status(event=None)
 
-        Bootstraps mysqlrouter if the relations exist, but pebble_ready event
-        fired before the requires relation was formed.
-        """
-        if (
-            isinstance(self.unit.status, WaitingStatus)
-            and self.app_peer_data.get(MYSQL_DATABASE_CREATED)
-            and self._bootstrap_mysqlrouter()
-        ):
-            self.unit.status = ActiveStatus()
-
-        if self.unit.is_leader():
-            num_units_bootstrapped = sum(
-                1
-                for _ in self.peers.units.union({self.unit})
-                if self.unit_peer_data.get(UNIT_BOOTSTRAPPED)
-            )
-            self.app_peer_data[NUM_UNITS_BOOTSTRAPPED] = str(num_units_bootstrapped)
-
-    def _on_update_status(self, _) -> None:
-        """Handle update-status event."""
-        if self.missing_relations:
-            self.unit.status = WaitingStatus(
-                f"Waiting for relations: {' '.join(self.missing_relations)}"
-            )
+    def _on_install(self, _) -> None:
+        """Patch existing k8s service to include read-write and read-only services."""
+        if not self.unit.is_leader():
             return
-        self.unit.status = ActiveStatus()
+        try:
+            self._patch_service(name=self.app.name, ro_port=6447, rw_port=6446)
+        except lightkube.ApiError:
+            logger.exception("Failed to patch k8s service")
+            raise
 
 
 if __name__ == "__main__":
-    main(MySQLRouterOperatorCharm)
+    ops.main.main(MySQLRouterOperatorCharm)
