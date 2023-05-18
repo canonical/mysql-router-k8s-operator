@@ -31,6 +31,11 @@ class _UnitSecrets:
 
     _peer_unit_databag: ops.RelationDataContent
 
+    @staticmethod
+    def generate_private_key() -> str:
+        """Generate TLS private key."""
+        return tls_certificates.generate_private_key().decode("utf-8")
+
     @property
     def private_key(self) -> str:
         """TLS private key
@@ -44,11 +49,6 @@ class _UnitSecrets:
     @private_key.setter
     def private_key(self, value: str) -> None:
         self._peer_unit_databag["secrets.tls_private_key"] = value
-
-    @staticmethod
-    def generate_private_key() -> str:
-        """Generate TLS private key."""
-        return tls_certificates.generate_private_key().decode("utf-8")
 
 
 class _PeerUnitDatabag:
