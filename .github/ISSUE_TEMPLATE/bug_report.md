@@ -29,7 +29,8 @@ Juju CLI:
 Juju agent: 
 
 <!-- App revision from "juju status" or (advanced) commit hash -->
-Charm revision: 
+mysql-k8s charm revision: 
+mysql-router-k8s charm revision: 
 
 <!-- Run "microk8s version" -->
 microk8s: 
