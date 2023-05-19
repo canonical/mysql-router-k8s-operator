@@ -97,12 +97,40 @@ class Workload:
         self._container.add_layer(self._SERVICE_NAME, layer, combine=True)
         self._container.replan()
 
+    def _write_file(self, path: pathlib.Path, content: str) -> None:
+        """Write content to file.
+
+        Args:
+            path: Full filesystem path (with filename)
+            content: File content
+        """
+        self._container.push(
+            str(path),
+            content,
+            permissions=0o600,
+            user=self._UNIX_USERNAME,
+            group=self._UNIX_USERNAME,
+        )
+        logger.debug(f"Wrote file {path=}")
+
+    def _delete_file(self, path: pathlib.Path) -> None:
+        """Delete file.
+
+        Args:
+            path: Full filesystem path (with filename)
+        """
+        path = str(path)
+        if self._container.exists(path):
+            self._container.remove_path(path)
+            logger.debug(f"Deleted file {path=}")
+
     def disable(self) -> None:
         """Stop and disable MySQL Router service."""
         if not self._enabled:
             return
         logger.debug("Disabling MySQL Router service")
         self._update_layer(enabled=False)
+        self._delete_file(self._ROUTER_CONFIG_DIRECTORY / self._ROUTER_CONFIG_FILE)
         logger.debug("Disabled MySQL Router service")
 
 
@@ -222,33 +250,6 @@ class AuthenticatedWorkload(Workload):
         # wait_until_mysql_router_ready will set WaitingStatus—override it with current charm
         # status
         self._charm.set_status(event=None)
-
-    def _write_file(self, path: pathlib.Path, content: str) -> None:
-        """Write content to file.
-
-        Args:
-            path: Full filesystem path (with filename)
-            content: File content
-        """
-        self._container.push(
-            str(path),
-            content,
-            permissions=0o600,
-            user=self._UNIX_USERNAME,
-            group=self._UNIX_USERNAME,
-        )
-        logger.debug(f"Wrote file {path=}")
-
-    def _delete_file(self, path: pathlib.Path) -> None:
-        """Delete file.
-
-        Args:
-            path: Full filesystem path (with filename)
-        """
-        path = str(path)
-        if self._container.exists(path):
-            self._container.remove_path(path)
-            logger.debug(f"Deleted file {path=}")
 
     @property
     def _tls_config_file(self) -> str:
