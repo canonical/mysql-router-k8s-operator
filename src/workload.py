@@ -12,6 +12,7 @@ import string
 import typing
 
 import ops
+import tenacity
 
 import mysql_shell
 
@@ -223,6 +224,31 @@ class AuthenticatedWorkload(Workload):
         )
         return config["metadata_cache:bootstrap"]["user"]
 
+    def _wait_until_mysql_router_ready(self) -> None:
+        """Wait until a connection to MySQL Router is possible.
+
+        Retry every 5 seconds for up to 30 seconds.
+        """
+        logger.debug("Waiting until MySQL Router is ready")
+        self._charm.set_status(
+            event=None, additional_statuses=[ops.WaitingStatus("MySQL Router starting")]
+        )
+        try:
+            for attempt in tenacity.Retrying(
+                reraise=True,
+                stop=tenacity.stop_after_delay(30),
+                wait=tenacity.wait_fixed(5),
+            ):
+                with attempt:
+                    for port in [6446, 6447]:
+                        with socket.socket() as s:
+                            assert s.connect_ex(("localhost", port)) == 0
+        except AssertionError:
+            logger.exception("Unable to connect to MySQL Router")
+            raise
+        else:
+            logger.debug("MySQL Router is ready")
+
     def enable(self, *, tls: bool, unit_name: str) -> None:
         """Start and enable MySQL Router service."""
         if self._enabled:
@@ -236,7 +262,7 @@ class AuthenticatedWorkload(Workload):
             username=self._router_username, router_id=self._router_id, unit_name=unit_name
         )
         logger.debug("Enabled MySQL Router service")
-        self._charm.wait_until_mysql_router_ready()
+        self._wait_until_mysql_router_ready()
 
     def _restart(self, *, tls: bool) -> None:
         """Restart MySQL Router to enable or disable TLS."""
@@ -244,8 +270,8 @@ class AuthenticatedWorkload(Workload):
         assert self._enabled is True
         self._bootstrap_router(tls=tls)
         logger.debug("Restarted MySQL Router")
-        self._charm.wait_until_mysql_router_ready()
-        # wait_until_mysql_router_ready will set WaitingStatus—override it with current charm
+        self._wait_until_mysql_router_ready()
+        # _wait_until_mysql_router_ready will set WaitingStatus—override it with current charm
         # status
         self._charm.set_status(event=None)
 

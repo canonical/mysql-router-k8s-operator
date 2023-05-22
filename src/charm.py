@@ -8,13 +8,13 @@
 
 import logging
 import socket
+import typing
 
 import lightkube
 import lightkube.models.core_v1
 import lightkube.models.meta_v1
 import lightkube.resources.core_v1
 import ops
-import tenacity
 
 import relations.database_provides
 import relations.database_requires
@@ -80,9 +80,17 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
         # Example: mysql-router-k8s.my-model.svc.cluster.local
         return f"{self.app.name}.{self.model_service_domain}"
 
-    def _determine_status(self, event) -> ops.StatusBase:
+    def _determine_status(
+        self,
+        *,
+        event,
+        additional_statuses: typing.Optional[list[ops.StatusBase]],
+    ) -> ops.StatusBase:
         """Report charm status."""
-        statuses = []
+        if additional_statuses is None:
+            statuses = []
+        else:
+            statuses = additional_statuses
         if self.unit.is_leader():
             # Only report status about related applications on leader unit
             # (The `data_interfaces.DatabaseProvides` `on.database_requested` event is only
@@ -108,33 +116,17 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
                     return status
         return ops.ActiveStatus()
 
-    def set_status(self, event) -> None:
+    def set_status(
+        self,
+        *,
+        event,
+        additional_statuses: list[ops.StatusBase] = None,
+    ) -> None:
         """Set charm status."""
-        self.unit.status = self._determine_status(event)
+        self.unit.status = self._determine_status(
+            event=event, additional_statuses=additional_statuses
+        )
         logger.debug(f"Set status to {self.unit.status}")
-
-    def wait_until_mysql_router_ready(self) -> None:
-        """Wait until a connection to MySQL Router is possible.
-
-        Retry every 5 seconds for up to 30 seconds.
-        """
-        logger.debug("Waiting until MySQL Router is ready")
-        self.unit.status = ops.WaitingStatus("MySQL Router starting")
-        try:
-            for attempt in tenacity.Retrying(
-                reraise=True,
-                stop=tenacity.stop_after_delay(30),
-                wait=tenacity.wait_fixed(5),
-            ):
-                with attempt:
-                    for port in [6446, 6447]:
-                        with socket.socket() as s:
-                            assert s.connect_ex(("localhost", port)) == 0
-        except AssertionError:
-            logger.exception("Unable to connect to MySQL Router")
-            raise
-        else:
-            logger.debug("MySQL Router is ready")
 
     def _patch_service(self, *, name: str, ro_port: int, rw_port: int) -> None:
         """Patch Juju-created k8s service.
@@ -224,7 +216,7 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
             self.workload.enable(tls=self.tls.certificate_saved, unit_name=self.unit.name)
         elif self.workload.container_ready:
             self.workload.disable()
-        self.set_status(event)
+        self.set_status(event=event)
 
     def _on_mysql_router_pebble_ready(self, _) -> None:
         self.unit.set_workload_version(self.workload.version)
