@@ -34,15 +34,12 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
 
         self.database_provides = relations.database_provides.RelationEndpoint(self)
 
-        # Set status on first start if no relations active
-        self.framework.observe(self.on.start, self.reconcile_database_relations)
-
         self.framework.observe(self.on.install, self._on_install)
+        self.framework.observe(self.on.start, self._on_start)
         self.framework.observe(
             getattr(self.on, "mysql_router_pebble_ready"), self._on_mysql_router_pebble_ready
         )
-        self.framework.observe(self.on.leader_elected, self._on_leadership_change)
-        self.framework.observe(self.on.leader_settings_changed, self._on_leadership_change)
+        self.framework.observe(self.on.leader_elected, self._on_leader_elected)
 
         # Start workload after pod restart
         self.framework.observe(self.on.upgrade_charm, self.reconcile_database_relations)
@@ -242,16 +239,6 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
             self.workload.disable()
         self.set_status(event)
 
-    def _on_mysql_router_pebble_ready(self, _) -> None:
-        self.unit.set_workload_version(self.workload.version)
-        self.reconcile_database_relations()
-
-    def _on_leadership_change(self, _) -> None:
-        # TODO: update or remove
-        # The leader unit is responsible for reporting status about related applications.
-        # If leadership changes, all units should update status.
-        self.set_status(event=None)
-
     def _on_install(self, _) -> None:
         """Patch existing k8s service to include read-write and read-only services."""
         if not self.unit.is_leader():
@@ -261,6 +248,18 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
         except lightkube.ApiError:
             logger.exception("Failed to patch k8s service")
             raise
+
+    def _on_start(self, _) -> None:
+        # Set status on first start if no relations active
+        self.set_status(event=None)
+
+    def _on_mysql_router_pebble_ready(self, _) -> None:
+        self.unit.set_workload_version(self.workload.version)
+        self.reconcile_database_relations()
+
+    def _on_leader_elected(self, _) -> None:
+        # Update app status
+        self.set_status(event=None)
 
 
 if __name__ == "__main__":
