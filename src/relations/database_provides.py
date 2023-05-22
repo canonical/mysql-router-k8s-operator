@@ -26,7 +26,7 @@ class _Relation:
     _interface: data_interfaces.DatabaseProvides
 
     @property
-    def id(self) -> int:
+    def _id(self) -> int:
         return self._relation.id
 
     @property
@@ -37,7 +37,7 @@ class _Relation:
     @property
     def _remote_databag(self) -> dict:
         """MySQL charm databag"""
-        return self._interface.fetch_relation_data()[self.id]
+        return self._interface.fetch_relation_data()[self._id]
 
     @property
     def user_created(self) -> bool:
@@ -66,28 +66,28 @@ class _Relation:
         # This ensures a unique username if MySQL Router is deployed in a different Juju model
         # from MySQL.
         # (Relation IDs are only unique within a Juju model.)
-        return f"{database_requires_username}-{self.id}"
+        return f"{database_requires_username}-{self._id}"
 
     def _set_databag(self, *, username: str, password: str, router_endpoint: str) -> None:
         """Share connection information with application charm."""
         read_write_endpoint = f"{router_endpoint}:6446"
         read_only_endpoint = f"{router_endpoint}:6447"
         logger.debug(
-            f"Setting databag {self.id=} {self._database=}, {username=}, {read_write_endpoint=}, {read_only_endpoint=}"
+            f"Setting databag {self._id=} {self._database=}, {username=}, {read_write_endpoint=}, {read_only_endpoint=}"
         )
-        self._interface.set_database(self.id, self._database)
-        self._interface.set_credentials(self.id, username, password)
-        self._interface.set_endpoints(self.id, read_write_endpoint)
-        self._interface.set_read_only_endpoints(self.id, read_only_endpoint)
+        self._interface.set_database(self._id, self._database)
+        self._interface.set_credentials(self._id, username, password)
+        self._interface.set_endpoints(self._id, read_write_endpoint)
+        self._interface.set_read_only_endpoints(self._id, read_only_endpoint)
         logger.debug(
-            f"Set databag {self.id=} {self._database=}, {username=}, {read_write_endpoint=}, {read_only_endpoint=}"
+            f"Set databag {self._id=} {self._database=}, {username=}, {read_write_endpoint=}, {read_only_endpoint=}"
         )
 
     def _delete_databag(self) -> None:
         """Remove connection information from databag."""
-        logger.debug(f"Deleting databag {self.id=}")
+        logger.debug(f"Deleting databag {self._id=}")
         self._local_databag.clear()
-        logger.debug(f"Deleted databag {self.id=}")
+        logger.debug(f"Deleted databag {self._id=}")
 
     def create_database_and_user(self, *, router_endpoint: str, shell: mysql_shell.Shell) -> None:
         """Create database & user and update databag."""
@@ -104,7 +104,7 @@ class _Relation:
 
     def is_breaking(self, event):
         """Whether relation will be broken after the current event is handled"""
-        return isinstance(event, ops.RelationBrokenEvent) and event.relation.id == self.id
+        return isinstance(event, ops.RelationBrokenEvent) and event.relation.id == self._id
 
 
 class RelationEndpoint:
@@ -134,7 +134,7 @@ class RelationEndpoint:
         """Related application charms that have requested a database & user"""
         requested_users = []
         for relation in self._relations:
-            if isinstance(event, ops.RelationBrokenEvent) and event.relation.id == relation.id:
+            if relation.is_breaking(event):
                 # Relation is being removed; delete user
                 continue
             requested_users.append(relation)
