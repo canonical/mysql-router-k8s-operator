@@ -82,34 +82,34 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
 
     def _determine_status(self, event) -> ops.StatusBase:
         """Report charm status."""
+        statuses = []
         if self.unit.is_leader():
             # Only report status about related applications on leader unit
             # (The `data_interfaces.DatabaseProvides` `on.database_requested` event is only
             # emitted on the leader unit—non-leader units may not have a chance to update status
             # when the status about related applications changes.)
-            missing_relations = []
             for endpoint in [self.database_requires, self.database_provides]:
-                if endpoint.is_missing_relation(event):
-                    missing_relations.append(endpoint.NAME)
-            if missing_relations:
-                return ops.BlockedStatus(
-                    f"Missing relation{'s' if len(missing_relations) > 1 else ''}: {', '.join(missing_relations)}"
-                )
-            if self.database_requires.waiting_for_resource:
-                return ops.WaitingStatus(f"Waiting for related app: {self.database_requires.NAME}")
+                if status := endpoint.get_status(event):
+                    statuses.append(status)
         if not self.workload.container_ready:
-            return ops.MaintenanceStatus("Waiting for container")
+            statuses.append(ops.MaintenanceStatus("Waiting for container"))
+        # Report the highest priority status
+        # (Statuses of the same type are reported in the order they were added to `statuses`)
+        status_priority = (
+            ops.BlockedStatus,
+            ops.WaitingStatus,
+            ops.MaintenanceStatus,
+            # Catch any unknown status type
+            ops.StatusBase,
+        )
+        for status_type in status_priority:
+            for status in statuses:
+                if isinstance(status, status_type):
+                    return status
         return ops.ActiveStatus()
 
     def set_status(self, event) -> None:
-        """Set charm status.
-
-        Except if charm is in unrecognized state
-        """
-        if isinstance(
-            self.unit.status, ops.BlockedStatus
-        ) and not self.unit.status.message.startswith("Missing relation"):
-            return
+        """Set charm status."""
         self.unit.status = self._determine_status(event)
         logger.debug(f"Set status to {self.unit.status}")
 

@@ -53,6 +53,14 @@ class _Relation:
         """Requested database name"""
         return self._remote_databag["database"]
 
+    @property
+    def status(self) -> typing.Optional[ops.StatusBase]:
+        """Non-active status"""
+        if self._remote_databag.get("extra-user-roles"):
+            return ops.BlockedStatus(
+                f"{self._relation.app.name} app requested unsupported extra user role"
+            )
+
     def _get_username(self, database_requires_username: str) -> str:
         """Database username"""
         # Prefix username with username from database requires relation.
@@ -139,12 +147,16 @@ class RelationEndpoint:
         """Users that have been created and shared with an application charm"""
         return [relation for relation in self._relations if relation.user_created]
 
-    def is_missing_relation(self, event) -> bool:
-        """Whether zero relations to application charms (will) exist"""
-        for relation in self._relations:
-            if not relation.is_breaking(event):
-                return False
-        return True
+    def get_status(self, event) -> typing.Optional[ops.StatusBase]:
+        """Report non-active status."""
+        active_relations = [
+            relation for relation in self._relations if not relation.is_breaking(event)
+        ]
+        if not active_relations:
+            return ops.BlockedStatus(f"Missing relation: {self.NAME}")
+        for relation in active_relations:
+            if status := relation.status:
+                return status
 
     def reconcile_users(
         self,
