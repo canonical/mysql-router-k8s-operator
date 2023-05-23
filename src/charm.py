@@ -104,26 +104,19 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
                 statuses.append(status)
         return self._prioritize_statuses(statuses)
 
-    def _determine_unit_status(
-        self,
-    ) -> ops.StatusBase:
+    def _determine_unit_status(self) -> ops.StatusBase:
         """Report unit status."""
         statuses = []
         if not self.workload.container_ready:
             statuses.append(ops.MaintenanceStatus("Waiting for container"))
         return self._prioritize_statuses(statuses)
 
-    def set_status(
-        self,
-        *,
-        event,
-    ) -> None:
+    def set_status(self, *, event) -> None:
         """Set charm status."""
         if self.unit.is_leader():
             self.app.status = self._determine_app_status(event=event)
             logger.debug(f"Set app status to {self.app.status}")
-        self.unit.status = self._determine_unit_status(
-        )
+        self.unit.status = self._determine_unit_status()
         logger.debug(f"Set unit status to {self.unit.status}")
 
     def wait_until_mysql_router_ready(self) -> None:
