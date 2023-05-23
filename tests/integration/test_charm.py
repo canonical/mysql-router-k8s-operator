@@ -70,10 +70,12 @@ async def test_database_relation(ops_test: OpsTest):
     mysql_app, application_app = applications[0], applications[2]
 
     async with ops_test.fast_forward():
-        logger.info("Waiting for mysqlrouter to be in BlockedStatus")
+        logger.info("Waiting for mysqlrouter to be idle")
+        # MySQL Router app status should be "blocked", unit status should be "active"
+        # `wait_for_idle()` waits for unit status
         await ops_test.model.wait_for_idle(
             apps=[MYSQL_ROUTER_APP_NAME],
-            status="blocked",
+            status="active",
             timeout=SLOW_TIMEOUT,
         )
 
