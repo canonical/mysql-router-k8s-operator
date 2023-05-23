@@ -132,7 +132,7 @@ class _Relation:
         self._peer_unit_databag.chain = json.dumps(event.chain)
         self._peer_unit_databag.active_csr = self._peer_unit_databag.requested_csr
         logger.debug(f"Saved TLS certificate {event=}")
-        self._charm.workload.enable_tls(
+        self._charm.get_workload(event=None).enable_tls(
             key=self._unit_secrets.private_key,
             certificate=self._peer_unit_databag.certificate,
         )
@@ -288,7 +288,7 @@ class RelationEndpoint(ops.Object):
         """Delete TLS certificate."""
         logger.debug("Deleting TLS certificate")
         self._peer_unit_databag.clear()
-        self._charm.workload.disable_tls()
+        self._charm.get_workload(event=None).disable_tls()
         logger.debug("Deleted TLS certificate")
 
     def _on_certificate_available(self, event: tls_certificates.CertificateAvailableEvent) -> None:

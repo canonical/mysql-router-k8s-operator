@@ -96,12 +96,17 @@ class RelationEndpoint:
             charm_.reconcile_database_relations,
         )
 
-    @property
-    def relation(self) -> typing.Optional[Relation]:
+    def get_relation(self, *, event) -> typing.Optional[Relation]:
         """Relation to MySQL charm"""
-        if not self._interface.is_resource_created():
+        if not self._interface.relations:
             return
         relation = Relation(self._interface)
+        if relation.is_breaking(event):
+            return
+        # If the relation is breaking, `is_resource_created()` will fail when trying to access the
+        # remote application's databag—check if the relation is breaking first.
+        if not self._interface.is_resource_created():
+            return
         # TODO: Refactor `Relation` so that we don't need to access private class member
         if relation._remote_databag.get("endpoints") is None:
             return
@@ -118,6 +123,6 @@ class RelationEndpoint:
         """Report non-active status."""
         if self._is_missing_relation(event):
             return ops.BlockedStatus(f"Missing relation: {self.NAME}")
-        if self.relation is None:
+        if self.get_relation(event=event) is None:
             # Resource (database & user) has not been created by the MySQL charm
             return ops.WaitingStatus(f"Waiting for related app on endpoint: {self.NAME}")
