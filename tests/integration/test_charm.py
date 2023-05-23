@@ -73,7 +73,7 @@ async def test_database_relation(ops_test: OpsTest):
         logger.info("Waiting for mysqlrouter to be in BlockedStatus")
         await ops_test.model.block_until(
             lambda: ops_test.model.applications[MYSQL_ROUTER_APP_NAME].status == "blocked",
-            timeout=SLOW_TIMEOUT
+            timeout=SLOW_TIMEOUT,
         )
 
         logger.info("Relating mysql, mysqlrouter and application")
