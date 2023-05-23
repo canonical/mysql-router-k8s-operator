@@ -230,7 +230,7 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
             self.workload.enable(tls=self.tls.certificate_saved, unit_name=self.unit.name)
         elif self.workload.container_ready:
             self.workload.disable()
-        self.set_status(event)
+        self.set_status(event=event)
 
     def _on_install(self, _) -> None:
         """Patch existing k8s service to include read-write and read-only services."""
