@@ -216,10 +216,7 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
                 router_endpoint=self._endpoint,
                 shell=workload_.shell,
             )
-        if (
-            isinstance(self.get_workload, workload.AuthenticatedWorkload)
-            and workload_.container_ready
-        ):
+        if isinstance(workload_, workload.AuthenticatedWorkload) and workload_.container_ready:
             if isinstance(event, ops.UpgradeCharmEvent):
                 # Pod restart (https://juju.is/docs/sdk/start-event#heading--emission-sequence)
                 workload_.cleanup_after_pod_restart()
