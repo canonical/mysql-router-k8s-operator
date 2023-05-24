@@ -34,15 +34,12 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
 
         self.database_provides = relations.database_provides.RelationEndpoint(self)
 
-        # Set status on first start if no relations active
-        self.framework.observe(self.on.start, self.reconcile_database_relations)
-
         self.framework.observe(self.on.install, self._on_install)
+        self.framework.observe(self.on.start, self._on_start)
         self.framework.observe(
             getattr(self.on, "mysql_router_pebble_ready"), self._on_mysql_router_pebble_ready
         )
-        self.framework.observe(self.on.leader_elected, self._on_leadership_change)
-        self.framework.observe(self.on.leader_settings_changed, self._on_leadership_change)
+        self.framework.observe(self.on.leader_elected, self._on_leader_elected)
 
         # Start workload after pod restart
         self.framework.observe(self.on.upgrade_charm, self.reconcile_database_relations)
@@ -80,21 +77,12 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
         # Example: mysql-router-k8s.my-model.svc.cluster.local
         return f"{self.app.name}.{self.model_service_domain}"
 
-    def _determine_status(self, event) -> ops.StatusBase:
-        """Report charm status."""
-        statuses = []
-        if self.unit.is_leader():
-            # Only report status about related applications on leader unit
-            # (The `data_interfaces.DatabaseProvides` `on.database_requested` event is only
-            # emitted on the leader unit—non-leader units may not have a chance to update status
-            # when the status about related applications changes.)
-            for endpoint in [self.database_requires, self.database_provides]:
-                if status := endpoint.get_status(event):
-                    statuses.append(status)
-        if not self.workload.container_ready:
-            statuses.append(ops.MaintenanceStatus("Waiting for container"))
-        # Report the highest priority status
-        # (Statuses of the same type are reported in the order they were added to `statuses`)
+    @staticmethod
+    def _prioritize_statuses(statuses: list[ops.StatusBase]) -> ops.StatusBase:
+        """Report the highest priority status.
+
+        (Statuses of the same type are reported in the order they were added to `statuses`)
+        """
         status_priority = (
             ops.BlockedStatus,
             ops.WaitingStatus,
@@ -108,10 +96,28 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
                     return status
         return ops.ActiveStatus()
 
-    def set_status(self, event) -> None:
+    def _determine_app_status(self, *, event) -> ops.StatusBase:
+        """Report app status."""
+        statuses = []
+        for endpoint in [self.database_requires, self.database_provides]:
+            if status := endpoint.get_status(event):
+                statuses.append(status)
+        return self._prioritize_statuses(statuses)
+
+    def _determine_unit_status(self) -> ops.StatusBase:
+        """Report unit status."""
+        statuses = []
+        if not self.workload.container_ready:
+            statuses.append(ops.MaintenanceStatus("Waiting for container"))
+        return self._prioritize_statuses(statuses)
+
+    def set_status(self, *, event) -> None:
         """Set charm status."""
-        self.unit.status = self._determine_status(event)
-        logger.debug(f"Set status to {self.unit.status}")
+        if self.unit.is_leader():
+            self.app.status = self._determine_app_status(event=event)
+            logger.debug(f"Set app status to {self.app.status}")
+        self.unit.status = self._determine_unit_status()
+        logger.debug(f"Set unit status to {self.unit.status}")
 
     def wait_until_mysql_router_ready(self) -> None:
         """Wait until a connection to MySQL Router is possible.
@@ -224,16 +230,7 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
             self.workload.enable(tls=self.tls.certificate_saved, unit_name=self.unit.name)
         elif self.workload.container_ready:
             self.workload.disable()
-        self.set_status(event)
-
-    def _on_mysql_router_pebble_ready(self, _) -> None:
-        self.unit.set_workload_version(self.workload.version)
-        self.reconcile_database_relations()
-
-    def _on_leadership_change(self, _) -> None:
-        # The leader unit is responsible for reporting status about related applications.
-        # If leadership changes, all units should update status.
-        self.set_status(event=None)
+        self.set_status(event=event)
 
     def _on_install(self, _) -> None:
         """Patch existing k8s service to include read-write and read-only services."""
@@ -244,6 +241,18 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
         except lightkube.ApiError:
             logger.exception("Failed to patch k8s service")
             raise
+
+    def _on_start(self, _) -> None:
+        # Set status on first start if no relations active
+        self.set_status(event=None)
+
+    def _on_mysql_router_pebble_ready(self, _) -> None:
+        self.unit.set_workload_version(self.workload.version)
+        self.reconcile_database_relations()
+
+    def _on_leader_elected(self, _) -> None:
+        # Update app status
+        self.set_status(event=None)
 
 
 if __name__ == "__main__":
