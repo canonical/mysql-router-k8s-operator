@@ -15,6 +15,14 @@ if typing.TYPE_CHECKING:
 
 @dataclasses.dataclass(kw_only=True)
 class ConnectionInformation:
+    """Information for connection to MySQL cluster
+
+    User has permission to:
+    - Create databases & users
+    - Grant all privileges on a database to a user
+    (Different from user that MySQL Router runs with after bootstrap.)
+    """
+
     host: str
     port: str
     username: str
@@ -22,7 +30,7 @@ class ConnectionInformation:
 
 
 class _IncompleteDatabag(KeyError):
-    pass
+    """Databag is missing required key"""
 
 
 class _Databag(dict):
@@ -34,7 +42,7 @@ class _Databag(dict):
 
 
 @dataclasses.dataclass
-class Relation:
+class _Relation:
     """Relation to MySQL charm"""
 
     _interface: data_interfaces.DatabaseRequires
@@ -106,10 +114,11 @@ class RelationEndpoint:
         )
 
     @property
-    def _relation(self) -> typing.Optional[Relation]:
+    def _relation(self) -> typing.Optional[_Relation]:
+        """Relation to MySQL charm"""
         if not self._interface.relations:
             return
-        return Relation(self._interface)
+        return _Relation(self._interface)
 
     def _is_missing_relation(self, event) -> bool:
         """Whether relation to MySQL charm does (or will) not exist"""

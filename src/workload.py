@@ -132,10 +132,6 @@ class Workload:
 class AuthenticatedWorkload(Workload):
     """Workload with connection to MySQL cluster"""
 
-    # Database requires relation provides an admin user with permission to:
-    # - Create databases & users
-    # - Grant all privileges on a database to a user
-    # (Different from user that MySQL Router runs with after bootstrap.)
     _connection_info: "relations.database_requires.ConnectionInformation"
     _charm: "charm.MySQLRouterOperatorCharm"
 
