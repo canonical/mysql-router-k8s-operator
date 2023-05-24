@@ -125,6 +125,7 @@ class RelationEndpoint:
         return self._relation is None or self._relation.is_breaking(event)
 
     def get_connection_info(self, event) -> typing.Optional[ConnectionInformation]:
+        """Information for connection to MySQL cluster"""
         if self._is_missing_relation(event=event):
             return
         try:
