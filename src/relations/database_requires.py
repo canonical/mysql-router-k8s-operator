@@ -3,12 +3,14 @@
 
 """Relation to MySQL charm"""
 
-import dataclasses
 import logging
 import typing
 
 import charms.data_platform_libs.v0.data_interfaces as data_interfaces
 import ops
+import remote_databag
+
+import status_exception
 
 if typing.TYPE_CHECKING:
     import charm
@@ -16,44 +18,7 @@ if typing.TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-class StatusException(Exception):
-    """Exception with ops status"""
-
-    def __init__(self, status: ops.StatusBase) -> None:
-        super().__init__(status.message)
-        self.status = status
-
-
-class _IncompleteDatabag(StatusException):
-    """Databag is missing required key"""
-
-    def __init__(self, *, app_name: str, endpoint_name: str) -> None:
-        super().__init__(
-            ops.WaitingStatus(f"Waiting for {app_name} app on {endpoint_name} endpoint")
-        )
-
-
-class _Databag(dict):
-    def __init__(
-        self,
-        interface: data_interfaces.DatabaseRequires | data_interfaces.DatabaseProvides,
-        relation: ops.Relation,
-    ) -> None:
-        super().__init__(interface.fetch_relation_data()[relation.id])
-        self._app_name = relation.app.name
-        self._endpoint_name = relation.name
-
-    def __getitem__(self, key):
-        try:
-            return super().__getitem__(key)
-        except KeyError:
-            logger.debug(
-                f"Required {key=} missing from databag for {self._app_name=} on {self._endpoint_name=}"
-            )
-            raise _IncompleteDatabag(app_name=self._app_name, endpoint_name=self._endpoint_name)
-
-
-class _MissingRelation(StatusException):
+class _MissingRelation(status_exception.StatusException):
     """Relation to MySQL charm does (or will) not exist"""
 
     def __init__(self, *, endpoint_name: str) -> None:
@@ -82,14 +47,14 @@ class ConnectionInformation:
             logger.debug(f"Relation breaking on {endpoint_name=}")
             raise _MissingRelation(endpoint_name=endpoint_name)
         # MySQL charm databag
-        remote_databag = _Databag(interface=interface, relation=relation)
-        endpoints = remote_databag["endpoints"].split(",")
+        databag = remote_databag.RemoteDatabag(interface=interface, relation=relation)
+        endpoints = databag["endpoints"].split(",")
         assert len(endpoints) == 1
         endpoint = endpoints[0]
         self.host: str = endpoint.split(":")[0]
         self.port: str = endpoint.split(":")[1]
-        self.username: str = remote_databag["username"]
-        self.password: str = remote_databag["password"]
+        self.username: str = databag["username"]
+        self.password: str = databag["password"]
 
 
 class RelationEndpoint:
@@ -126,12 +91,12 @@ class RelationEndpoint:
         """Information for connection to MySQL cluster"""
         try:
             return ConnectionInformation(interface=self._interface, event=event)
-        except (_MissingRelation, _IncompleteDatabag):
+        except (_MissingRelation, remote_databag.IncompleteDatabag):
             return
 
     def get_status(self, event) -> typing.Optional[ops.StatusBase]:
         """Report non-active status."""
         try:
             ConnectionInformation(interface=self._interface, event=event)
-        except (_MissingRelation, _IncompleteDatabag) as exception:
+        except (_MissingRelation, remote_databag.IncompleteDatabag) as exception:
             return exception.status

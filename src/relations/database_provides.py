@@ -3,14 +3,15 @@
 
 """Relation(s) to one or more application charms"""
 
-import dataclasses
 import logging
 import typing
 
 import charms.data_platform_libs.v0.data_interfaces as data_interfaces
 import ops
+import remote_databag
 
 import mysql_shell
+import status_exception
 
 if typing.TYPE_CHECKING:
     import charm
@@ -18,48 +19,11 @@ if typing.TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-class StatusException(Exception):
-    """Exception with ops status"""
-
-    def __init__(self, status: ops.StatusBase) -> None:
-        super().__init__(status.message)
-        self.status = status
-
-
-class _IncompleteDatabag(StatusException):
-    """Databag is missing required key"""
-
-    def __init__(self, *, app_name: str, endpoint_name: str) -> None:
-        super().__init__(
-            ops.WaitingStatus(f"Waiting for {app_name} app on {endpoint_name} endpoint")
-        )
-
-
-class _Databag(dict):
-    def __init__(
-        self,
-        interface: data_interfaces.DatabaseRequires | data_interfaces.DatabaseProvides,
-        relation: ops.Relation,
-    ) -> None:
-        super().__init__(interface.fetch_relation_data()[relation.id])
-        self._app_name = relation.app.name
-        self._endpoint_name = relation.name
-
-    def __getitem__(self, key):
-        try:
-            return super().__getitem__(key)
-        except KeyError:
-            logger.debug(
-                f"Required {key=} missing from databag for {self._app_name=} on {self._endpoint_name=}"
-            )
-            raise _IncompleteDatabag(app_name=self._app_name, endpoint_name=self._endpoint_name)
-
-
 class _RelationBreaking(Exception):
     """Relation will be broken after the current event is handled"""
 
 
-class _UnsupportedExtraUserRole(StatusException):
+class _UnsupportedExtraUserRole(status_exception.StatusException):
     """Application charm requested unsupported extra user role"""
 
     def __init__(self, *, app_name: str, endpoint_name: str) -> None:
@@ -101,9 +65,9 @@ class _RequestedUser(_Relation):
         if isinstance(event, ops.RelationBrokenEvent) and event.relation.id == self._id:
             raise _RelationBreaking
         # Application charm databag
-        remote_databag = _Databag(interface=interface, relation=relation)
-        self._database: str = remote_databag["database"]
-        if remote_databag.get("extra-user-roles"):
+        databag = remote_databag.RemoteDatabag(interface=interface, relation=relation)
+        self._database: str = databag["database"]
+        if databag.get("extra-user-roles"):
             raise _UnsupportedExtraUserRole(
                 app_name=relation.app.name, endpoint_name=relation.name
             )
@@ -201,7 +165,11 @@ class RelationEndpoint:
                 requested_users.append(
                     _RequestedUser(relation=relation, interface=self._interface, event=event)
                 )
-            except (_RelationBreaking, _IncompleteDatabag, _UnsupportedExtraUserRole):
+            except (
+                _RelationBreaking,
+                remote_databag.IncompleteDatabag,
+                _UnsupportedExtraUserRole,
+            ):
                 pass
             try:
                 created_users.append(_CreatedUser(relation=relation, interface=self._interface))
@@ -219,7 +187,7 @@ class RelationEndpoint:
     def get_status(self, event) -> typing.Optional[ops.StatusBase]:
         """Report non-active status."""
         requested_users = []
-        exceptions: list[StatusException] = []
+        exceptions: list[status_exception.StatusException] = []
         for relation in self._interface.relations:
             try:
                 requested_users.append(
@@ -227,7 +195,7 @@ class RelationEndpoint:
                 )
             except _RelationBreaking:
                 pass
-            except (_IncompleteDatabag, _UnsupportedExtraUserRole) as exception:
+            except (remote_databag.IncompleteDatabag, _UnsupportedExtraUserRole) as exception:
                 exceptions.append(exception)
         # Always report unsupported extra user role
         for exception in exceptions:
@@ -237,6 +205,6 @@ class RelationEndpoint:
             # At least one relation is active—do not report about inactive relations
             return
         for exception in exceptions:
-            if isinstance(exception, _IncompleteDatabag):
+            if isinstance(exception, remote_databag.IncompleteDatabag):
                 return exception.status
         return ops.BlockedStatus(f"Missing relation: {self.NAME}")
