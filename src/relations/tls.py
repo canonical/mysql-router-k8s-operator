@@ -187,7 +187,7 @@ class RelationEndpoint(ops.Object):
 
     NAME = "certificates"
 
-    def __init__(self, charm_: "charm.MySQLRouterOperatorCharm"):
+    def __init__(self, charm_: "charm.MySQLRouterOperatorCharm") -> None:
         super().__init__(charm_, self.NAME)
         self._charm = charm_
         self._interface = tls_certificates.TLSCertificatesRequiresV1(self._charm, self.NAME)

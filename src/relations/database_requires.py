@@ -4,6 +4,7 @@
 """Relation to MySQL charm"""
 
 import dataclasses
+import logging
 import typing
 
 import charms.data_platform_libs.v0.data_interfaces as data_interfaces
@@ -12,21 +13,51 @@ import ops
 if typing.TYPE_CHECKING:
     import charm
 
+logger = logging.getLogger(__name__)
 
-class _IncompleteDatabag(KeyError):
+
+class StatusException(Exception):
+    """Exception with ops status"""
+
+    def __init__(self, status: ops.StatusBase) -> None:
+        super().__init__(status.message)
+        self.status = status
+
+
+class _IncompleteDatabag(StatusException):
     """Databag is missing required key"""
+
+    def __init__(self, *, app_name: str, endpoint_name: str) -> None:
+        super().__init__(
+            ops.WaitingStatus(f"Waiting for {app_name} app on {endpoint_name} endpoint")
+        )
 
 
 class _Databag(dict):
+    def __init__(
+        self,
+        interface: data_interfaces.DatabaseRequires | data_interfaces.DatabaseProvides,
+        relation: ops.Relation,
+    ) -> None:
+        super().__init__(interface.fetch_relation_data()[relation.id])
+        self._app_name = relation.app.name
+        self._endpoint_name = relation.name
+
     def __getitem__(self, key):
         try:
             return super().__getitem__(key)
         except KeyError:
-            raise _IncompleteDatabag
+            logger.debug(
+                f"Required {key=} missing from databag for {self._app_name=} on {self._endpoint_name=}"
+            )
+            raise _IncompleteDatabag(app_name=self._app_name, endpoint_name=self._endpoint_name)
 
 
-class _MissingRelation(Exception):
+class _MissingRelation(StatusException):
     """Relation to MySQL charm does (or will) not exist"""
+
+    def __init__(self, *, endpoint_name: str) -> None:
+        super().__init__(ops.BlockedStatus(f"Missing relation: {endpoint_name}"))
 
 
 class ConnectionInformation:
@@ -38,17 +69,20 @@ class ConnectionInformation:
     (Different from user that MySQL Router runs with after bootstrap.)
     """
 
-    def __init__(self, *, interface: data_interfaces.DatabaseRequires, event):
+    def __init__(self, *, interface: data_interfaces.DatabaseRequires, event) -> None:
         relations = interface.relations
+        endpoint_name = interface.relation_name
         if not relations:
-            raise _MissingRelation
+            logger.debug(f"No relations on {endpoint_name=}")
+            raise _MissingRelation(endpoint_name=endpoint_name)
         assert len(relations) == 1
         relation = relations[0]
         if isinstance(event, ops.RelationBrokenEvent) and event.relation.id == relation.id:
             # Relation will be broken after the current event is handled
-            raise _MissingRelation
+            logger.debug(f"Relation breaking on {endpoint_name=}")
+            raise _MissingRelation(endpoint_name=endpoint_name)
         # MySQL charm databag
-        remote_databag = _Databag(interface.fetch_relation_data()[relation.id])
+        remote_databag = _Databag(interface=interface, relation=relation)
         endpoints = remote_databag["endpoints"].split(",")
         assert len(endpoints) == 1
         endpoint = endpoints[0]
@@ -88,7 +122,7 @@ class RelationEndpoint:
             charm_.reconcile_database_relations,
         )
 
-    def get_connection_info(self, event) -> typing.Optional[ConnectionInformation]:
+    def get_connection_info(self, *, event) -> typing.Optional[ConnectionInformation]:
         """Information for connection to MySQL cluster"""
         try:
             return ConnectionInformation(interface=self._interface, event=event)
@@ -99,8 +133,5 @@ class RelationEndpoint:
         """Report non-active status."""
         try:
             ConnectionInformation(interface=self._interface, event=event)
-        except _MissingRelation:
-            return ops.BlockedStatus(f"Missing relation: {self.NAME}")
-        except _IncompleteDatabag:
-            # Connection information has not been provided by the MySQL charm
-            return ops.WaitingStatus(f"Waiting for related app on endpoint: {self.NAME}")
+        except (_MissingRelation, _IncompleteDatabag) as exception:
+            return exception.status
