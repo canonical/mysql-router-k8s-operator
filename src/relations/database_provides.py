@@ -8,9 +8,9 @@ import typing
 
 import charms.data_platform_libs.v0.data_interfaces as data_interfaces
 import ops
-import remote_databag
 
 import mysql_shell
+import relations.remote_databag as remote_databag
 import status_exception
 
 if typing.TYPE_CHECKING:
