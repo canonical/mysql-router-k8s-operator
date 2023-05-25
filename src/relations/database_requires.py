@@ -88,6 +88,10 @@ class RelationEndpoint:
             charm_.reconcile_database_relations,
         )
         charm_.framework.observe(
+            self._interface.on.endpoints_changed,
+            charm_.reconcile_database_relations,
+        )
+        charm_.framework.observe(
             charm_.on[self.NAME].relation_broken,
             charm_.reconcile_database_relations,
         )
@@ -97,7 +101,11 @@ class RelationEndpoint:
         """Relation to MySQL charm"""
         if not self._interface.is_resource_created():
             return
-        return Relation(self._interface)
+        relation = Relation(self._interface)
+        # TODO: Refactor `Relation` so that we don't need to access private class member
+        if relation._remote_databag.get("endpoints") is None:
+            return
+        return relation
 
     def _is_missing_relation(self, event) -> bool:
         """Whether relation to MySQL charm does (or will) not exist"""
