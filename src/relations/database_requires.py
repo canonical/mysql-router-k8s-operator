@@ -13,22 +13,6 @@ if typing.TYPE_CHECKING:
     import charm
 
 
-@dataclasses.dataclass(kw_only=True)
-class ConnectionInformation:
-    """Information for connection to MySQL cluster
-
-    User has permission to:
-    - Create databases & users
-    - Grant all privileges on a database to a user
-    (Different from user that MySQL Router runs with after bootstrap.)
-    """
-
-    host: str
-    port: str
-    username: str
-    password: str
-
-
 class _IncompleteDatabag(KeyError):
     """Databag is missing required key"""
 
@@ -41,46 +25,37 @@ class _Databag(dict):
             raise _IncompleteDatabag
 
 
-@dataclasses.dataclass
-class _Relation:
-    """Relation to MySQL charm"""
+class _MissingRelation(Exception):
+    """Relation to MySQL charm does (or will) not exist"""
 
-    _interface: data_interfaces.DatabaseRequires
 
-    @property
-    def _relation(self) -> ops.Relation:
-        relations = self._interface.relations
+class ConnectionInformation:
+    """Information for connection to MySQL cluster
+
+    User has permission to:
+    - Create databases & users
+    - Grant all privileges on a database to a user
+    (Different from user that MySQL Router runs with after bootstrap.)
+    """
+
+    def __init__(self, *, interface: data_interfaces.DatabaseRequires, event):
+        relations = interface.relations
+        if not relations:
+            raise _MissingRelation
         assert len(relations) == 1
-        return relations[0]
-
-    @property
-    def _id(self) -> int:
-        return self._relation.id
-
-    @property
-    def _remote_databag(self) -> _Databag:
-        """MySQL charm databag"""
-        return _Databag(self._interface.fetch_relation_data()[self._id])
-
-    @property
-    def _endpoint(self) -> str:
-        """MySQL cluster primary endpoint"""
-        endpoints = self._remote_databag["endpoints"].split(",")
+        relation = relations[0]
+        if isinstance(event, ops.RelationBrokenEvent) and event.relation.id == relation.id:
+            # Relation will be broken after the current event is handled
+            raise _MissingRelation
+        # MySQL charm databag
+        remote_databag = _Databag(interface.fetch_relation_data()[relation.id])
+        endpoints = remote_databag["endpoints"].split(",")
         assert len(endpoints) == 1
-        return endpoints[0]
-
-    @property
-    def connection_info(self) -> ConnectionInformation:
-        return ConnectionInformation(
-            host=self._endpoint.split(":")[0],
-            port=self._endpoint.split(":")[1],
-            username=self._remote_databag["username"],
-            password=self._remote_databag["password"],
-        )
-
-    def is_breaking(self, event):
-        """Whether relation will be broken after the current event is handled"""
-        return isinstance(event, ops.RelationBrokenEvent) and event.relation.id == self._id
+        endpoint = endpoints[0]
+        self.host: str = endpoint.split(":")[0]
+        self.port: str = endpoint.split(":")[1]
+        self.username: str = remote_databag["username"]
+        self.password: str = remote_databag["password"]
 
 
 class RelationEndpoint:
@@ -113,30 +88,19 @@ class RelationEndpoint:
             charm_.reconcile_database_relations,
         )
 
-    @property
-    def _relation(self) -> typing.Optional[_Relation]:
-        """Relation to MySQL charm"""
-        if not self._interface.relations:
-            return
-        return _Relation(self._interface)
-
-    def _is_missing_relation(self, event) -> bool:
-        """Whether relation to MySQL charm does (or will) not exist"""
-        return self._relation is None or self._relation.is_breaking(event)
-
     def get_connection_info(self, event) -> typing.Optional[ConnectionInformation]:
         """Information for connection to MySQL cluster"""
-        if self._is_missing_relation(event=event):
-            return
         try:
-            return self._relation.connection_info
-        except _IncompleteDatabag:
+            return ConnectionInformation(interface=self._interface, event=event)
+        except (_MissingRelation, _IncompleteDatabag):
             return
 
     def get_status(self, event) -> typing.Optional[ops.StatusBase]:
         """Report non-active status."""
-        if self._is_missing_relation(event=event):
+        try:
+            ConnectionInformation(interface=self._interface, event=event)
+        except _MissingRelation:
             return ops.BlockedStatus(f"Missing relation: {self.NAME}")
-        if self.get_connection_info(event=event) is None:
+        except _IncompleteDatabag:
             # Connection information has not been provided by the MySQL charm
             return ops.WaitingStatus(f"Waiting for related app on endpoint: {self.NAME}")
