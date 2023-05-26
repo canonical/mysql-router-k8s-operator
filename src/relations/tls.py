@@ -71,7 +71,7 @@ class _PeerUnitDatabag:
         return f"tls_{key}"
 
     @property
-    def _attribute_names(self) -> typing.Generator[str]:
+    def _attribute_names(self) -> typing.Iterable[str]:
         """Class attributes with type annotation"""
         return (name for name in inspect.get_annotations(type(self)))
 
