@@ -73,7 +73,8 @@ class _PeerUnitDatabag:
     @property
     def _attribute_names(self) -> typing.Iterable[str]:
         """Class attributes with type annotation"""
-        return (name for name in inspect.get_annotations(type(self)))
+        # TODO python3.10 min version: Replace `self.__annotations__` with `inspect.get_annotations(type(self))`
+        return (name for name in self.__annotations__)
 
     def __getattr__(self, name: str) -> typing.Optional[str]:
         assert name in self._attribute_names, f"Invalid attribute {name=}"
@@ -93,7 +94,8 @@ class _PeerUnitDatabag:
             delattr(self, name)
 
 
-@dataclasses.dataclass(kw_only=True)
+# TODO python3.10 min version: Add `(kw_only=True)`
+@dataclasses.dataclass
 class _Relation:
     """Relation to TLS certificate provider"""
 

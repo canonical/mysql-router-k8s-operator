@@ -22,7 +22,8 @@ if typing.TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-@dataclasses.dataclass(kw_only=True)
+# TODO python3.10 min version: Add `(kw_only=True)`
+@dataclasses.dataclass
 class Workload:
     """MySQL Router workload"""
 
@@ -128,7 +129,8 @@ class Workload:
         logger.debug("Disabled MySQL Router service")
 
 
-@dataclasses.dataclass(kw_only=True)
+# TODO python3.10 min version: Add `(kw_only=True)`
+@dataclasses.dataclass
 class AuthenticatedWorkload(Workload):
     """Workload with connection to MySQL cluster"""
 
