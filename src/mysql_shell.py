@@ -65,7 +65,7 @@ class Shell:
     @staticmethod
     def _generate_password() -> str:
         choices = string.ascii_letters + string.digits
-        return "".join([secrets.choice(choices) for _ in range(_PASSWORD_LENGTH)])
+        return "".join(secrets.choice(choices) for _ in range(_PASSWORD_LENGTH))
 
     def _get_attributes(self, additional_attributes: dict = None) -> str:
         """Attributes for (MySQL) users created by this charm

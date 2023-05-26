@@ -96,7 +96,7 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
     def _determine_app_status(self, *, event) -> ops.StatusBase:
         """Report app status."""
         statuses = []
-        for endpoint in [self.database_requires, self.database_provides]:
+        for endpoint in (self.database_requires, self.database_provides):
             if status := endpoint.get_status(event):
                 statuses.append(status)
         return self._prioritize_statuses(statuses)
@@ -130,7 +130,7 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
                 wait=tenacity.wait_fixed(5),
             ):
                 with attempt:
-                    for port in [6446, 6447]:
+                    for port in (6446, 6447):
                         with socket.socket() as s:
                             assert s.connect_ex(("localhost", port)) == 0
         except AssertionError:

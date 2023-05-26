@@ -315,7 +315,7 @@ class AuthenticatedWorkload(Workload):
     def disable_tls(self) -> None:
         """Disable TLS and restart MySQL Router."""
         logger.debug("Disabling TLS")
-        for file in [self._TLS_CONFIG_FILE, self._TLS_KEY_FILE, self._TLS_CERTIFICATE_FILE]:
+        for file in (self._TLS_CONFIG_FILE, self._TLS_KEY_FILE, self._TLS_CERTIFICATE_FILE):
             self._delete_file(self._ROUTER_CONFIG_DIRECTORY / file)
         if self._enabled:
             self._restart(tls=False)

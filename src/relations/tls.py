@@ -71,9 +71,9 @@ class _PeerUnitDatabag:
         return f"tls_{key}"
 
     @property
-    def _attribute_names(self) -> list[str]:
+    def _attribute_names(self) -> typing.Generator[str]:
         """Class attributes with type annotation"""
-        return [name for name in inspect.get_annotations(type(self))]
+        return (name for name in inspect.get_annotations(type(self)))
 
     def __getattr__(self, name: str) -> typing.Optional[str]:
         assert name in self._attribute_names, f"Invalid attribute {name=}"
@@ -105,7 +105,7 @@ class _Relation:
     @property
     def certificate_saved(self) -> bool:
         """Whether a TLS certificate is available to use"""
-        for value in [self._peer_unit_databag.certificate, self._peer_unit_databag.ca]:
+        for value in (self._peer_unit_databag.certificate, self._peer_unit_databag.ca):
             if not value:
                 return False
         return True
