@@ -176,32 +176,46 @@ class AuthenticatedWorkload(Workload):
         logger.debug(
             f"Bootstrapping router {tls=}, {self._database_requires_relation.host=}, {self._database_requires_relation.port=}"
         )
+
+        def _get_command(password: str):
+            return [
+                "mysqlrouter",
+                "--bootstrap",
+                self._database_requires_relation.username
+                + ":"
+                + password
+                + "@"
+                + self._database_requires_relation.host
+                + ":"
+                + self._database_requires_relation.port,
+                "--strict",
+                "--user",
+                self._UNIX_USERNAME,
+                "--conf-set-option",
+                "http_server.bind_address=127.0.0.1",
+                "--conf-use-gr-notifications",
+            ]
+
+        # Redact password from log
+        logged_command = _get_command("***")
+
+        command = _get_command(self._database_requires_relation.password)
         try:
             # Bootstrap MySQL Router
             process = self._container.exec(
-                [
-                    "mysqlrouter",
-                    "--bootstrap",
-                    self._database_requires_relation.username
-                    + ":"
-                    + self._database_requires_relation.password
-                    + "@"
-                    + self._database_requires_relation.host
-                    + ":"
-                    + self._database_requires_relation.port,
-                    "--strict",
-                    "--user",
-                    self._UNIX_USERNAME,
-                    "--conf-set-option",
-                    "http_server.bind_address=127.0.0.1",
-                    "--conf-use-gr-notifications",
-                ],
+                command,
                 timeout=30,
             )
             process.wait_output()
         except ops.pebble.ExecError as e:
-            logger.exception(f"Failed to bootstrap router\nstderr:\n{e.stderr}\n")
-            raise
+            # Use `logger.error` instead of `logger.exception` so password isn't logged
+            logger.error(f"Failed to bootstrap router\n{logged_command=}\nstderr:\n{e.stderr}\n")
+            # Original exception contains password
+            # Re-raising would log the password to Juju's debug log
+            # Raise new exception
+            # `from None` disables exception chaining so that the original exception is not
+            # included in the traceback
+            raise Exception("Failed to bootstrap router") from None
         # Enable service
         self._update_layer(enabled=True, tls=tls)
 
