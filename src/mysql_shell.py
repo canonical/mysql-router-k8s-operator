@@ -32,6 +32,12 @@ class Shell:
 
     def _run_commands(self, commands: list[str]) -> None:
         """Connect to MySQL cluster and run commands."""
+        # Redact password from log
+        logged_commands = commands.copy()
+        logged_commands.insert(
+            0, f"shell.connect('{self.username}:***@{self._host}:{self._port}')"
+        )
+
         commands.insert(
             0, f"shell.connect('{self.username}:{self._password}@{self._host}:{self._port}')"
         )
@@ -42,7 +48,7 @@ class Shell:
             )
             process.wait_output()
         except ops.pebble.ExecError as e:
-            logger.exception(f"Failed to run {commands=}\nstderr:\n{e.stderr}\n")
+            logger.exception(f"Failed to run {logged_commands=}\nstderr:\n{e.stderr}\n")
             raise
         finally:
             self._container.remove_path(self._TEMPORARY_SCRIPT_FILE)
