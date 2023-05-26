@@ -112,7 +112,7 @@ class _RelationWithCreatedUser(_Relation):
             if key not in self._local_databag:
                 raise _UserNotCreated
 
-    def _delete_databag(self) -> None:
+    def delete_databag(self) -> None:
         """Remove connection information from databag."""
         logger.debug(f"Deleting databag {self._id=}")
         self._local_databag.clear()
@@ -120,7 +120,7 @@ class _RelationWithCreatedUser(_Relation):
 
     def delete_user(self, *, shell: mysql_shell.Shell) -> None:
         """Delete user and update databag."""
-        self._delete_databag()
+        self.delete_databag()
         shell.delete_user(self._get_username(shell.username))
 
 
@@ -144,6 +144,18 @@ class RelationEndpoint:
             charm_.reconcile_database_relations,
         )
 
+    @property
+    def _created_users(self) -> list[_RelationWithCreatedUser]:
+        created_users = []
+        for relation in self._interface.relations:
+            try:
+                created_users.append(
+                    _RelationWithCreatedUser(relation=relation, interface=self._interface)
+                )
+            except _UserNotCreated:
+                pass
+        return created_users
+
     def reconcile_users(
         self,
         *,
@@ -159,7 +171,6 @@ class RelationEndpoint:
         """
         logger.debug(f"Reconciling users {event=}, {router_endpoint=}")
         requested_users = []
-        created_users = []
         for relation in self._interface.relations:
             try:
                 requested_users.append(
@@ -173,20 +184,28 @@ class RelationEndpoint:
                 _UnsupportedExtraUserRole,
             ):
                 pass
-            try:
-                created_users.append(
-                    _RelationWithCreatedUser(relation=relation, interface=self._interface)
-                )
-            except _UserNotCreated:
-                pass
-        logger.debug(f"State of reconcile users {requested_users=}, {created_users=}")
+        logger.debug(f"State of reconcile users {requested_users=}, {self._created_users=}")
         for relation in requested_users:
-            if relation not in created_users:
+            if relation not in self._created_users:
                 relation.create_database_and_user(router_endpoint=router_endpoint, shell=shell)
-        for relation in created_users:
+        for relation in self._created_users:
             if relation not in requested_users:
                 relation.delete_user(shell=shell)
         logger.debug(f"Reconciled users {event=}, {router_endpoint=}")
+
+    def delete_all_databags(self) -> None:
+        """Remove connection information from all databags.
+
+        Called when relation with MySQL is breaking
+
+        When the MySQL relation is re-established, it could be a different MySQL cluster—new users
+        will need to be created.
+        """
+        logger.debug("Deleting all application databags")
+        for relation in self._created_users:
+            # MySQL charm will delete user; just delete databag
+            relation.delete_databag()
+        logger.debug("Deleted all application databags")
 
     def get_status(self, event) -> typing.Optional[ops.StatusBase]:
         """Report non-active status."""

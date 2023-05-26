@@ -25,6 +25,13 @@ class _MissingRelation(status_exception.StatusException):
         super().__init__(ops.BlockedStatus(f"Missing relation: {endpoint_name}"))
 
 
+class _RelationBreaking(_MissingRelation):
+    """Relation to MySQL charm will be broken after the current event is handled
+
+    Relation currently exists
+    """
+
+
 class ConnectionInformation:
     """Information for connection to MySQL cluster
 
@@ -38,14 +45,12 @@ class ConnectionInformation:
         relations = interface.relations
         endpoint_name = interface.relation_name
         if not relations:
-            logger.debug(f"No relations on {endpoint_name=}")
             raise _MissingRelation(endpoint_name=endpoint_name)
         assert len(relations) == 1
         relation = relations[0]
         if isinstance(event, ops.RelationBrokenEvent) and event.relation.id == relation.id:
             # Relation will be broken after the current event is handled
-            logger.debug(f"Relation breaking on {endpoint_name=}")
-            raise _MissingRelation(endpoint_name=endpoint_name)
+            raise _RelationBreaking(endpoint_name=endpoint_name)
         # MySQL charm databag
         databag = remote_databag.RemoteDatabag(interface=interface, relation=relation)
         endpoints = databag["endpoints"].split(",")
@@ -93,6 +98,16 @@ class RelationEndpoint:
             return ConnectionInformation(interface=self._interface, event=event)
         except (_MissingRelation, remote_databag.IncompleteDatabag):
             return
+
+    def is_relation_breaking(self, event) -> bool:
+        """Whether relation will be broken after the current event is handled"""
+        try:
+            ConnectionInformation(interface=self._interface, event=event)
+        except _RelationBreaking:
+            return True
+        except (_MissingRelation, remote_databag.IncompleteDatabag):
+            pass
+        return False
 
     def get_status(self, event) -> typing.Optional[ops.StatusBase]:
         """Report non-active status."""
