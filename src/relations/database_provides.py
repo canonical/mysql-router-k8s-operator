@@ -54,7 +54,7 @@ class _Relation:
         return f"{database_requires_username}-{self._id}"
 
 
-class _RequestedUser(_Relation):
+class _RelationThatRequestedUser(_Relation):
     """Related application charm that has requested a database & user"""
 
     def __init__(
@@ -100,7 +100,7 @@ class _UserNotCreated(Exception):
     """Database & user has not been provided to related application charm"""
 
 
-class _CreatedUser(_Relation):
+class _RelationWithCreatedUser(_Relation):
     """Related application charm that has been provided with a database & user"""
 
     def __init__(
@@ -163,7 +163,9 @@ class RelationEndpoint:
         for relation in self._interface.relations:
             try:
                 requested_users.append(
-                    _RequestedUser(relation=relation, interface=self._interface, event=event)
+                    _RelationThatRequestedUser(
+                        relation=relation, interface=self._interface, event=event
+                    )
                 )
             except (
                 _RelationBreaking,
@@ -172,7 +174,9 @@ class RelationEndpoint:
             ):
                 pass
             try:
-                created_users.append(_CreatedUser(relation=relation, interface=self._interface))
+                created_users.append(
+                    _RelationWithCreatedUser(relation=relation, interface=self._interface)
+                )
             except _UserNotCreated:
                 pass
         logger.debug(f"State of reconcile users {requested_users=}, {created_users=}")
@@ -191,7 +195,9 @@ class RelationEndpoint:
         for relation in self._interface.relations:
             try:
                 requested_users.append(
-                    _RequestedUser(relation=relation, interface=self._interface, event=event)
+                    _RelationThatRequestedUser(
+                        relation=relation, interface=self._interface, event=event
+                    )
                 )
             except _RelationBreaking:
                 pass
