@@ -71,9 +71,9 @@ class _PeerUnitDatabag:
         return f"tls_{key}"
 
     @property
-    def _attribute_names(self) -> list[str]:
+    def _attribute_names(self) -> typing.Iterable[str]:
         """Class attributes with type annotation"""
-        return [name for name in inspect.get_annotations(type(self))]
+        return (name for name in inspect.get_annotations(type(self)))
 
     def __getattr__(self, name: str) -> typing.Optional[str]:
         assert name in self._attribute_names, f"Invalid attribute {name=}"
@@ -105,7 +105,7 @@ class _Relation:
     @property
     def certificate_saved(self) -> bool:
         """Whether a TLS certificate is available to use"""
-        for value in [self._peer_unit_databag.certificate, self._peer_unit_databag.ca]:
+        for value in (self._peer_unit_databag.certificate, self._peer_unit_databag.ca):
             if not value:
                 return False
         return True
@@ -132,7 +132,7 @@ class _Relation:
         self._peer_unit_databag.chain = json.dumps(event.chain)
         self._peer_unit_databag.active_csr = self._peer_unit_databag.requested_csr
         logger.debug(f"Saved TLS certificate {event=}")
-        self._charm.workload.enable_tls(
+        self._charm.get_workload(event=None).enable_tls(
             key=self._unit_secrets.private_key,
             certificate=self._peer_unit_databag.certificate,
         )
@@ -187,7 +187,7 @@ class RelationEndpoint(ops.Object):
 
     NAME = "certificates"
 
-    def __init__(self, charm_: "charm.MySQLRouterOperatorCharm"):
+    def __init__(self, charm_: "charm.MySQLRouterOperatorCharm") -> None:
         super().__init__(charm_, self.NAME)
         self._charm = charm_
         self._interface = tls_certificates.TLSCertificatesRequiresV1(self._charm, self.NAME)
@@ -288,7 +288,7 @@ class RelationEndpoint(ops.Object):
         """Delete TLS certificate."""
         logger.debug("Deleting TLS certificate")
         self._peer_unit_databag.clear()
-        self._charm.workload.disable_tls()
+        self._charm.get_workload(event=None).disable_tls()
         logger.debug("Deleted TLS certificate")
 
     def _on_certificate_available(self, event: tls_certificates.CertificateAvailableEvent) -> None:

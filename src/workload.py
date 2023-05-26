@@ -132,11 +132,7 @@ class Workload:
 class AuthenticatedWorkload(Workload):
     """Workload with connection to MySQL cluster"""
 
-    # Database requires relation provides an admin user with permission to:
-    # - Create databases & users
-    # - Grant all privileges on a database to a user
-    # (Different from user that MySQL Router runs with after bootstrap.)
-    _database_requires_relation: "relations.database_requires.Relation"
+    _connection_info: "relations.database_requires.ConnectionInformation"
     _charm: "charm.MySQLRouterOperatorCharm"
 
     _TLS_KEY_FILE = "custom-key.pem"
@@ -147,10 +143,10 @@ class AuthenticatedWorkload(Workload):
         """MySQL Shell"""
         return mysql_shell.Shell(
             _container=self._container,
-            username=self._database_requires_relation.username,
-            _password=self._database_requires_relation.password,
-            _host=self._database_requires_relation.host,
-            _port=self._database_requires_relation.port,
+            username=self._connection_info.username,
+            _password=self._connection_info.password,
+            _host=self._connection_info.host,
+            _port=self._connection_info.port,
         )
 
     @property
@@ -174,20 +170,20 @@ class AuthenticatedWorkload(Workload):
     def _bootstrap_router(self, *, tls: bool) -> None:
         """Bootstrap MySQL Router and enable service."""
         logger.debug(
-            f"Bootstrapping router {tls=}, {self._database_requires_relation.host=}, {self._database_requires_relation.port=}"
+            f"Bootstrapping router {tls=}, {self._connection_info.host=}, {self._connection_info.port=}"
         )
 
         def _get_command(password: str):
             return [
                 "mysqlrouter",
                 "--bootstrap",
-                self._database_requires_relation.username
+                self._connection_info.username
                 + ":"
                 + password
                 + "@"
-                + self._database_requires_relation.host
+                + self._connection_info.host
                 + ":"
-                + self._database_requires_relation.port,
+                + self._connection_info.port,
                 "--strict",
                 "--user",
                 self._UNIX_USERNAME,
@@ -199,7 +195,7 @@ class AuthenticatedWorkload(Workload):
         # Redact password from log
         logged_command = _get_command("***")
 
-        command = _get_command(self._database_requires_relation.password)
+        command = _get_command(self._connection_info.password)
         try:
             # Bootstrap MySQL Router
             process = self._container.exec(
@@ -220,7 +216,7 @@ class AuthenticatedWorkload(Workload):
         self._update_layer(enabled=True, tls=tls)
 
         logger.debug(
-            f"Bootstrapped router {tls=}, {self._database_requires_relation.host=}, {self._database_requires_relation.port=}"
+            f"Bootstrapped router {tls=}, {self._connection_info.host=}, {self._connection_info.port=}"
         )
 
     @property
@@ -319,7 +315,7 @@ class AuthenticatedWorkload(Workload):
     def disable_tls(self) -> None:
         """Disable TLS and restart MySQL Router."""
         logger.debug("Disabling TLS")
-        for file in [self._TLS_CONFIG_FILE, self._TLS_KEY_FILE, self._TLS_CERTIFICATE_FILE]:
+        for file in (self._TLS_CONFIG_FILE, self._TLS_KEY_FILE, self._TLS_CERTIFICATE_FILE):
             self._delete_file(self._ROUTER_CONFIG_DIRECTORY / file)
         if self._enabled:
             self._restart(tls=False)

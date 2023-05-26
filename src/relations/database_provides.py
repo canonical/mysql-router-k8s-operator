@@ -3,7 +3,6 @@
 
 """Relation(s) to one or more application charms"""
 
-import dataclasses
 import logging
 import typing
 
@@ -11,6 +10,8 @@ import charms.data_platform_libs.v0.data_interfaces as data_interfaces
 import ops
 
 import mysql_shell
+import relations.remote_databag as remote_databag
+import status_exception
 
 if typing.TYPE_CHECKING:
     import charm
@@ -18,47 +19,31 @@ if typing.TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-@dataclasses.dataclass(kw_only=True)
+class _RelationBreaking(Exception):
+    """Relation will be broken after the current event is handled"""
+
+
+class _UnsupportedExtraUserRole(status_exception.StatusException):
+    """Application charm requested unsupported extra user role"""
+
+    def __init__(self, *, app_name: str, endpoint_name: str) -> None:
+        message = (
+            f"{app_name} app requested unsupported extra user role on {endpoint_name} endpoint"
+        )
+        logger.warning(message)
+        super().__init__(ops.BlockedStatus(message))
+
+
 class _Relation:
     """Relation to one application charm"""
 
-    _relation: ops.Relation
-    _interface: data_interfaces.DatabaseProvides
+    def __init__(self, *, relation: ops.Relation) -> None:
+        self._id = relation.id
 
-    @property
-    def id(self) -> int:
-        return self._relation.id
-
-    @property
-    def _local_databag(self) -> ops.RelationDataContent:
-        """MySQL Router charm databag"""
-        return self._relation.data[self._interface.local_app]
-
-    @property
-    def _remote_databag(self) -> dict:
-        """MySQL charm databag"""
-        return self._interface.fetch_relation_data()[self.id]
-
-    @property
-    def user_created(self) -> bool:
-        """Whether database user has been shared with application charm"""
-        for key in ["database", "username", "password", "endpoints"]:
-            if key not in self._local_databag:
-                return False
-        return True
-
-    @property
-    def _database(self) -> str:
-        """Requested database name"""
-        return self._remote_databag["database"]
-
-    @property
-    def status(self) -> typing.Optional[ops.StatusBase]:
-        """Non-active status"""
-        if self._remote_databag.get("extra-user-roles"):
-            return ops.BlockedStatus(
-                f"{self._relation.app.name} app requested unsupported extra user role"
-            )
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, _Relation):
+            return False
+        return self._id == other._id
 
     def _get_username(self, database_requires_username: str) -> str:
         """Database username"""
@@ -66,28 +51,41 @@ class _Relation:
         # This ensures a unique username if MySQL Router is deployed in a different Juju model
         # from MySQL.
         # (Relation IDs are only unique within a Juju model.)
-        return f"{database_requires_username}-{self.id}"
+        return f"{database_requires_username}-{self._id}"
+
+
+class _RelationThatRequestedUser(_Relation):
+    """Related application charm that has requested a database & user"""
+
+    def __init__(
+        self, *, relation: ops.Relation, interface: data_interfaces.DatabaseProvides, event
+    ) -> None:
+        super().__init__(relation=relation)
+        self._interface = interface
+        if isinstance(event, ops.RelationBrokenEvent) and event.relation.id == self._id:
+            raise _RelationBreaking
+        # Application charm databag
+        databag = remote_databag.RemoteDatabag(interface=interface, relation=relation)
+        self._database: str = databag["database"]
+        if databag.get("extra-user-roles"):
+            raise _UnsupportedExtraUserRole(
+                app_name=relation.app.name, endpoint_name=relation.name
+            )
 
     def _set_databag(self, *, username: str, password: str, router_endpoint: str) -> None:
         """Share connection information with application charm."""
         read_write_endpoint = f"{router_endpoint}:6446"
         read_only_endpoint = f"{router_endpoint}:6447"
         logger.debug(
-            f"Setting databag {self.id=} {self._database=}, {username=}, {read_write_endpoint=}, {read_only_endpoint=}"
+            f"Setting databag {self._id=} {self._database=}, {username=}, {read_write_endpoint=}, {read_only_endpoint=}"
         )
-        self._interface.set_database(self.id, self._database)
-        self._interface.set_credentials(self.id, username, password)
-        self._interface.set_endpoints(self.id, read_write_endpoint)
-        self._interface.set_read_only_endpoints(self.id, read_only_endpoint)
+        self._interface.set_database(self._id, self._database)
+        self._interface.set_credentials(self._id, username, password)
+        self._interface.set_endpoints(self._id, read_write_endpoint)
+        self._interface.set_read_only_endpoints(self._id, read_only_endpoint)
         logger.debug(
-            f"Set databag {self.id=} {self._database=}, {username=}, {read_write_endpoint=}, {read_only_endpoint=}"
+            f"Set databag {self._id=} {self._database=}, {username=}, {read_write_endpoint=}, {read_only_endpoint=}"
         )
-
-    def _delete_databag(self) -> None:
-        """Remove connection information from databag."""
-        logger.debug(f"Deleting databag {self.id=}")
-        self._local_databag.clear()
-        logger.debug(f"Deleted databag {self.id=}")
 
     def create_database_and_user(self, *, router_endpoint: str, shell: mysql_shell.Shell) -> None:
         """Create database & user and update databag."""
@@ -97,14 +95,33 @@ class _Relation:
         )
         self._set_databag(username=username, password=password, router_endpoint=router_endpoint)
 
+
+class _UserNotCreated(Exception):
+    """Database & user has not been provided to related application charm"""
+
+
+class _RelationWithCreatedUser(_Relation):
+    """Related application charm that has been provided with a database & user"""
+
+    def __init__(
+        self, *, relation: ops.Relation, interface: data_interfaces.DatabaseProvides
+    ) -> None:
+        super().__init__(relation=relation)
+        self._local_databag = relation.data[interface.local_app]
+        for key in ("database", "username", "password", "endpoints"):
+            if key not in self._local_databag:
+                raise _UserNotCreated
+
+    def _delete_databag(self) -> None:
+        """Remove connection information from databag."""
+        logger.debug(f"Deleting databag {self._id=}")
+        self._local_databag.clear()
+        logger.debug(f"Deleted databag {self._id=}")
+
     def delete_user(self, *, shell: mysql_shell.Shell) -> None:
         """Delete user and update databag."""
         self._delete_databag()
         shell.delete_user(self._get_username(shell.username))
-
-    def is_breaking(self, event):
-        """Whether relation will be broken after the current event is handled"""
-        return isinstance(event, ops.RelationBrokenEvent) and event.relation.id == self.id
 
 
 class RelationEndpoint:
@@ -115,6 +132,10 @@ class RelationEndpoint:
     def __init__(self, charm_: "charm.MySQLRouterOperatorCharm") -> None:
         self._interface = data_interfaces.DatabaseProvides(charm_, relation_name=self.NAME)
         charm_.framework.observe(
+            charm_.on[self.NAME].relation_joined,
+            charm_.reconcile_database_relations,
+        )
+        charm_.framework.observe(
             self._interface.on.database_requested,
             charm_.reconcile_database_relations,
         )
@@ -122,39 +143,6 @@ class RelationEndpoint:
             charm_.on[self.NAME].relation_broken,
             charm_.reconcile_database_relations,
         )
-
-    @property
-    def _relations(self) -> list[_Relation]:
-        return [
-            _Relation(_relation=relation, _interface=self._interface)
-            for relation in self._interface.relations
-        ]
-
-    def _requested_users(self, *, event) -> list[_Relation]:
-        """Related application charms that have requested a database & user"""
-        requested_users = []
-        for relation in self._relations:
-            if isinstance(event, ops.RelationBrokenEvent) and event.relation.id == relation.id:
-                # Relation is being removed; delete user
-                continue
-            requested_users.append(relation)
-        return requested_users
-
-    @property
-    def _created_users(self) -> list[_Relation]:
-        """Users that have been created and shared with an application charm"""
-        return [relation for relation in self._relations if relation.user_created]
-
-    def get_status(self, event) -> typing.Optional[ops.StatusBase]:
-        """Report non-active status."""
-        active_relations = [
-            relation for relation in self._relations if not relation.is_breaking(event)
-        ]
-        if not active_relations:
-            return ops.BlockedStatus(f"Missing relation: {self.NAME}")
-        for relation in active_relations:
-            if status := relation.status:
-                return status
 
     def reconcile_users(
         self,
@@ -170,8 +158,27 @@ class RelationEndpoint:
         relation is broken.
         """
         logger.debug(f"Reconciling users {event=}, {router_endpoint=}")
-        requested_users = self._requested_users(event=event)
-        created_users = self._created_users
+        requested_users = []
+        created_users = []
+        for relation in self._interface.relations:
+            try:
+                requested_users.append(
+                    _RelationThatRequestedUser(
+                        relation=relation, interface=self._interface, event=event
+                    )
+                )
+            except (
+                _RelationBreaking,
+                remote_databag.IncompleteDatabag,
+                _UnsupportedExtraUserRole,
+            ):
+                pass
+            try:
+                created_users.append(
+                    _RelationWithCreatedUser(relation=relation, interface=self._interface)
+                )
+            except _UserNotCreated:
+                pass
         logger.debug(f"State of reconcile users {requested_users=}, {created_users=}")
         for relation in requested_users:
             if relation not in created_users:
@@ -180,3 +187,30 @@ class RelationEndpoint:
             if relation not in requested_users:
                 relation.delete_user(shell=shell)
         logger.debug(f"Reconciled users {event=}, {router_endpoint=}")
+
+    def get_status(self, event) -> typing.Optional[ops.StatusBase]:
+        """Report non-active status."""
+        requested_users = []
+        exceptions: list[status_exception.StatusException] = []
+        for relation in self._interface.relations:
+            try:
+                requested_users.append(
+                    _RelationThatRequestedUser(
+                        relation=relation, interface=self._interface, event=event
+                    )
+                )
+            except _RelationBreaking:
+                pass
+            except (remote_databag.IncompleteDatabag, _UnsupportedExtraUserRole) as exception:
+                exceptions.append(exception)
+        # Always report unsupported extra user role
+        for exception in exceptions:
+            if isinstance(exception, _UnsupportedExtraUserRole):
+                return exception.status
+        if requested_users:
+            # At least one relation is active—do not report about inactive relations
+            return
+        for exception in exceptions:
+            if isinstance(exception, remote_databag.IncompleteDatabag):
+                return exception.status
+        return ops.BlockedStatus(f"Missing relation: {self.NAME}")

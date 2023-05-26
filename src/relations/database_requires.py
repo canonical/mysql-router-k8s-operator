@@ -3,67 +3,58 @@
 
 """Relation to MySQL charm"""
 
-import dataclasses
+import logging
 import typing
 
 import charms.data_platform_libs.v0.data_interfaces as data_interfaces
 import ops
 
+import relations.remote_databag as remote_databag
+import status_exception
+
 if typing.TYPE_CHECKING:
     import charm
 
+logger = logging.getLogger(__name__)
 
-@dataclasses.dataclass
-class Relation:
-    """Relation to MySQL charm"""
 
-    _interface: data_interfaces.DatabaseRequires
+class _MissingRelation(status_exception.StatusException):
+    """Relation to MySQL charm does (or will) not exist"""
 
-    @property
-    def _relation(self) -> ops.Relation:
-        relations = self._interface.relations
+    def __init__(self, *, endpoint_name: str) -> None:
+        super().__init__(ops.BlockedStatus(f"Missing relation: {endpoint_name}"))
+
+
+class ConnectionInformation:
+    """Information for connection to MySQL cluster
+
+    User has permission to:
+    - Create databases & users
+    - Grant all privileges on a database to a user
+    (Different from user that MySQL Router runs with after bootstrap.)
+    """
+
+    def __init__(self, *, interface: data_interfaces.DatabaseRequires, event) -> None:
+        relations = interface.relations
+        endpoint_name = interface.relation_name
+        if not relations:
+            logger.debug(f"No relations on {endpoint_name=}")
+            raise _MissingRelation(endpoint_name=endpoint_name)
         assert len(relations) == 1
-        return relations[0]
-
-    @property
-    def _id(self) -> int:
-        return self._relation.id
-
-    @property
-    def _remote_databag(self) -> dict:
-        """MySQL charm databag"""
-        return self._interface.fetch_relation_data()[self._id]
-
-    @property
-    def _endpoint(self) -> str:
-        """MySQL cluster primary endpoint"""
-        endpoints = self._remote_databag["endpoints"].split(",")
+        relation = relations[0]
+        if isinstance(event, ops.RelationBrokenEvent) and event.relation.id == relation.id:
+            # Relation will be broken after the current event is handled
+            logger.debug(f"Relation breaking on {endpoint_name=}")
+            raise _MissingRelation(endpoint_name=endpoint_name)
+        # MySQL charm databag
+        databag = remote_databag.RemoteDatabag(interface=interface, relation=relation)
+        endpoints = databag["endpoints"].split(",")
         assert len(endpoints) == 1
-        return endpoints[0]
-
-    @property
-    def host(self) -> str:
-        """MySQL cluster primary host"""
-        return self._endpoint.split(":")[0]
-
-    @property
-    def port(self) -> str:
-        """MySQL cluster primary port"""
-        return self._endpoint.split(":")[1]
-
-    @property
-    def username(self) -> str:
-        """Admin username"""
-        return self._remote_databag["username"]
-
-    @property
-    def password(self) -> str:
-        """Admin password"""
-        return self._remote_databag["password"]
-
-    def is_breaking(self, event):
-        """Whether relation will be broken after the current event is handled"""
-        return isinstance(event, ops.RelationBrokenEvent) and event.relation.id == self._id
+        endpoint = endpoints[0]
+        self.host: str = endpoint.split(":")[0]
+        self.port: str = endpoint.split(":")[1]
+        self.username: str = databag["username"]
+        self.password: str = databag["password"]
 
 
 class RelationEndpoint:
@@ -96,28 +87,16 @@ class RelationEndpoint:
             charm_.reconcile_database_relations,
         )
 
-    @property
-    def relation(self) -> typing.Optional[Relation]:
-        """Relation to MySQL charm"""
-        if not self._interface.is_resource_created():
+    def get_connection_info(self, *, event) -> typing.Optional[ConnectionInformation]:
+        """Information for connection to MySQL cluster"""
+        try:
+            return ConnectionInformation(interface=self._interface, event=event)
+        except (_MissingRelation, remote_databag.IncompleteDatabag):
             return
-        relation = Relation(self._interface)
-        # TODO: Refactor `Relation` so that we don't need to access private class member
-        if relation._remote_databag.get("endpoints") is None:
-            return
-        return relation
-
-    def _is_missing_relation(self, event) -> bool:
-        """Whether relation to MySQL charm does (or will) not exist"""
-        # Cannot use `self.relation.is_breaking()` in case relation exists but resource not created
-        if self._interface.relations and Relation(self._interface).is_breaking(event):
-            return True
-        return len(self._interface.relations) == 0
 
     def get_status(self, event) -> typing.Optional[ops.StatusBase]:
         """Report non-active status."""
-        if self._is_missing_relation(event):
-            return ops.BlockedStatus(f"Missing relation: {self.NAME}")
-        if self.relation is None:
-            # Resource (database & user) has not been created by the MySQL charm
-            return ops.WaitingStatus(f"Waiting for related app on endpoint: {self.NAME}")
+        try:
+            ConnectionInformation(interface=self._interface, event=event)
+        except (_MissingRelation, remote_databag.IncompleteDatabag) as exception:
+            return exception.status

@@ -46,16 +46,13 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
 
         self.tls = relations.tls.RelationEndpoint(self)
 
-    @property
-    def workload(self):
+    def get_workload(self, *, event):
         """MySQL Router workload"""
-        # Defined as a property instead of an attribute in __init__ since this class is
-        # not re-instantiated between events (if there are deferred events)
         container = self.unit.get_container(workload.Workload.CONTAINER_NAME)
-        if self.database_requires.relation:
+        if connection_info := self.database_requires.get_connection_info(event=event):
             return workload.AuthenticatedWorkload(
                 _container=container,
-                _database_requires_relation=self.database_requires.relation,
+                _connection_info=connection_info,
                 _charm=self,
             )
         return workload.Workload(_container=container)
@@ -99,15 +96,15 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
     def _determine_app_status(self, *, event) -> ops.StatusBase:
         """Report app status."""
         statuses = []
-        for endpoint in [self.database_requires, self.database_provides]:
+        for endpoint in (self.database_requires, self.database_provides):
             if status := endpoint.get_status(event):
                 statuses.append(status)
         return self._prioritize_statuses(statuses)
 
-    def _determine_unit_status(self) -> ops.StatusBase:
+    def _determine_unit_status(self, *, event) -> ops.StatusBase:
         """Report unit status."""
         statuses = []
-        if not self.workload.container_ready:
+        if not self.get_workload(event=event).container_ready:
             statuses.append(ops.MaintenanceStatus("Waiting for container"))
         return self._prioritize_statuses(statuses)
 
@@ -116,7 +113,7 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
         if self.unit.is_leader():
             self.app.status = self._determine_app_status(event=event)
             logger.debug(f"Set app status to {self.app.status}")
-        self.unit.status = self._determine_unit_status()
+        self.unit.status = self._determine_unit_status(event=event)
         logger.debug(f"Set unit status to {self.unit.status}")
 
     def wait_until_mysql_router_ready(self) -> None:
@@ -133,7 +130,7 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
                 wait=tenacity.wait_fixed(5),
             ):
                 with attempt:
-                    for port in [6446, 6447]:
+                    for port in (6446, 6447):
                         with socket.socket() as s:
                             assert s.connect_ex(("localhost", port)) == 0
         except AssertionError:
@@ -201,35 +198,31 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
 
     def reconcile_database_relations(self, event=None) -> None:
         """Handle database requires/provides events."""
+        workload_ = self.get_workload(event=event)
         logger.debug(
             "State of reconcile "
             f"{self.unit.is_leader()=}, "
-            f"{isinstance(self.workload, workload.AuthenticatedWorkload)=}, "
-            f"{self.database_requires.relation and self.database_requires.relation.is_breaking(event)=}, "
-            f"{self.workload.container_ready=}, "
+            f"{isinstance(workload_, workload.AuthenticatedWorkload)=}, "
+            f"{workload_.container_ready=}, "
             f"{isinstance(event, ops.UpgradeCharmEvent)=}"
         )
         if (
             self.unit.is_leader()
-            and isinstance(self.workload, workload.AuthenticatedWorkload)
-            and self.workload.container_ready
+            and isinstance(workload_, workload.AuthenticatedWorkload)
+            and workload_.container_ready
         ):
             self.database_provides.reconcile_users(
                 event=event,
                 router_endpoint=self._endpoint,
-                shell=self.workload.shell,
+                shell=workload_.shell,
             )
-        if (
-            isinstance(self.workload, workload.AuthenticatedWorkload)
-            and self.workload.container_ready
-            and not self.database_requires.relation.is_breaking(event)
-        ):
+        if isinstance(workload_, workload.AuthenticatedWorkload) and workload_.container_ready:
             if isinstance(event, ops.UpgradeCharmEvent):
                 # Pod restart (https://juju.is/docs/sdk/start-event#heading--emission-sequence)
-                self.workload.cleanup_after_pod_restart()
-            self.workload.enable(tls=self.tls.certificate_saved, unit_name=self.unit.name)
-        elif self.workload.container_ready:
-            self.workload.disable()
+                workload_.cleanup_after_pod_restart()
+            workload_.enable(tls=self.tls.certificate_saved, unit_name=self.unit.name)
+        elif workload_.container_ready:
+            workload_.disable()
         self.set_status(event=event)
 
     def _on_install(self, _) -> None:
@@ -247,7 +240,7 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
         self.set_status(event=None)
 
     def _on_mysql_router_pebble_ready(self, _) -> None:
-        self.unit.set_workload_version(self.workload.version)
+        self.unit.set_workload_version(self.get_workload(event=None).version)
         self.reconcile_database_relations()
 
     def _on_leader_elected(self, _) -> None:
