@@ -27,6 +27,10 @@ logger = logging.getLogger(__name__)
 class MySQLRouterOperatorCharm(ops.CharmBase):
     """Operator charm for MySQL Router"""
 
+    # Track if unit has previously handled a mysql_router_pebble_ready event
+    # (to detect pod restart)
+    _stored = ops.framework.StoredState()
+
     def __init__(self, *args) -> None:
         super().__init__(*args)
 
@@ -40,9 +44,6 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
             getattr(self.on, "mysql_router_pebble_ready"), self._on_mysql_router_pebble_ready
         )
         self.framework.observe(self.on.leader_elected, self._on_leader_elected)
-
-        # Start workload after pod restart
-        self.framework.observe(self.on.upgrade_charm, self.reconcile_database_relations)
 
         self.tls = relations.tls.RelationEndpoint(self)
 
@@ -196,7 +197,7 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
     #  Handlers
     # =======================
 
-    def reconcile_database_relations(self, event=None) -> None:
+    def reconcile_database_relations(self, event=None, *, pod_restart=False) -> None:
         """Handle database requires/provides events."""
         workload_ = self.get_workload(event=event)
         logger.debug(
@@ -220,8 +221,7 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
                 shell=workload_.shell,
             )
         if isinstance(workload_, workload.AuthenticatedWorkload) and workload_.container_ready:
-            if isinstance(event, ops.UpgradeCharmEvent):
-                # Pod restart (https://juju.is/docs/sdk/start-event#heading--emission-sequence)
+            if pod_restart:
                 workload_.cleanup_after_pod_restart()
             workload_.enable(tls=self.tls.certificate_saved, unit_name=self.unit.name)
         elif workload_.container_ready:
@@ -244,7 +244,13 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
 
     def _on_mysql_router_pebble_ready(self, _) -> None:
         self.unit.set_workload_version(self.get_workload(event=None).version)
-        self.reconcile_database_relations()
+        # Check if unit has already handled a pebble ready event
+        if self._stored.get("handled_mysql_router_pebble_ready_event"):
+            # Pod restart
+            self.reconcile_database_relations(pod_restart=True)
+        else:
+            self.reconcile_database_relations()
+            self._stored["handled_mysql_router_pebble_ready_event"] = True
 
     def _on_leader_elected(self, _) -> None:
         # Update app status
@@ -252,4 +258,8 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
 
 
 if __name__ == "__main__":
-    ops.main.main(MySQLRouterOperatorCharm)
+    ops.main.main(
+        MySQLRouterOperatorCharm,
+        # Persist stored state across pod restart
+        use_juju_for_storage=True,
+    )
