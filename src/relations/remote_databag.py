@@ -4,6 +4,7 @@
 """Relation databag for remote application"""
 
 import logging
+import typing
 
 import charms.data_platform_libs.v0.data_interfaces as data_interfaces
 import ops
@@ -27,7 +28,10 @@ class RemoteDatabag(dict):
 
     def __init__(
         self,
-        interface: data_interfaces.DatabaseRequires | data_interfaces.DatabaseProvides,
+        # TODO python3.10 min version: Use `|` instead of `typing.Union`
+        interface: typing.Union[
+            data_interfaces.DatabaseRequires, data_interfaces.DatabaseProvides
+        ],
         relation: ops.Relation,
     ) -> None:
         super().__init__(interface.fetch_relation_data()[relation.id])
