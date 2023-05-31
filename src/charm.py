@@ -251,6 +251,7 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
             handled_event = False
         if handled_event:
             # Pod restart
+            logger.debug("Pod restart detected")
             self.reconcile_database_relations(pod_restart=True)
         else:
             self.reconcile_database_relations()
