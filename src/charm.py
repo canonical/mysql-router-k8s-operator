@@ -245,12 +245,16 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
     def _on_mysql_router_pebble_ready(self, _) -> None:
         self.unit.set_workload_version(self.get_workload(event=None).version)
         # Check if unit has already handled a pebble ready event
-        if self._stored.get("handled_mysql_router_pebble_ready_event"):
+        try:
+            handled_event = self._stored.handled_mysql_router_pebble_ready_event
+        except AttributeError:
+            handled_event = False
+        if handled_event:
             # Pod restart
             self.reconcile_database_relations(pod_restart=True)
         else:
             self.reconcile_database_relations()
-            self._stored["handled_mysql_router_pebble_ready_event"] = True
+            self._stored.handled_mysql_router_pebble_ready_event = True
 
     def _on_leader_elected(self, _) -> None:
         # Update app status
