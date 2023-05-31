@@ -29,6 +29,7 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
 
     # Track if unit has previously handled a mysql_router_pebble_ready event
     # (to detect pod restart)
+    # Workaround for https://bugs.launchpad.net/juju/+bug/2021891
     _stored = ops.framework.StoredState()
 
     def __init__(self, *args) -> None:
@@ -245,6 +246,7 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
     def _on_mysql_router_pebble_ready(self, _) -> None:
         self.unit.set_workload_version(self.get_workload(event=None).version)
         # Check if unit has already handled a pebble ready event
+        # Workaround for https://bugs.launchpad.net/juju/+bug/2021891
         try:
             handled_event = self._stored.handled_mysql_router_pebble_ready_event
         except AttributeError:
