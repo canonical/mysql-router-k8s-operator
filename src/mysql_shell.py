@@ -11,11 +11,21 @@ import json
 import logging
 import secrets
 import string
+import typing
 
 import ops
 
 _PASSWORD_LENGTH = 24
 logger = logging.getLogger(__name__)
+
+
+# TODO python3.10 min version: Add `(kw_only=True)`
+@dataclasses.dataclass
+class RouterUserInformation:
+    """MySQL Router user information"""
+
+    username: str
+    router_id: str
 
 
 # TODO python3.10 min version: Add `(kw_only=True)`
@@ -31,7 +41,7 @@ class Shell:
 
     _TEMPORARY_SCRIPT_FILE = "/tmp/script.py"
 
-    def _run_commands(self, commands: list[str]) -> None:
+    def _run_commands(self, commands: list[str]) -> str:
         """Connect to MySQL cluster and run commands."""
         # Redact password from log
         logged_commands = commands.copy()
@@ -47,12 +57,13 @@ class Shell:
             process = self._container.exec(
                 ["mysqlsh", "--no-wizard", "--python", "--file", self._TEMPORARY_SCRIPT_FILE]
             )
-            process.wait_output()
+            stdout, _ = process.wait_output()
         except ops.pebble.ExecError as e:
             logger.exception(f"Failed to run {logged_commands=}\nstderr:\n{e.stderr}\n")
             raise
         finally:
             self._container.remove_path(self._TEMPORARY_SCRIPT_FILE)
+        return stdout
 
     def _run_sql(self, sql_statements: list[str]) -> None:
         """Connect to MySQL cluster and execute SQL."""
@@ -105,38 +116,46 @@ class Shell:
         self._run_sql([f"ALTER USER `{username}` ATTRIBUTE '{attributes}'"])
         logger.debug(f"Added {attributes=} to {username=}")
 
-    def delete_user(self, username: str) -> None:
-        """Delete user."""
-        logger.debug(f"Deleting {username=}")
-        self._run_sql([f"DROP USER `{username}`"])
-        logger.debug(f"Deleted {username=}")
+    def get_mysql_router_user_for_unit(
+        self, unit_name: str
+    ) -> typing.Optional[RouterUserInformation]:
+        """Get MySQL Router user created by a previous instance of the unit.
 
-    def delete_router_user_after_pod_restart(self, router_id: str) -> None:
-        """Delete MySQL Router user created by a previous instance of this unit.
+        Get username & router ID attribute.
 
-        Before pod restart, the charm does not have an opportunity to delete the MySQL Router user.
-        During MySQL Router bootstrap, a new user is created. Before bootstrap, the old user
-        should be deleted.
+        Before container restart, the charm does not have an opportunity to delete the MySQL
+        Router user or cluster metadata created during MySQL Router bootstrap. After container
+        restart, the user and cluster metadata should be deleted before bootstrapping MySQL Router
+        again.
         """
-        logger.debug(f"Deleting MySQL Router user {router_id=} created by {self.username=}")
-        self._run_sql(
-            [
-                f"SELECT CONCAT('DROP USER ', GROUP_CONCAT(QUOTE(USER), '@', QUOTE(HOST))) INTO @sql FROM INFORMATION_SCHEMA.USER_ATTRIBUTES WHERE ATTRIBUTE->'$.created_by_user'='{self.username}' AND ATTRIBUTE->'$.router_id'='{router_id}'",
-                "PREPARE stmt FROM @sql",
-                "EXECUTE stmt",
-                "DEALLOCATE PREPARE stmt",
-            ]
+        rows = json.loads(
+            self._run_commands(
+                [
+                    f"result = session.run_sql(\"SELECT USER, ATTRIBUTE->>'$.router_id' FROM INFORMATION_SCHEMA.USER_ATTRIBUTES WHERE ATTRIBUTE->'$.created_by_user'='{self.username}' AND ATTRIBUTE->'$.created_by_juju_unit'='{unit_name}'\")",
+                    "print(result.fetch_all())",
+                ]
+            )
         )
-        logger.debug(f"Deleted MySQL Router user {router_id=} created by {self.username=}")
+        if not rows:
+            return
+        assert len(rows) == 1
+        username, router_id = rows[0]
+        return RouterUserInformation(username=username, router_id=router_id)
 
     def remove_router_from_cluster_metadata(self, router_id: str) -> None:
         """Remove MySQL Router from InnoDB Cluster metadata.
 
-        On pod restart, MySQL Router bootstrap will fail without `--force` if cluster metadata
-        already exists for the router ID.
+        On container restart, MySQL Router bootstrap will fail without `--force` if cluster
+        metadata already exists for the router ID.
         """
         logger.debug(f"Removing {router_id=} from cluster metadata")
         self._run_commands(
             ["cluster = dba.get_cluster()", f'cluster.remove_router_metadata("{router_id}")']
         )
         logger.debug(f"Removed {router_id=} from cluster metadata")
+
+    def delete_user(self, username: str) -> None:
+        """Delete user."""
+        logger.debug(f"Deleting {username=}")
+        self._run_sql([f"DROP USER `{username}`"])
+        logger.debug(f"Deleted {username=}")
