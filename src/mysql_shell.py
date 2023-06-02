@@ -128,6 +128,7 @@ class Shell:
         restart, the user and cluster metadata should be deleted before bootstrapping MySQL Router
         again.
         """
+        logger.debug(f"Getting MySQL Router user for {unit_name=}")
         rows = json.loads(
             self._run_commands(
                 [
@@ -137,10 +138,13 @@ class Shell:
             )
         )
         if not rows:
+            logger.debug(f"No MySQL Router user found for {unit_name=}")
             return
         assert len(rows) == 1
         username, router_id = rows[0]
-        return RouterUserInformation(username=username, router_id=router_id)
+        user_info = RouterUserInformation(username=username, router_id=router_id)
+        logger.debug(f"MySQL Router user found for {unit_name=}: {user_info}")
+        return user_info
 
     def remove_router_from_cluster_metadata(self, router_id: str) -> None:
         """Remove MySQL Router from InnoDB Cluster metadata.
