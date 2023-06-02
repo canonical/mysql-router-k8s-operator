@@ -36,6 +36,8 @@ class Workload:
     _ROUTER_DATA_DIRECTORY = pathlib.Path("/var/lib/mysqlrouter")
     _ROUTER_CONFIG_FILE = "mysqlrouter.conf"
     _TLS_CONFIG_FILE = "tls.conf"
+    _TLS_KEY_FILE = "custom-key.pem"
+    _TLS_CERTIFICATE_FILE = "custom-certificate.pem"
 
     @property
     def container_ready(self) -> bool:
@@ -128,6 +130,64 @@ class Workload:
         self._delete_directory(self._ROUTER_DATA_DIRECTORY)
         logger.debug("Disabled MySQL Router service")
 
+    def _write_file(self, path: pathlib.Path, content: str) -> None:
+        """Write content to file.
+
+        Args:
+            path: Full filesystem path (with filename)
+            content: File content
+        """
+        self._container.push(
+            str(path),
+            content,
+            permissions=0o600,
+            user=self._UNIX_USERNAME,
+            group=self._UNIX_USERNAME,
+        )
+        logger.debug(f"Wrote file {path=}")
+
+    def _delete_file(self, path: pathlib.Path) -> None:
+        """Delete file.
+
+        Args:
+            path: Full filesystem path (with filename)
+        """
+        path = str(path)
+        if self._container.exists(path):
+            self._container.remove_path(path)
+            logger.debug(f"Deleted file {path=}")
+
+    @property
+    def _tls_config_file(self) -> str:
+        """Render config file template to string.
+
+        Config file enables TLS on MySQL Router.
+        """
+        with open("templates/tls.cnf", "r") as template_file:
+            template = string.Template(template_file.read())
+        config_string = template.substitute(
+            tls_ssl_key_file=self._ROUTER_CONFIG_DIRECTORY / self._TLS_KEY_FILE,
+            tls_ssl_cert_file=self._ROUTER_CONFIG_DIRECTORY / self._TLS_CERTIFICATE_FILE,
+        )
+        return config_string
+
+    def enable_tls(self, *, key: str, certificate: str):
+        """Enable TLS."""
+        logger.debug("Enabling TLS")
+        self._write_file(
+            self._ROUTER_CONFIG_DIRECTORY / self._TLS_CONFIG_FILE, self._tls_config_file
+        )
+        self._write_file(self._ROUTER_CONFIG_DIRECTORY / self._TLS_KEY_FILE, key)
+        self._write_file(self._ROUTER_CONFIG_DIRECTORY / self._TLS_CERTIFICATE_FILE, certificate)
+        logger.debug("Enabled TLS")
+
+    def disable_tls(self) -> None:
+        """Disable TLS."""
+        logger.debug("Disabling TLS")
+        for file in (self._TLS_CONFIG_FILE, self._TLS_KEY_FILE, self._TLS_CERTIFICATE_FILE):
+            self._delete_file(self._ROUTER_CONFIG_DIRECTORY / file)
+        logger.debug("Disabled TLS")
+
 
 # TODO python3.10 min version: Add `(kw_only=True)`
 @dataclasses.dataclass
@@ -136,9 +196,6 @@ class AuthenticatedWorkload(Workload):
 
     _connection_info: "relations.database_requires.ConnectionInformation"
     _charm: "charm.MySQLRouterOperatorCharm"
-
-    _TLS_KEY_FILE = "custom-key.pem"
-    _TLS_CERTIFICATE_FILE = "custom-certificate.pem"
 
     @property
     def shell(self) -> mysql_shell.Shell:
@@ -261,64 +318,14 @@ class AuthenticatedWorkload(Workload):
         # status
         self._charm.set_status(event=None)
 
-    def _write_file(self, path: pathlib.Path, content: str) -> None:
-        """Write content to file.
-
-        Args:
-            path: Full filesystem path (with filename)
-            content: File content
-        """
-        self._container.push(
-            str(path),
-            content,
-            permissions=0o600,
-            user=self._UNIX_USERNAME,
-            group=self._UNIX_USERNAME,
-        )
-        logger.debug(f"Wrote file {path=}")
-
-    def _delete_file(self, path: pathlib.Path) -> None:
-        """Delete file.
-
-        Args:
-            path: Full filesystem path (with filename)
-        """
-        path = str(path)
-        if self._container.exists(path):
-            self._container.remove_path(path)
-            logger.debug(f"Deleted file {path=}")
-
-    @property
-    def _tls_config_file(self) -> str:
-        """Render config file template to string.
-
-        Config file enables TLS on MySQL Router.
-        """
-        with open("templates/tls.cnf", "r") as template_file:
-            template = string.Template(template_file.read())
-        config_string = template.substitute(
-            tls_ssl_key_file=self._ROUTER_CONFIG_DIRECTORY / self._TLS_KEY_FILE,
-            tls_ssl_cert_file=self._ROUTER_CONFIG_DIRECTORY / self._TLS_CERTIFICATE_FILE,
-        )
-        return config_string
-
     def enable_tls(self, *, key: str, certificate: str):
         """Enable TLS and restart MySQL Router."""
-        logger.debug("Enabling TLS")
-        self._write_file(
-            self._ROUTER_CONFIG_DIRECTORY / self._TLS_CONFIG_FILE, self._tls_config_file
-        )
-        self._write_file(self._ROUTER_CONFIG_DIRECTORY / self._TLS_KEY_FILE, key)
-        self._write_file(self._ROUTER_CONFIG_DIRECTORY / self._TLS_CERTIFICATE_FILE, certificate)
+        super().enable_tls(key=key, certificate=certificate)
         if self._enabled:
             self._restart(tls=True)
-        logger.debug("Enabled TLS")
 
     def disable_tls(self) -> None:
         """Disable TLS and restart MySQL Router."""
-        logger.debug("Disabling TLS")
-        for file in (self._TLS_CONFIG_FILE, self._TLS_KEY_FILE, self._TLS_CERTIFICATE_FILE):
-            self._delete_file(self._ROUTER_CONFIG_DIRECTORY / file)
+        super().disable_tls()
         if self._enabled:
             self._restart(tls=False)
-        logger.debug("Disabled TLS")
