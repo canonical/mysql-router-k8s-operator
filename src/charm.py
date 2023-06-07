@@ -201,7 +201,7 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
             f"{self.unit.is_leader()=}, "
             f"{isinstance(workload_, workload.AuthenticatedWorkload)=}, "
             f"{workload_.container_ready=}, "
-            f"{self.database_requires.is_relation_breaking(event)=}, "
+            f"{self.database_requires.is_relation_breaking(event)=}"
         )
         if self.unit.is_leader() and self.database_requires.is_relation_breaking(event):
             self.database_provides.delete_all_databags()
