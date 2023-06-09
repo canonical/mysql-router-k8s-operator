@@ -98,10 +98,7 @@ class Container(abc.ABC):
         Raises:
             CalledProcessError: Command returns non-zero exit code
         """
-        args.insert(
-            0,
-            self._mysql_router_command,
-        )
+        args.insert(0, self._mysql_router_command)
         return self._run_command(args, timeout=timeout)
 
     def run_mysql_shell(self, args: list[str], *, timeout: int = None) -> str:
