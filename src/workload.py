@@ -98,8 +98,8 @@ class AuthenticatedWorkload(Workload):
     def __init__(
         self,
         container_: container.Container,
-        connection_info: relations.database_requires.ConnectionInformation,
-        charm_: charm.MySQLRouterOperatorCharm,
+        connection_info: "relations.database_requires.ConnectionInformation",
+        charm_: "charm.MySQLRouterOperatorCharm",
     ) -> None:
         super().__init__(container_)
         self._connection_info = connection_info
