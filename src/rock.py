@@ -1,5 +1,6 @@
 import io
 import logging
+import typing
 
 import ops
 
@@ -94,9 +95,9 @@ class Rock(container.Container):
         self._container.add_layer(self._SERVICE_NAME, layer, combine=True)
         self._container.replan()
 
-    def _run_command(self, command: list[str]) -> str:
+    def _run_command(self, command: list[str], *, timeout: typing.Optional[int]) -> str:
         try:
-            process = self._container.exec(command)
+            process = self._container.exec(command, timeout=timeout)
             output, _ = process.wait_output()
         except ops.pebble.ExecError as e:
             raise container.CalledProcessError(

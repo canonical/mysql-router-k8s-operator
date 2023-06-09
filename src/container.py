@@ -1,6 +1,7 @@
 import abc
 import pathlib
 import subprocess
+import typing
 
 
 class Path(pathlib.PurePosixPath, abc.ABC):
@@ -84,30 +85,33 @@ class Container(abc.ABC):
             assert tls is not None, "`tls` argument required when enabled=True"
 
     @abc.abstractmethod
-    def _run_command(self, command: list[str]) -> str:
+    def _run_command(self, command: list[str], *, timeout: typing.Optional[int]) -> str:
         """Run command in container.
 
         Raises:
             CalledProcessError: Command returns non-zero exit code
         """
 
-    def run_mysql_router(self, args: list[str]) -> str:
+    def run_mysql_router(self, args: list[str], *, timeout: int = None) -> str:
         """Run MySQL Router command.
 
         Raises:
             CalledProcessError: Command returns non-zero exit code
         """
-        args.insert(0, self._mysql_router_command)
-        return self._run_command(args)
+        args.insert(
+            0,
+            self._mysql_router_command,
+        )
+        return self._run_command(args, timeout=timeout)
 
-    def run_mysql_shell(self, args: list[str]) -> str:
+    def run_mysql_shell(self, args: list[str], *, timeout: int = None) -> str:
         """Run MySQL Shell command.
 
         Raises:
             CalledProcessError: Command returns non-zero exit code
         """
         args.insert(0, self._mysql_shell_command)
-        return self._run_command(args)
+        return self._run_command(args, timeout=timeout)
 
     @abc.abstractmethod
     def path(self, *args) -> Path:

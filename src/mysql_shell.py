@@ -43,6 +43,7 @@ class Shell:
         """Connect to MySQL cluster and run commands."""
         # Redact password from log
         logged_commands = commands.copy()
+        # TODO: Password is still logged on user creation
         logged_commands.insert(
             0, f"shell.connect('{self.username}:***@{self._host}:{self._port}')"
         )
@@ -54,7 +55,7 @@ class Shell:
         temporary_script_file.write_text("\n".join(commands))
         try:
             output = self._container.run_mysql_shell(
-                ["--no-wizard", "--python", "--file", temporary_script_file]
+                ["--no-wizard", "--python", "--file", str(temporary_script_file)]
             )
         except container.CalledProcessError as e:
             logger.exception(f"Failed to run {logged_commands=}\nstderr:\n{e.stderr}\n")
