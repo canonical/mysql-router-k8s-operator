@@ -53,7 +53,7 @@ jobs:
           - integration-database
     name: ${{ matrix.tox-environments }}
     needs:
-      - lint
+#      - lint
       # TODO: re-enable after adding unit tests
       #- unit-test
       - build
