@@ -19,6 +19,7 @@ import tenacity
 import relations.database_provides
 import relations.database_requires
 import relations.tls
+import rock
 import workload
 
 logger = logging.getLogger(__name__)
@@ -45,14 +46,14 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
 
     def get_workload(self, *, event):
         """MySQL Router workload"""
-        container = self.unit.get_container(workload.Workload.CONTAINER_NAME)
+        container = rock.Rock(self.unit)
         if connection_info := self.database_requires.get_connection_info(event=event):
             return workload.AuthenticatedWorkload(
-                _container=container,
-                _connection_info=connection_info,
-                _charm=self,
+                container_=container,
+                connection_info=connection_info,
+                charm_=self,
             )
-        return workload.Workload(_container=container)
+        return workload.Workload(container_=container)
 
     @property
     def model_service_domain(self):
