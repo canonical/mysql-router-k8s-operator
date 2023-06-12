@@ -25,6 +25,10 @@ class _Path(container.Path):
     def __rtruediv__(self, other):
         return type(self)(other, self, container_=self._container)
 
+    @property
+    def relative_to_container(self) -> "_Path":
+        return self
+
     def read_text(self) -> str:
         with self._container.pull(self, encoding="utf-8") as file:
             file: io.TextIOWrapper
