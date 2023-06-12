@@ -12,8 +12,6 @@ _UNIX_USERNAME = "mysql"
 
 
 class _Path(container.Path):
-    _UNIX_USERNAME = _UNIX_USERNAME
-
     def __new__(cls, *args, container_: ops.Container):
         path = super().__new__(cls, *args)
         path._container = container_
@@ -36,7 +34,7 @@ class _Path(container.Path):
 
     def write_text(self, data: str):
         self._container.push(
-            self, data, permissions=0o600, user=self._UNIX_USERNAME, group=self._UNIX_USERNAME
+            self, data, permissions=0o600, user=_UNIX_USERNAME, group=_UNIX_USERNAME
         )
 
     def unlink(self):
@@ -46,7 +44,7 @@ class _Path(container.Path):
             logger.debug(f"Deleted file {path=}")
 
     def mkdir(self):
-        self._container.make_dir(str(self), user=self._UNIX_USERNAME, group=self._UNIX_USERNAME)
+        self._container.make_dir(str(self), user=_UNIX_USERNAME, group=_UNIX_USERNAME)
 
     def rmtree(self):
         self._container.remove_path(str(self), recursive=True)
@@ -54,7 +52,6 @@ class _Path(container.Path):
 
 class Rock(container.Container):
     _SERVICE_NAME = "mysql_router"
-    _UNIX_USERNAME = _UNIX_USERNAME
 
     def __init__(self, unit: ops.Unit) -> None:
         super().__init__(mysql_router_command="mysqlrouter", mysql_shell_command="mysqlsh")
@@ -90,8 +87,8 @@ class Rock(container.Container):
                         "summary": "mysql router",
                         "command": command,
                         "startup": startup,
-                        "user": self._UNIX_USERNAME,
-                        "group": self._UNIX_USERNAME,
+                        "user": _UNIX_USERNAME,
+                        "group": _UNIX_USERNAME,
                     },
                 },
             }
@@ -102,7 +99,7 @@ class Rock(container.Container):
     def _run_command(self, command: list[str], *, timeout: typing.Optional[int]) -> str:
         try:
             process = self._container.exec(
-                command, user=self._UNIX_USERNAME, group=self._UNIX_USERNAME, timeout=timeout
+                command, user=_UNIX_USERNAME, group=_UNIX_USERNAME, timeout=timeout
             )
             output, _ = process.wait_output()
         except ops.pebble.ExecError as e:
