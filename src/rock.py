@@ -54,7 +54,7 @@ class _Path(container.Path):
 
 class Rock(container.Container):
     _SERVICE_NAME = "mysql_router"
-    UNIX_USERNAME = _UNIX_USERNAME
+    _UNIX_USERNAME = _UNIX_USERNAME
 
     def __init__(self, unit: ops.Unit) -> None:
         super().__init__(mysql_router_command="mysqlrouter", mysql_shell_command="mysqlsh")
@@ -90,8 +90,8 @@ class Rock(container.Container):
                         "summary": "mysql router",
                         "command": command,
                         "startup": startup,
-                        "user": self.UNIX_USERNAME,
-                        "group": self.UNIX_USERNAME,
+                        "user": self._UNIX_USERNAME,
+                        "group": self._UNIX_USERNAME,
                     },
                 },
             }
@@ -101,7 +101,9 @@ class Rock(container.Container):
 
     def _run_command(self, command: list[str], *, timeout: typing.Optional[int]) -> str:
         try:
-            process = self._container.exec(command, timeout=timeout)
+            process = self._container.exec(
+                command, user=self._UNIX_USERNAME, group=self._UNIX_USERNAME, timeout=timeout
+            )
             output, _ = process.wait_output()
         except ops.pebble.ExecError as e:
             raise container.CalledProcessError(
