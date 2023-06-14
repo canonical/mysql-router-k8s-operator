@@ -237,13 +237,6 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
 
     def _on_mysql_router_pebble_ready(self, _) -> None:
         self.unit.set_workload_version(self.get_workload(event=None).version)
-        workload_ = self.get_workload(event=None)
-        if isinstance(workload_, workload.AuthenticatedWorkload):
-            # If this is not the first pebble ready event (for this unit), the container
-            # restarted. MySQL Router may have already been bootstrapped on this unit but MySQL
-            # Router's config file was lost during container restart—clean up the old MySQL Router
-            # instance.
-            workload_.cleanup_after_potential_container_restart(unit_name=self.unit.name)
         self.reconcile_database_relations()
 
     def _on_leader_elected(self, _) -> None:
