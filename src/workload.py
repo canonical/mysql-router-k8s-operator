@@ -217,15 +217,17 @@ class AuthenticatedWorkload(Workload):
         # MySQL Router is bootstrapped without `--directory`—there is one system-wide instance.
         return f"{socket.getfqdn()}::system"
 
-    def cleanup_after_potential_container_restart(self, *, unit_name: str) -> None:
+    def _cleanup_after_potential_container_restart(self) -> None:
         """Remove MySQL Router cluster metadata & user after (potential) container restart.
 
         (Storage is not persisted on container restart—MySQL Router's config file is deleted.
         Therefore, MySQL Router needs to be bootstrapped again.)
         """
-        if user_info := self.shell.get_mysql_router_user_for_unit(unit_name):
+        if user_info := self.shell.get_mysql_router_user_for_unit(self._charm.unit.name):
+            logger.debug("Cleaning up after container restart")
             self.shell.remove_router_from_cluster_metadata(user_info.router_id)
             self.shell.delete_user(user_info.username)
+            logger.debug("Cleaned up after container restart")
 
     def _bootstrap_router(self, *, tls: bool) -> None:
         """Bootstrap MySQL Router and enable service."""
@@ -301,6 +303,7 @@ class AuthenticatedWorkload(Workload):
             # Therefore, if the host or port changes, we do not need to restart MySQL Router.
             return
         logger.debug("Enabling MySQL Router service")
+        self._cleanup_after_potential_container_restart()
         self._bootstrap_router(tls=tls)
         self.shell.add_attributes_to_mysql_router_user(
             username=self._router_username, router_id=self._router_id, unit_name=unit_name
