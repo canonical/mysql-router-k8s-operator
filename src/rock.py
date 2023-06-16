@@ -37,11 +37,12 @@ class _Path(container.Path):
             self, data, permissions=0o600, user=_UNIX_USERNAME, group=_UNIX_USERNAME
         )
 
-    def unlink(self):
+    def unlink(self, missing_ok=False):
         path = str(self)
-        if self._container.exists(path):  # TODO fail if not exists?
-            self._container.remove_path(path)
-            logger.debug(f"Deleted file {path=}")
+        if missing_ok and not self._container.exists(path):
+            return
+        self._container.remove_path(path)
+        logger.debug(f"Deleted file {path=}")
 
     def mkdir(self):
         self._container.make_dir(str(self), user=_UNIX_USERNAME, group=_UNIX_USERNAME)
