@@ -1,3 +1,8 @@
+# Copyright 2023 Canonical Ltd.
+# See LICENSE file for licensing details.
+
+"""Workload ROCK or OCI container"""
+
 import io
 import logging
 import typing
@@ -12,6 +17,8 @@ _UNIX_USERNAME = "mysql"
 
 
 class _Path(container.Path):
+    """ROCK filesystem path"""
+
     def __new__(cls, *args, container_: ops.Container):
         path = super().__new__(cls, *args)
         path._container = container_
@@ -38,6 +45,7 @@ class _Path(container.Path):
         )
 
     def unlink(self, missing_ok=False):
+        # TODO: use `self` instead of `str(self)` after next ops release
         path = str(self)
         if missing_ok and not self._container.exists(path):
             return
@@ -45,13 +53,17 @@ class _Path(container.Path):
         logger.debug(f"Deleted file {path=}")
 
     def mkdir(self):
+        # TODO: use `self` instead of `str(self)` after next ops release
         self._container.make_dir(str(self), user=_UNIX_USERNAME, group=_UNIX_USERNAME)
 
     def rmtree(self):
+        # TODO: use `self` instead of `str(self)` after next ops release
         self._container.remove_path(str(self), recursive=True)
 
 
 class Rock(container.Container):
+    """Workload ROCK or OCI container"""
+
     _SERVICE_NAME = "mysql_router"
 
     def __init__(self, unit: ops.Unit) -> None:
