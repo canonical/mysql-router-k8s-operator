@@ -210,11 +210,10 @@ class AuthenticatedWorkload(Workload):
         logger.debug("Enabling MySQL Router service")
         self._cleanup_after_potential_container_restart()
         self._bootstrap_router(tls=tls)
-        self._container.update_mysql_router_service(enabled=True, tls=tls)
-        # TODO: move before enable service
         self.shell.add_attributes_to_mysql_router_user(
             username=self._router_username, router_id=self._router_id, unit_name=unit_name
         )
+        self._container.update_mysql_router_service(enabled=True, tls=tls)
         logger.debug("Enabled MySQL Router service")
         self._charm.wait_until_mysql_router_ready()
 
