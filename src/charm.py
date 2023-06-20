@@ -63,7 +63,7 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
 
     def get_workload(self, *, event):
         """MySQL Router workload"""
-        container = rock.Rock(self.unit)
+        container = rock.Rock(unit=self.unit)
         if connection_info := self.database_requires.get_connection_info(event=event):
             return workload.AuthenticatedWorkload(
                 container_=container,

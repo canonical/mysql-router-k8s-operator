@@ -66,7 +66,7 @@ class Rock(container.Container):
 
     _SERVICE_NAME = "mysql_router"
 
-    def __init__(self, unit: ops.Unit) -> None:
+    def __init__(self, *, unit: ops.Unit) -> None:
         super().__init__(mysql_router_command="mysqlrouter", mysql_shell_command="mysqlsh")
         self._container = unit.get_container("mysql-router")
 
