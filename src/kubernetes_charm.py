@@ -23,6 +23,8 @@ logger = logging.getLogger(__name__)
 
 
 class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
+    """MySQL Router Kubernetes charm"""
+
     _READ_WRITE_PORT = 6446
     _READ_ONLY_PORT = 6447
 
