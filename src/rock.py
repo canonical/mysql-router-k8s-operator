@@ -92,12 +92,11 @@ class Rock(container.Container):
             startup = ops.pebble.ServiceStartup.DISABLED.value
         layer = ops.pebble.Layer(
             {
-                "summary": "mysql router layer",
-                "description": "the pebble config layer for mysql router",
+                "summary": "MySQL Router layer",
                 "services": {
                     self._SERVICE_NAME: {
                         "override": "replace",
-                        "summary": "mysql router",
+                        "summary": "MySQL Router",
                         "command": command,
                         "startup": startup,
                         "user": _UNIX_USERNAME,
