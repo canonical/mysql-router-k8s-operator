@@ -58,7 +58,7 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
 
     @property
     def _host(self) -> str:
-        """K8s hostname for MySQL Router"""
+        """K8s service hostname for MySQL Router"""
         # Example: mysql-router-k8s.my-model.svc.cluster.local
         return f"{self.app.name}.{self.model_service_domain}"
 
