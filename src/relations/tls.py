@@ -18,8 +18,9 @@ import ops
 if typing.TYPE_CHECKING:
     import charm
 
-_PEER_RELATION_ENDPOINT_NAME = "mysql-router-peers"
 logger = logging.getLogger(__name__)
+
+_PEER_RELATION_ENDPOINT_NAME = "mysql-router-peers"
 
 
 @dataclasses.dataclass
