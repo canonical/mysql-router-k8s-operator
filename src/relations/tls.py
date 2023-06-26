@@ -16,7 +16,7 @@ import charms.tls_certificates_interface.v1.tls_certificates as tls_certificates
 import ops
 
 if typing.TYPE_CHECKING:
-    import charm
+    import kubernetes_charm
 
 logger = logging.getLogger(__name__)
 
@@ -98,7 +98,7 @@ class _PeerUnitDatabag:
 class _Relation:
     """Relation to TLS certificate provider"""
 
-    _charm: "charm.MySQLRouterOperatorCharm"
+    _charm: "kubernetes_charm.KubernetesRouterCharm"
     _interface: tls_certificates.TLSCertificatesRequiresV1
     _peer_unit_databag: _PeerUnitDatabag
     _unit_secrets: _UnitSecrets
@@ -188,7 +188,7 @@ class RelationEndpoint(ops.Object):
 
     NAME = "certificates"
 
-    def __init__(self, charm_: "charm.MySQLRouterOperatorCharm") -> None:
+    def __init__(self, charm_: "kubernetes_charm.KubernetesRouterCharm") -> None:
         super().__init__(charm_, self.NAME)
         self._charm = charm_
         self._interface = tls_certificates.TLSCertificatesRequiresV1(self._charm, self.NAME)

@@ -14,7 +14,7 @@ import container
 import mysql_shell
 
 if typing.TYPE_CHECKING:
-    import charm
+    import abstract_charm
     import relations.database_requires
 
 logger = logging.getLogger(__name__)
@@ -101,23 +101,11 @@ class AuthenticatedWorkload(Workload):
         *,
         container_: container.Container,
         connection_info: "relations.database_requires.ConnectionInformation",
-        host: str,
-        charm_: "charm.MySQLRouterOperatorCharm",
+        charm_: "abstract_charm.MySQLRouterCharm",
     ) -> None:
         super().__init__(container_=container_)
         self._connection_info = connection_info
-        self._host = host
         self._charm = charm_
-
-    @property
-    def read_write_endpoint(self) -> str:
-        """MySQL Router read-write endpoint"""
-        return f"{self._host}:6446"
-
-    @property
-    def read_only_endpoint(self) -> str:
-        """MySQL Router read-only endpoint"""
-        return f"{self._host}:6447"
 
     @property
     def shell(self) -> mysql_shell.Shell:
