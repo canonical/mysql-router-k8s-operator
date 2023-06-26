@@ -13,10 +13,11 @@ import secrets
 import string
 import typing
 
-import ops
+import container
+
+logger = logging.getLogger(__name__)
 
 _PASSWORD_LENGTH = 24
-logger = logging.getLogger(__name__)
 
 
 # TODO python3.10 min version: Add `(kw_only=True)`
@@ -33,13 +34,11 @@ class RouterUserInformation:
 class Shell:
     """MySQL Shell connected to MySQL cluster"""
 
-    _container: ops.Container
+    _container: container.Container
     username: str
     _password: str
     _host: str
     _port: str
-
-    _TEMPORARY_SCRIPT_FILE = "/tmp/script.py"
 
     def _run_commands(self, commands: list[str]) -> str:
         """Connect to MySQL cluster and run commands."""
@@ -52,18 +51,23 @@ class Shell:
         commands.insert(
             0, f"shell.connect('{self.username}:{self._password}@{self._host}:{self._port}')"
         )
-        self._container.push(self._TEMPORARY_SCRIPT_FILE, "\n".join(commands))
+        temporary_script_file = self._container.path("/tmp/script.py")
+        temporary_script_file.write_text("\n".join(commands))
         try:
-            process = self._container.exec(
-                ["mysqlsh", "--no-wizard", "--python", "--file", self._TEMPORARY_SCRIPT_FILE]
+            output = self._container.run_mysql_shell(
+                [
+                    "--no-wizard",
+                    "--python",
+                    "--file",
+                    str(temporary_script_file.relative_to_container),
+                ]
             )
-            stdout, _ = process.wait_output()
-        except ops.pebble.ExecError as e:
+        except container.CalledProcessError as e:
             logger.exception(f"Failed to run {logged_commands=}\nstderr:\n{e.stderr}\n")
             raise
         finally:
-            self._container.remove_path(self._TEMPORARY_SCRIPT_FILE)
-        return stdout
+            temporary_script_file.unlink()
+        return output
 
     def _run_sql(self, sql_statements: list[str]) -> None:
         """Connect to MySQL cluster and execute SQL."""

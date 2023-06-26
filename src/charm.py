@@ -19,6 +19,7 @@ import tenacity
 import relations.database_provides
 import relations.database_requires
 import relations.tls
+import rock
 import workload
 
 logger = logging.getLogger(__name__)
@@ -43,17 +44,6 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
 
         self.tls = relations.tls.RelationEndpoint(self)
 
-    def get_workload(self, *, event):
-        """MySQL Router workload"""
-        container = self.unit.get_container(workload.Workload.CONTAINER_NAME)
-        if connection_info := self.database_requires.get_connection_info(event=event):
-            return workload.AuthenticatedWorkload(
-                _container=container,
-                _connection_info=connection_info,
-                _charm=self,
-            )
-        return workload.Workload(_container=container)
-
     @property
     def model_service_domain(self):
         """K8s service domain for Juju model"""
@@ -66,10 +56,22 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
         return fqdn.removeprefix(prefix)
 
     @property
-    def _endpoint(self) -> str:
-        """K8s endpoint for MySQL Router"""
+    def _hostname(self) -> str:
+        """K8s hostname for MySQL Router"""
         # Example: mysql-router-k8s.my-model.svc.cluster.local
         return f"{self.app.name}.{self.model_service_domain}"
+
+    def get_workload(self, *, event):
+        """MySQL Router workload"""
+        container = rock.Rock(unit=self.unit)
+        if connection_info := self.database_requires.get_connection_info(event=event):
+            return workload.AuthenticatedWorkload(
+                container_=container,
+                connection_info=connection_info,
+                host=self._hostname,
+                charm_=self,
+            )
+        return workload.Workload(container_=container)
 
     @staticmethod
     def _prioritize_statuses(statuses: list[ops.StatusBase]) -> ops.StatusBase:
@@ -212,7 +214,8 @@ class MySQLRouterOperatorCharm(ops.CharmBase):
         ):
             self.database_provides.reconcile_users(
                 event=event,
-                router_endpoint=self._endpoint,
+                router_read_write_endpoint=workload_.read_write_endpoint,
+                router_read_only_endpoint=workload_.read_only_endpoint,
                 shell=workload_.shell,
             )
         if isinstance(workload_, workload.AuthenticatedWorkload) and workload_.container_ready:
