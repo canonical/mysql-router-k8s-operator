@@ -198,7 +198,7 @@ class RelationEndpoint(ops.Object):
             self._on_set_tls_private_key,
         )
         self.framework.observe(
-            self._charm.on[self.NAME].relation_joined, self._on_tls_relation_joined
+            self._charm.on[self.NAME].relation_created, self._on_tls_relation_created
         )
         self.framework.observe(
             self._charm.on[self.NAME].relation_broken, self._on_tls_relation_broken
@@ -281,8 +281,8 @@ class RelationEndpoint(ops.Object):
                 raise
         logger.debug("Handled set TLS private key action")
 
-    def _on_tls_relation_joined(self, _) -> None:
-        """Request certificate when TLS relation joined."""
+    def _on_tls_relation_created(self, _) -> None:
+        """Request certificate when TLS relation created."""
         self._relation.request_certificate_creation()
 
     def _on_tls_relation_broken(self, _) -> None:
