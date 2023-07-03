@@ -34,6 +34,8 @@ class Unit(ops.Object):
         *-relation-departed -> *-relation-broken
         stop
         remove
+
+        Workaround for https://bugs.launchpad.net/juju/+bug/1979811
         """
         try:
             return self._stored.tearing_down
