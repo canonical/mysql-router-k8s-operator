@@ -45,20 +45,16 @@ class _Path(container.Path):
         )
 
     def unlink(self, missing_ok=False):
-        # TODO: use `self` instead of `str(self)` after next ops release
-        path = str(self)
-        if missing_ok and not self._container.exists(path):
+        if missing_ok and not self._container.exists(self):
             return
-        self._container.remove_path(path)
-        logger.debug(f"Deleted file {path=}")
+        self._container.remove_path(self)
+        logger.debug(f"Deleted file {self=}")
 
     def mkdir(self):
-        # TODO: use `self` instead of `str(self)` after next ops release
-        self._container.make_dir(str(self), user=_UNIX_USERNAME, group=_UNIX_USERNAME)
+        self._container.make_dir(self, user=_UNIX_USERNAME, group=_UNIX_USERNAME)
 
     def rmtree(self):
-        # TODO: use `self` instead of `str(self)` after next ops release
-        self._container.remove_path(str(self), recursive=True)
+        self._container.remove_path(self, recursive=True)
 
 
 class Rock(container.Container):
