@@ -47,6 +47,7 @@ async def test_database_relation(ops_test: OpsTest):
             MYSQL_APP_NAME,
             channel="8.0/edge",
             application_name=MYSQL_APP_NAME,
+            config={"profile": "testing"},
             series="jammy",
             num_units=3,
             trust=True,  # Necessary after a6f1f01: Fix/endpoints as k8s services (#142)
