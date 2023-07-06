@@ -13,6 +13,7 @@ import container
 
 logger = logging.getLogger(__name__)
 
+CONTAINER_NAME = "mysql-router"
 _UNIX_USERNAME = "mysql"
 
 
@@ -64,7 +65,7 @@ class Rock(container.Container):
 
     def __init__(self, *, unit: ops.Unit) -> None:
         super().__init__(mysql_router_command="mysqlrouter", mysql_shell_command="mysqlsh")
-        self._container = unit.get_container("mysql-router")
+        self._container = unit.get_container(CONTAINER_NAME)
 
     @property
     def ready(self) -> bool:

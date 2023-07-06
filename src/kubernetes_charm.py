@@ -32,7 +32,7 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         super().__init__(*args)
         self.framework.observe(self.on.install, self._on_install)
         self.framework.observe(
-            getattr(self.on, "mysql_router_pebble_ready"), self._on_mysql_router_pebble_ready
+            self.on[rock.CONTAINER_NAME].pebble_ready, self._on_workload_container_pebble_ready
         )
         # TODO VM TLS: Move to super class
         self.tls = relations.tls.RelationEndpoint(self)
@@ -132,7 +132,7 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
             logger.exception("Failed to patch k8s service")
             raise
 
-    def _on_mysql_router_pebble_ready(self, _) -> None:
+    def _on_workload_container_pebble_ready(self, _) -> None:
         self.unit.set_workload_version(self.get_workload(event=None).version)
         self.reconcile_database_relations()
 
