@@ -8,6 +8,7 @@
 
 import logging
 import socket
+import typing
 
 import lightkube
 import lightkube.models.core_v1
@@ -36,6 +37,10 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         )
         # TODO VM TLS: Move to super class
         self.tls = relations.tls.RelationEndpoint(self)
+
+    @property
+    def _subordinate_relation_endpoint_names(self) -> typing.Optional[typing.Iterable[str]]:
+        return
 
     @property
     def tls_certificate_saved(self) -> bool:
