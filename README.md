@@ -4,7 +4,7 @@
 
 Charmed operator for mysql-router under k8s. MySQL-Router is a database proxy for Group Replicated MySQL clusters.
 
-The proxy sit between the MySQL cluster and a client application, e.g.:
+The prox sit between the MySQL cluster and a client application, e.g.:
 
 ```mermaid
 flowchart TD
