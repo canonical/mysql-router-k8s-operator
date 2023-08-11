@@ -103,7 +103,12 @@ class Rock(container.Container):
             }
         )
         self._container.add_layer(self._SERVICE_NAME, layer, combine=True)
-        self._container.replan()
+        # `self._container.replan()` does not stop services that have been disabled
+        # Use `restart()` and `stop()` instead
+        if enabled:
+            self._container.restart(self._SERVICE_NAME)
+        else:
+            self._container.stop(self._SERVICE_NAME)
 
     # TODO python3.10 min version: Use `list` instead of `typing.List`
     def _run_command(self, command: typing.List[str], *, timeout: typing.Optional[int]) -> str:
