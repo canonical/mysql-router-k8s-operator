@@ -111,18 +111,7 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
         """Report unit status."""
         statuses = []
         workload_ = self.get_workload(event=event)
-        if workload_.container_ready:
-            if (
-                isinstance(workload_, workload.AuthenticatedWorkload)
-                and not workload_.router_in_cluster_set
-            ):
-                statuses.append(
-                    ops.BlockedStatus(
-                        "Router was manually removed from MySQL ClusterSet. Remove & re-deploy unit"
-                    )
-                )
-        else:
-            statuses.append(ops.MaintenanceStatus("Waiting for container"))
+        statuses.append(workload_.get_status(event))
         return self._prioritize_statuses(statuses)
 
     def set_status(self, *, event) -> None:
