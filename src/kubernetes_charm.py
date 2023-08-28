@@ -131,10 +131,7 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         """Open ports & patch k8s service."""
         if ops.JujuVersion.from_environ().supports_open_port_on_k8s:
             for port in (self._READ_WRITE_PORT, self._READ_ONLY_PORT, 6448, 6449):
-                try:
-                    self.unit.open_port("tcp", port)
-                except ops.ModelError:
-                    logger.exception(f"failed to open {port=}")
+                self.unit.open_port("tcp", port)
         if not self.unit.is_leader():
             return
         try:
