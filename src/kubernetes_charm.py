@@ -15,7 +15,7 @@ import lightkube.models.core_v1
 import lightkube.models.meta_v1
 import lightkube.resources.core_v1
 import ops
-from yaml import CSafeLoader
+from yaml import CSafeLoader  # flake8: ignore
 
 import abstract_charm
 import relations.tls
