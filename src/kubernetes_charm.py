@@ -5,7 +5,7 @@
 # Learn more at: https://juju.is/docs/sdk
 
 """MySQL Router Kubernetes charm"""
-
+from yaml import CSafeLoader
 import logging
 import socket
 import typing
