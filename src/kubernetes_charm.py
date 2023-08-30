@@ -5,7 +5,7 @@
 # Learn more at: https://juju.is/docs/sdk
 
 """MySQL Router Kubernetes charm"""
-from yaml import CSafeLoader
+
 import logging
 import socket
 import typing
@@ -15,6 +15,7 @@ import lightkube.models.core_v1
 import lightkube.models.meta_v1
 import lightkube.resources.core_v1
 import ops
+from yaml import CSafeLoader
 
 import abstract_charm
 import relations.tls
