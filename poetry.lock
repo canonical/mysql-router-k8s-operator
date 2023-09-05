@@ -1113,13 +1113,13 @@ signedtoken = ["cryptography (>=3.0.0)", "pyjwt (>=2.0.0,<3)"]
 
 [[package]]
 name = "ops"
-version = "2.4.1"
+version = "2.6.0"
 description = "The Python library behind great charms"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "ops-2.4.1-py3-none-any.whl", hash = "sha256:9cd1a25c6ae30dc9f9afcbe87250f5349ff9a05d5b06632ad8111700c5f0db04"},
-    {file = "ops-2.4.1.tar.gz", hash = "sha256:b5762bea03049ec150c6266833925d0bb36237b26b006ca878e74e24d162f981"},
+    {file = "ops-2.6.0-py3-none-any.whl", hash = "sha256:b8ce352df4d17de483173dd2f8caf397e89585212d73b4d466b541b1ad3b8966"},
+    {file = "ops-2.6.0.tar.gz", hash = "sha256:387d5f5bd004b865f575ea4e25ca298bdca05b2b2beb2c51f203d5856c460cf6"},
 ]
 
 [package.dependencies]
@@ -1128,17 +1128,17 @@ websocket-client = "==1.*"
 
 [[package]]
 name = "ops-scenario"
-version = "4.0.4.1"
-description = "Python library providing a Scenario-based testing API for Operator Framework charms."
+version = "5.2"
+description = "Python library providing a state-transition testing API for Operator Framework charms."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "ops-scenario-4.0.4.1.tar.gz", hash = "sha256:8693ac1d50144e33405b02133f11f19623489b69418c2903481f61d8d10d9296"},
-    {file = "ops_scenario-4.0.4.1-py3-none-any.whl", hash = "sha256:a81147eed155bf1fdb941340421243189b34963bced17ca47dd3ac15b2356cff"},
+    {file = "ops-scenario-5.2.tar.gz", hash = "sha256:2effeab9a652689a339768dfc440004ffd524fea6d4c628593492724f06b9698"},
+    {file = "ops_scenario-5.2-py3-none-any.whl", hash = "sha256:78a266071170127475f0d53b5f29e38b6968e9c27a89e574b4182a10a6ba00fc"},
 ]
 
 [package.dependencies]
-ops = ">=2.0"
+ops = ">=2.6"
 PyYAML = ">=6.0.1"
 typer = "0.7.0"
 
@@ -2188,4 +2188,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "73894526dc33d82fa779ca45bd855a3f254e7228e6c398e92ca6b8b6f4b22c45"
+content-hash = "9d8d338345f8db3c0181485d1c466a1bdc5bb6453bc8a70a67412488253d4573"
