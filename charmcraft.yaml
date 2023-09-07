@@ -20,7 +20,7 @@ parts:
       fi
     charm-entrypoint: src/kubernetes_charm.py
     charm-binary-python-packages:
-      - mysql-connector-python~=8.0.32
+      - mysql-connector-python~=8.0.33
     build-packages:
       - libffi-dev
       - libssl-dev
