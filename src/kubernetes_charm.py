@@ -128,7 +128,10 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
     # =======================
 
     def _on_install(self, _) -> None:
-        """Patch existing k8s service to include read-write and read-only services."""
+        """Open ports & patch k8s service."""
+        if ops.JujuVersion.from_environ().supports_open_port_on_k8s:
+            for port in (self._READ_WRITE_PORT, self._READ_ONLY_PORT, 6448, 6449):
+                self.unit.open_port("tcp", port)
         if not self.unit.is_leader():
             return
         try:
