@@ -1272,6 +1272,17 @@ dev = ["pre-commit", "tox"]
 testing = ["pytest", "pytest-benchmark"]
 
 [[package]]
+name = "poetry-core"
+version = "1.7.0"
+description = "Poetry PEP 517 Build Backend"
+optional = false
+python-versions = ">=3.8,<4.0"
+files = [
+    {file = "poetry_core-1.7.0-py3-none-any.whl", hash = "sha256:38e174cdb00a84ee4a1cab66a378b435747f72414f5573bc18cfc3850a94df38"},
+    {file = "poetry_core-1.7.0.tar.gz", hash = "sha256:8f679b83bd9c820082637beca1204124d5d2a786e4818da47ec8acefd0353b74"},
+]
+
+[[package]]
 name = "prompt-toolkit"
 version = "3.0.39"
 description = "Library for building powerful interactive command lines in Python"
@@ -2188,4 +2199,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "159c0fd6ea0474886f6fb3530b1708c87542273a0b549f5b4a4eb1bc9a195afb"
+content-hash = "23bae050128bb34b801c136cd8e422960efa5de457a655ade250ab966dcef889"
