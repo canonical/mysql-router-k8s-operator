@@ -30,9 +30,7 @@ def patch(monkeypatch):
         "abstract_charm.MySQLRouterCharm.wait_until_mysql_router_ready",
         lambda *args, **kwargs: None,
     )
-    monkeypatch.setattr(
-        "workload.AuthenticatedWorkload._router_username", lambda *args, **kwargs: ""
-    )
+    monkeypatch.setattr("workload.AuthenticatedWorkload._router_username", "")
     monkeypatch.setattr("mysql_shell.Shell.is_router_in_cluster_set", lambda *args, **kwargs: True)
 
 
@@ -47,3 +45,4 @@ def kubernetes_patch(monkeypatch):
     monkeypatch.setattr("rock._Path.unlink", lambda *args, **kwargs: None)
     monkeypatch.setattr("rock._Path.mkdir", lambda *args, **kwargs: None)
     monkeypatch.setattr("rock._Path.rmtree", lambda *args, **kwargs: None)
+    monkeypatch.setattr("kubernetes_upgrade.Upgrade.in_progress", False)

@@ -32,7 +32,7 @@ def output_states(*, relations: list[scenario.Relation]) -> typing.Iterable[scen
     context = scenario.Context(kubernetes_charm.KubernetesRouterCharm)
     container = scenario.Container("mysql-router", can_connect=True)
     input_state = scenario.State(
-        relations=relations,
+        relations=[*relations, scenario.PeerRelation(endpoint="upgrade-version-a")],
         containers=[container],
         leader=True,
     )
@@ -46,7 +46,9 @@ def output_states(*, relations: list[scenario.Relation]) -> typing.Iterable[scen
             )
         )
     for event in events:
-        yield context.run(event, input_state)
+        output = context.run(event, input_state)
+        output.relations.pop()  # Remove PeerRelation
+        yield output
 
 
 # Tests are ordered by status priority.
