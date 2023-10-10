@@ -60,12 +60,13 @@ class Upgrade(abc.ABC):
     def is_compatible(self) -> bool:
         """Whether upgrade is supported from previous versions"""
         try:
-            versions: dict[str, str] = json.loads(self._app_databag["versions"])
+            previous_version_strs: dict[str, str] = json.loads(self._app_databag["versions"])
         except KeyError as exception:
             logger.debug("`versions` missing from peer relation", exc_info=exception)
             return False
         previous_versions: dict[str, poetry_version.Version] = {
-            key: poetry_version.Version.parse(value) for key, value in versions.items()
+            key: poetry_version.Version.parse(value)
+            for key, value in previous_version_strs.items()
         }
         current_versions = {
             key: poetry_version.Version.parse(value)
@@ -89,7 +90,9 @@ class Upgrade(abc.ABC):
                     f'{previous_versions["workload"]=} incompatible with {current_versions["workload"]=}'
                 )
                 return False
-            logger.debug("Versions before upgrade compatible with versions after upgrade")
+            logger.debug(
+                f"Versions before upgrade compatible with versions after upgrade {previous_version_strs=} {self._current_versions=}"
+            )
             return True
         except KeyError as exception:
             logger.debug(f"Version missing from {previous_versions=}", exc_info=exception)
