@@ -101,8 +101,8 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
         """
         status_priority = (
             ops.BlockedStatus,
-            ops.WaitingStatus,
             ops.MaintenanceStatus,
+            ops.WaitingStatus,
             # Catch any unknown status type
             ops.StatusBase,
         )
