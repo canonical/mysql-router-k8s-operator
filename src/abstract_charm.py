@@ -35,18 +35,17 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
         self._authenticated_workload_type = workload.AuthenticatedWorkload
         self._database_requires = relations.database_requires.RelationEndpoint(self)
         self._database_provides = relations.database_provides.RelationEndpoint(self)
-        self.framework.observe(self.on.update_status, self.reconcile_database_relations)
+        self.framework.observe(self.on.update_status, self.reconcile)
         self.framework.observe(
-            self.on[upgrade.PEER_RELATION_ENDPOINT_NAME].relation_changed,
-            self.reconcile_database_relations,
+            self.on[upgrade.PEER_RELATION_ENDPOINT_NAME].relation_changed, self.reconcile
         )
         self.framework.observe(
             self.on[upgrade.RESUME_ACTION_NAME].action, self._on_resume_upgrade_action
         )
         # Set status on first start if no relations active
-        self.framework.observe(self.on.start, self.reconcile_database_relations)
+        self.framework.observe(self.on.start, self.reconcile)
         # Update app status
-        self.framework.observe(self.on.leader_elected, self.reconcile_database_relations)
+        self.framework.observe(self.on.leader_elected, self.reconcile)
 
     @property
     @abc.abstractmethod
@@ -170,8 +169,8 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
     #  Handlers
     # =======================
 
-    def reconcile_database_relations(self, event=None) -> None:  # noqa: C901
-        """Handle database requires/provides events."""
+    def reconcile(self, event=None) -> None:  # noqa: C901
+        """Handle most events."""
         if not self._upgrade:
             logger.debug("Peer relation not available")
             return

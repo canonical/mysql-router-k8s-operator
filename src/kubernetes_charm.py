@@ -152,7 +152,7 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
 
     def _on_workload_container_pebble_ready(self, _) -> None:
         self.unit.set_workload_version(self.get_workload(event=None).version)
-        self.reconcile_database_relations()
+        self.reconcile()
 
     def _on_stop(self, _) -> None:
         unit_number = int(self.unit.name.split("/")[-1])
