@@ -214,7 +214,8 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
             workload_.enable(tls=self._tls_certificate_saved, unit_name=self.unit.name)
         elif workload_.container_ready:
             workload_.disable()
-        self._upgrade.unit_state = "healthy"
+        if not workload_.status:
+            self._upgrade.unit_state = "healthy"
         if self._unit_lifecycle.authorized_leader:
             if self._upgrade.in_progress:
                 self._upgrade.reconcile_partition()
