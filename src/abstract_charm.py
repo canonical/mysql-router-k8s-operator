@@ -36,14 +36,13 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
         self._database_requires = relations.database_requires.RelationEndpoint(self)
         self._database_provides = relations.database_provides.RelationEndpoint(self)
         self.framework.observe(self.on.update_status, self.reconcile)
-        self.framework.observe(self.on.upgrade_charm, self.reconcile)
         self.framework.observe(
             self.on[upgrade.PEER_RELATION_ENDPOINT_NAME].relation_changed, self.reconcile
         )
         self.framework.observe(
             self.on[upgrade.RESUME_ACTION_NAME].action, self._on_resume_upgrade_action
         )
-        # Set status on first start if no relations active
+        # Handle upgrade & set status on first start if no relations active
         self.framework.observe(self.on.start, self.reconcile)
         # Update app status
         self.framework.observe(self.on.leader_elected, self.reconcile)
