@@ -128,7 +128,7 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
         """Report unit status."""
         statuses = []
         workload_ = self.get_workload(event=event)
-        statuses.append(workload_.get_status(event))
+        statuses.append(workload_.status)
         if self._upgrade:
             statuses.append(self._upgrade.unit_juju_status)
         return self._prioritize_statuses(statuses)
