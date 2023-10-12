@@ -41,7 +41,6 @@ class Upgrade(abc.ABC):
         self._peer_relation = relations[0]
         self._unit: ops.Unit = charm_.unit
         self._unit_databag = self._peer_relation.data[self._unit]
-        self._unit_name = self._unit.name
         self._app_databag = self._peer_relation.data[charm_.app]
         self._app_name = charm_.app.name
         self._current_versions = {}  # For this unit
@@ -103,9 +102,12 @@ class Upgrade(abc.ABC):
             return False
 
     @property
-    @abc.abstractmethod
     def in_progress(self) -> bool:
-        pass
+        logger.debug(f"{self._app_workload_version=} {self._unit_workload_versions.values()=}")
+        return any(
+            version != self._app_workload_version
+            for version in self._unit_workload_versions.values()
+        )
 
     @property
     def _sorted_units(self) -> list[ops.Unit]:
@@ -113,9 +115,9 @@ class Upgrade(abc.ABC):
         return sorted((self._unit, *self._peer_relation.units), key=_unit_number, reverse=True)
 
     @property
-    @abc.abstractmethod
     def _unit_active_status(self) -> ops.ActiveStatus:
         """Status shown during upgrade if unit is healthy"""
+        return ops.ActiveStatus(self._current_versions["charm"])
 
     @property
     def unit_juju_status(self) -> typing.Optional[ops.StatusBase]:
@@ -168,9 +170,10 @@ class Upgrade(abc.ABC):
     def _partition(self, value: int) -> None:
         pass
 
+    @property
     @abc.abstractmethod
-    def _get_unit_workload_version(self, unit: ops.Unit):
-        """Get unique identifier for a unit's workload version.
+    def _unit_workload_versions(self) -> dict[str, str]:
+        """{Unit name: unique identifier for unit's workload version}
 
         If and only if this version changes, the workload will restart (during upgrade or
         rollback).
@@ -181,8 +184,6 @@ class Upgrade(abc.ABC):
         This identifier should be comparable to `_app_workload_version` to determine if the unit &
         app are the same workload version.
         """
-        if not self._app_name == unit.name.split("/")[0]:
-            raise ValueError(f"{unit=} must belong to {self._app_name=}")
 
     @property
     @abc.abstractmethod
@@ -214,7 +215,7 @@ class Upgrade(abc.ABC):
                 # Note: upgrade_order_index != unit number
                 if (
                     force is False and self._peer_relation.data[unit].get("state") != "healthy"
-                ) or self._get_unit_workload_version(unit) != self._app_workload_version:
+                ) or self._unit_workload_versions[unit.name] != self._app_workload_version:
                     if not action_event and upgrade_order_index == 1:
                         # User confirmation needed to resume upgrade (i.e. upgrade second unit)
                         return _unit_number(units[0])

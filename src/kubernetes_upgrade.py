@@ -21,44 +21,38 @@ import upgrade
 logger = logging.getLogger(__name__)
 
 
-class StatefulSet:
-    """Juju app StatefulSet"""
+class _Partition:
+    """StatefulSet partition getter/setter"""
 
-    def __init__(self, app_name: str):
-        self._app_name = app_name
-        self._client = lightkube.Client()
+    # Note: I realize this isn't very Pythonic (it'd be nicer to use a property). Because of how
+    # ops is structured, we don't have access to the app name when we initialize this class. We
+    # need to only initialize this class once so that there is a single cache. Therefore, the app
+    # name needs to be passed as argument to the methods (instead of as an argument to __init__)—
+    # so we can't use a property.
 
-    @property
-    def partition(self) -> int:
-        stateful_set = self._client.get(
-            res=lightkube.resources.apps_v1.StatefulSet, name=self._app_name
+    def __init__(self):
+        # Cache lightkube API call for duration of charm execution
+        self._cache: dict[str, int] = {}
+
+    def get(self, *, app_name: str) -> int:
+        return self._cache.setdefault(
+            app_name,
+            _client.get(
+                res=lightkube.resources.apps_v1.StatefulSet, name=app_name
+            ).spec.updateStrategy.rollingUpdate.partition,
         )
-        return stateful_set.spec.updateStrategy.rollingUpdate.partition
 
-    @partition.setter
-    def partition(self, value: int) -> None:
-        self._client.patch(
+    def set(self, *, app_name: str, value: int) -> None:
+        _client.patch(
             res=lightkube.resources.apps_v1.StatefulSet,
-            name=self._app_name,
+            name=app_name,
             obj={"spec": {"updateStrategy": {"rollingUpdate": {"partition": value}}}},
         )
+        self._cache[app_name] = value
 
 
 class Upgrade(upgrade.Upgrade):
     """In-place upgrades on Kubernetes"""
-
-    @functools.cached_property
-    # Cache result (so that it's consistent) for duration of Juju hook execution
-    def in_progress(self) -> bool:
-        stateful_set_revision = self._app_workload_version
-        # TODO: move caching to a lightkube wrapper so this function can be defined in base class
-        client = lightkube.Client()
-        pods = client.list(
-            res=lightkube.resources.core_v1.Pod, labels={"app.kubernetes.io/name": self._app_name}
-        )
-        pod_revisions = [pod.metadata.labels["controller-revision-hash"] for pod in pods]
-        logger.debug(f"{stateful_set_revision=} {pod_revisions=}")
-        return any(revision != stateful_set_revision for revision in pod_revisions)
 
     @property
     def _unit_active_status(self) -> ops.ActiveStatus:
@@ -69,21 +63,22 @@ class Upgrade(upgrade.Upgrade):
         # revision hash is different, the unit (pod) will restart during rollback.
 
         # Example: mysql-router-k8s-6c67d5f56c
-        revision_hash = self._get_unit_workload_version(self._unit)
+        revision_hash = self._unit_workload_versions[self._unit.name]
         # Example: 6c67d5f56c
         revision_hash = revision_hash.removeprefix(f"{self._app_name}-")
         return ops.ActiveStatus(f'{self._current_versions["charm"]} {revision_hash}')
 
     @property
     def _partition(self) -> int:
-        return StatefulSet(self._app_name).partition
+        return partition.get(app_name=self._app_name)
 
     @_partition.setter
     def _partition(self, value: int) -> None:
-        StatefulSet(self._app_name).partition = value
+        partition.set(app_name=self._app_name, value=value)
 
-    def _get_unit_workload_version(self, unit: ops.Unit) -> str:
-        """Get a unit's Kubernetes controller revision hash.
+    @functools.cached_property  # Cache lightkube API call for duration of charm execution
+    def _unit_workload_versions(self) -> dict[str, str]:
+        """{Unit name: Kubernetes controller revision hash}
 
         Even if the workload version is the same, the workload will restart if the controller
         revision hash changes. (Juju bug: https://bugs.launchpad.net/juju/+bug/2036246).
@@ -91,14 +86,27 @@ class Upgrade(upgrade.Upgrade):
         Therefore, we must use the revision hash instead of the workload version. (To satisfy the
         requirement that if and only if this version changes, the workload will restart.)
         """
-        super()._get_unit_workload_version(unit)
-        client = lightkube.Client()
-        pod = client.get(res=lightkube.resources.core_v1.Pod, name=unit.name.replace("/", "-"))
-        return pod.metadata.labels["controller-revision-hash"]
+        pods = _client.list(
+            res=lightkube.resources.core_v1.Pod, labels={"app.kubernetes.io/name": self._app_name}
+        )
 
-    @property
+        def get_unit_name(pod_name: str) -> str:
+            *app_name, unit_number = pod_name.split("-")
+            return f'{"-".join(app_name)}/{unit_number}'
+
+        return {
+            get_unit_name(pod.metadata.name): pod.metadata.labels["controller-revision-hash"]
+            for pod in pods
+        }
+
+    @functools.cached_property  # Cache lightkube API call for duration of charm execution
     def _app_workload_version(self) -> str:
         """App's Kubernetes controller revision hash"""
-        client = lightkube.Client()
-        stateful_set = client.get(res=lightkube.resources.apps_v1.StatefulSet, name=self._app_name)
+        stateful_set = _client.get(
+            res=lightkube.resources.apps_v1.StatefulSet, name=self._app_name
+        )
         return stateful_set.status.updateRevision
+
+
+_client = lightkube.Client()
+partition = _Partition()

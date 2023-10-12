@@ -156,9 +156,8 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
 
     def _on_stop(self, _) -> None:
         unit_number = int(self.unit.name.split("/")[-1])
-        stateful_set = kubernetes_upgrade.StatefulSet(self.app.name)
-        if stateful_set.partition < unit_number:
-            stateful_set.partition = unit_number
+        if kubernetes_upgrade.partition.get(app_name=self.app.name) < unit_number:
+            kubernetes_upgrade.partition.set(app_name=self.app.name, value=unit_number)
             logger.debug(f"Partition set to {unit_number} during stop event")
         if not self._upgrade:
             logger.debug("Peer relation missing during stop event")
