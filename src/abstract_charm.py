@@ -188,7 +188,7 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
             f"{self._unit_lifecycle.authorized_leader=}, "
             f"{isinstance(workload_, workload.AuthenticatedWorkload)=}, "
             f"{workload_.container_ready=}, "
-            f"{self._database_requires.is_relation_breaking(event)=}"
+            f"{self._database_requires.is_relation_breaking(event)=}, "
             f"{self._upgrade.in_progress=}"
         )
         if self._unit_lifecycle.authorized_leader:

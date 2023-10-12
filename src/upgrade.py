@@ -132,7 +132,7 @@ class Upgrade(abc.ABC):
             ):
                 # User confirmation needed to resume upgrade (i.e. upgrade second unit)
                 return ops.BlockedStatus(
-                    f"Upgrading. Check that highest number unit is healthy and run `juju run {self._app_name}/leader {RESUME_ACTION_NAME}`. To rollback, `juju refresh` to the previous revision"
+                    f"Upgrading. Verify highest unit is healthy & run `{RESUME_ACTION_NAME}` action. To rollback, `juju refresh` to last revision"
                 )
             else:
                 return ops.MaintenanceStatus(
@@ -211,6 +211,7 @@ class Upgrade(abc.ABC):
         units = self._sorted_units
 
         def determine_partition() -> int:
+            logger.debug(f"{self._peer_relation.data=}")
             for upgrade_order_index, unit in enumerate(units):
                 # Note: upgrade_order_index != unit number
                 if (
