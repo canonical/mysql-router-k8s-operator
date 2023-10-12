@@ -125,7 +125,7 @@ class Upgrade(abc.ABC):
     @property
     def app_status(self) -> typing.Optional[ops.StatusBase]:
         if self.in_progress:
-            if self._partition > _unit_number(self._sorted_units[1]):
+            if len(self._sorted_units) >= 2 and self._partition > _unit_number(self._sorted_units[1]):
                 # User confirmation needed to resume upgrade (i.e. upgrade second unit)
                 return ops.BlockedStatus(
                     f"Upgrading. Check that highest number unit is healthy and run `juju run {self._app_name}/leader {RESUME_ACTION_NAME}`. To rollback, `juju refresh` to the previous revision"
@@ -223,6 +223,7 @@ class Upgrade(abc.ABC):
         self._partition = partition
         logger.debug(f"Reconcile partition: set to {partition} {action_event=} {force=}")
         if action_event:
+            assert len(units) >= 2
             if partition > _unit_number(units[1]):
                 message = "Highest number unit is unhealthy. Upgrade will not resume."
                 logger.debug(f"Resume upgrade event failed: {message}")
