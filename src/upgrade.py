@@ -125,7 +125,9 @@ class Upgrade(abc.ABC):
     @property
     def app_status(self) -> typing.Optional[ops.StatusBase]:
         if self.in_progress:
-            if len(self._sorted_units) >= 2 and self._partition > _unit_number(self._sorted_units[1]):
+            if len(self._sorted_units) >= 2 and self._partition > _unit_number(
+                self._sorted_units[1]
+            ):
                 # User confirmation needed to resume upgrade (i.e. upgrade second unit)
                 return ops.BlockedStatus(
                     f"Upgrading. Check that highest number unit is healthy and run `juju run {self._app_name}/leader {RESUME_ACTION_NAME}`. To rollback, `juju refresh` to the previous revision"
