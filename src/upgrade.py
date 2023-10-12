@@ -22,6 +22,10 @@ PEER_RELATION_ENDPOINT_NAME = "upgrade-version-a"
 RESUME_ACTION_NAME = "resume-upgrade"
 
 
+def _unit_number(unit_: ops.Unit) -> int:
+    return int(unit_.name.split("/")[-1])
+
+
 class PeerRelationNotReady(Exception):
     """Upgrade peer relation not available (to this unit)"""
 
@@ -104,6 +108,11 @@ class Upgrade(abc.ABC):
         pass
 
     @property
+    def _sorted_units(self) -> list[ops.Unit]:
+        """Units sorted from highest to lowest unit number"""
+        return sorted((self._unit, *self._peer_relation.units), key=_unit_number, reverse=True)
+
+    @property
     @abc.abstractmethod
     def _unit_active_status(self) -> ops.ActiveStatus:
         """Status shown during upgrade if unit is healthy"""
@@ -116,9 +125,15 @@ class Upgrade(abc.ABC):
     @property
     def app_status(self) -> typing.Optional[ops.StatusBase]:
         if self.in_progress:
-            return ops.MaintenanceStatus(
-                "Upgrading. To rollback, `juju refresh` to the previous revision"
-            )
+            if self._partition > _unit_number(self._sorted_units[1]):
+                # User confirmation needed to resume upgrade (i.e. upgrade second unit)
+                return ops.BlockedStatus(
+                    f"Upgrading. Check that highest number unit is healthy and run `juju run {self._app_name}/leader {RESUME_ACTION_NAME}`. To rollback, `juju refresh` to the previous revision"
+                )
+            else:
+                return ops.MaintenanceStatus(
+                    "Upgrading. To rollback, `juju refresh` to the previous revision"
+                )
 
     def set_versions_in_app_databag(self) -> None:
         """Save current versions in app databag
@@ -132,6 +147,7 @@ class Upgrade(abc.ABC):
         logger.debug(f"Set {self._current_versions=} in upgrade peer relation app databag")
 
     @property
+    @abc.abstractmethod
     def _partition(self) -> int:
         """Specifies which units should upgrade
 
@@ -144,7 +160,6 @@ class Upgrade(abc.ABC):
         For Kubernetes, unit numbers are guaranteed to be sequential
         For machines, unit numbers are not guaranteed to be sequential
         """
-        raise Exception("Partition is write-only and should not be read")
 
     @_partition.setter
     @abc.abstractmethod
@@ -190,14 +205,7 @@ class Upgrade(abc.ABC):
         """
         force = action_event and action_event.params.get("force") is True
 
-        def unit_number(unit_: ops.Unit) -> int:
-            return int(unit_.name.split("/")[-1])
-
-        units = sorted(
-            (self._unit, *self._peer_relation.units),
-            key=unit_number,
-            reverse=True,  # Highest to lowest unit number
-        )
+        units = self._sorted_units
 
         def determine_partition() -> int:
             for upgrade_order_index, unit in enumerate(units):
@@ -207,15 +215,15 @@ class Upgrade(abc.ABC):
                 ) or self._get_unit_workload_version(unit) != self._app_workload_version:
                     if not action_event and upgrade_order_index == 1:
                         # User confirmation needed to resume upgrade (i.e. upgrade second unit)
-                        return unit_number(units[0])
-                    return unit_number(unit)
-            return unit_number(units[-1])  # Lowest unit number
+                        return _unit_number(units[0])
+                    return _unit_number(unit)
+            return _unit_number(units[-1])  # Lowest unit number
 
         partition = determine_partition()
         self._partition = partition
         logger.debug(f"Reconcile partition: set to {partition} {action_event=} {force=}")
         if action_event:
-            if partition > unit_number(units[1]):
+            if partition > _unit_number(units[1]):
                 message = "Highest number unit is unhealthy. Upgrade will not resume."
                 logger.debug(f"Resume upgrade event failed: {message}")
                 action_event.fail(message)

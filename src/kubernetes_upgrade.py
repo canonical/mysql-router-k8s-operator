@@ -74,7 +74,11 @@ class Upgrade(upgrade.Upgrade):
         revision_hash = revision_hash.removeprefix(f"{self._app_name}-")
         return ops.ActiveStatus(f'{self._current_versions["charm"]} {revision_hash}')
 
-    @upgrade.Upgrade._partition.setter
+    @property
+    def _partition(self) -> int:
+        return StatefulSet(self._app_name).partition
+
+    @_partition.setter
     def _partition(self, value: int) -> None:
         StatefulSet(self._app_name).partition = value
 
