@@ -103,7 +103,7 @@ class Upgrade(abc.ABC):
 
     @property
     def in_progress(self) -> bool:
-        logger.debug(f"{self._app_workload_version=} {self._unit_workload_versions.values()=}")
+        logger.debug(f"{self._app_workload_version=} {self._unit_workload_versions=}")
         return any(
             version != self._app_workload_version
             for version in self._unit_workload_versions.values()
