@@ -81,6 +81,7 @@ class Upgrade(upgrade.Upgrade):
             # Workaround for (potential) Juju bug
             # Example: If partition is lowered to 1, unit 1 begins to upgrade, and partition is set
             # to 2 right away, the unit/Juju agent will hang
+            # Details: https://chat.charmhub.io/charmhub/pl/on8rd538ufn4idgod139skkbfr
             # By sleeping for 30 seconds, we ensure that the leader doesn't raise the partition too
             # quickly and cause the unit to hang.
             # This does not address the situation where another unit > 1 restarts and sets the
