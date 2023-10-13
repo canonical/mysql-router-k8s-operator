@@ -42,6 +42,10 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
         self.framework.observe(
             self.on[upgrade.RESUME_ACTION_NAME].action, self._on_resume_upgrade_action
         )
+        # (For Kubernetes) Reset partition after scale down
+        self.framework.observe(
+            self.on[upgrade.PEER_RELATION_ENDPOINT_NAME].relation_departed, self.reconcile
+        )
         # Handle upgrade & set status on first start if no relations active
         self.framework.observe(self.on.start, self.reconcile)
         # Update app status
