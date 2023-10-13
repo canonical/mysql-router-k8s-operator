@@ -9,7 +9,6 @@ Implements specification: DA058 - In-Place Upgrades - Kubernetes v2
 
 import functools
 import logging
-import time
 
 import lightkube
 import lightkube.models.apps_v1
@@ -75,19 +74,8 @@ class Upgrade(upgrade.Upgrade):
 
     @_partition.setter
     def _partition(self, value: int) -> None:
-        lowering_partition = value < self._partition
         partition.set(app_name=self._app_name, value=value)
-        if lowering_partition:
-            # Workaround for (potential) Juju bug
-            # Example: If partition is lowered to 1, unit 1 begins to upgrade, and partition is set
-            # to 2 right away, the unit/Juju agent will hang
-            # Details: https://chat.charmhub.io/charmhub/pl/on8rd538ufn4idgod139skkbfr
-            # By sleeping for 30 seconds, we ensure that the leader doesn't raise the partition too
-            # quickly and cause the unit to hang.
-            # This does not address the situation where another unit > 1 restarts and sets the
-            # partition during the `stop` event, but that is unlikely to occur in the small time
-            # window that causes the unit to hang.
-            time.sleep(30)
+
 
     @functools.cached_property  # Cache lightkube API call for duration of charm execution
     def _unit_workload_versions(self) -> dict[str, str]:

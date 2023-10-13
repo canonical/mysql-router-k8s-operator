@@ -198,7 +198,7 @@ class Upgrade(abc.ABC):
         """
 
     def reconcile_partition(self, *, action_event: ops.ActionEvent = None) -> None:
-        """If ready, set partition to upgrade next unit.
+        """If ready, lower partition to upgrade next unit.
 
         Automatically upgrades next unit if all upgraded units are healthy—except if only one unit
         has upgraded (need manual user confirmation [via Juju action] to upgrade next unit)
@@ -225,11 +225,29 @@ class Upgrade(abc.ABC):
             return _unit_number(units[-1])  # Lowest unit number
 
         partition = determine_partition()
-        self._partition = partition
-        logger.debug(f"Reconcile partition: set to {partition} {action_event=} {force=}")
+        logger.debug(f"{self._partition=}, {partition=}")
+        # Only lower the partition—do not raise it.
+        # If this method is called during the action event and then called during another event a
+        # few seconds later, `determine_partition()` could return a lower number during the action
+        # and then a higher number a few seconds later.
+
+        # On machines, this could cause a unit to not upgrade & require that the action is run
+        # again. (e.g. if an update-status event fires immediately after the action and before the
+        # would-be upgrading unit receives a relation-changed event.)
+
+        # On Kubernetes, this can cause the unit to hang.
+        # Example: If partition is lowered to 1, unit 1 begins to upgrade, and partition is set to
+        # 2 right away, the unit/Juju agent will hang
+        # Details: https://chat.charmhub.io/charmhub/pl/on8rd538ufn4idgod139skkbfr
+        # This does not address the situation where another unit > 1 restarts and sets the
+        # partition during the `stop` event, but that is unlikely to occur in the small time window
+        # that causes the unit to hang.
+        if partition < self._partition:
+            self._partition = partition
+            logger.debug(f"Lowered partition to {partition} {action_event=} {force=}")
         if action_event:
             assert len(units) >= 2
-            if partition > _unit_number(units[1]):
+            if self._partition > _unit_number(units[1]):
                 message = "Highest number unit is unhealthy. Upgrade will not resume."
                 logger.debug(f"Resume upgrade event failed: {message}")
                 action_event.fail(message)
@@ -245,8 +263,8 @@ class Upgrade(abc.ABC):
                 # reset the partition if another event runs on the leader unit (and the action must
                 # be run again). This is also applicable `if not force`, but is unlikely to happen
                 # since all units are "healthy" `if not force`.
-                message = f"Attempting to upgrade unit {partition}"
+                message = f"Attempting to upgrade unit {self._partition}"
             else:
-                message = f"Upgrade resumed. Unit {partition} is upgrading next"
+                message = f"Upgrade resumed. Unit {self._partition} is upgrading next"
             action_event.set_results({"result": message})
             logger.debug(f"Resume upgrade event succeeded: {message}")
