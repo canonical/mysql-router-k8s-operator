@@ -37,13 +37,13 @@ class _Partition:
     def get(self, *, app_name: str) -> int:
         return self._cache.setdefault(
             app_name,
-            _client.get(
-                res=lightkube.resources.apps_v1.StatefulSet, name=app_name
-            ).spec.updateStrategy.rollingUpdate.partition,
+            lightkube.Client()
+            .get(res=lightkube.resources.apps_v1.StatefulSet, name=app_name)
+            .spec.updateStrategy.rollingUpdate.partition,
         )
 
     def set(self, *, app_name: str, value: int) -> None:
-        _client.patch(
+        lightkube.Client().patch(
             res=lightkube.resources.apps_v1.StatefulSet,
             name=app_name,
             obj={"spec": {"updateStrategy": {"rollingUpdate": {"partition": value}}}},
@@ -86,7 +86,7 @@ class Upgrade(upgrade.Upgrade):
         Therefore, we must use the revision hash instead of the workload version. (To satisfy the
         requirement that if and only if this version changes, the workload will restart.)
         """
-        pods = _client.list(
+        pods = lightkube.Client().list(
             res=lightkube.resources.core_v1.Pod, labels={"app.kubernetes.io/name": self._app_name}
         )
 
@@ -102,11 +102,10 @@ class Upgrade(upgrade.Upgrade):
     @functools.cached_property  # Cache lightkube API call for duration of charm execution
     def _app_workload_version(self) -> str:
         """App's Kubernetes controller revision hash"""
-        stateful_set = _client.get(
+        stateful_set = lightkube.Client().get(
             res=lightkube.resources.apps_v1.StatefulSet, name=self._app_name
         )
         return stateful_set.status.updateRevision
 
 
-_client = lightkube.Client()
 partition = _Partition()

@@ -254,7 +254,9 @@ class Upgrade(abc.ABC):
         # that causes the unit to hang.
         if partition < self._partition:
             self._partition = partition
-            logger.debug(f"Lowered partition to {partition} {action_event=} {force=} {self.in_progress=}")
+            logger.debug(
+                f"Lowered partition to {partition} {action_event=} {force=} {self.in_progress=}"
+            )
         if action_event:
             assert len(units) >= 2
             if self._partition > _unit_number(units[1]):

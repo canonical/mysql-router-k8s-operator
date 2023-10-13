@@ -32,6 +32,7 @@ def patch(monkeypatch):
     )
     monkeypatch.setattr("workload.AuthenticatedWorkload._router_username", "")
     monkeypatch.setattr("mysql_shell.Shell.is_router_in_cluster_set", lambda *args, **kwargs: True)
+    monkeypatch.setattr("upgrade.Upgrade.in_progress", False)
 
 
 @pytest.fixture(autouse=True)
@@ -45,4 +46,6 @@ def kubernetes_patch(monkeypatch):
     monkeypatch.setattr("rock._Path.unlink", lambda *args, **kwargs: None)
     monkeypatch.setattr("rock._Path.mkdir", lambda *args, **kwargs: None)
     monkeypatch.setattr("rock._Path.rmtree", lambda *args, **kwargs: None)
-    monkeypatch.setattr("kubernetes_upgrade.Upgrade.in_progress", False)
+    monkeypatch.setattr("lightkube.Client", lambda *args, **kwargs: None)
+    monkeypatch.setattr("kubernetes_upgrade._Partition.get", lambda *args, **kwargs: 0)
+    monkeypatch.setattr("kubernetes_upgrade._Partition.set", lambda *args, **kwargs: None)
