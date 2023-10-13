@@ -77,10 +77,12 @@ class Upgrade(abc.ABC):
         }
         try:
             if (
-                # TODO charm versioning: Un-comment when charm versioning specification is implemented
-                # Charm versions with git hash (temporary implementation) cannot be compared with `<`
+                # TODO charm versioning: Un-comment when charm versioning specification is
+                # implemented. Charm versions with git hash (temporary implementation) cannot be
+                # compared with `<`
                 # previous_versions["charm"] > current_versions["charm"] or
-                previous_versions["charm"].major != current_versions["charm"].major
+                previous_versions["charm"].major
+                != current_versions["charm"].major
             ):
                 logger.debug(
                     f'{previous_versions["charm"]=} incompatible with {current_versions["charm"]=}'
@@ -133,7 +135,8 @@ class Upgrade(abc.ABC):
                 self._sorted_units[1]
             ):
                 # User confirmation needed to resume upgrade (i.e. upgrade second unit)
-                # Statuses over 120 characters are truncated in `juju status` as of juju 3.1.6 and 2.9.45
+                # Statuses over 120 characters are truncated in `juju status` as of juju 3.1.6 and
+                # 2.9.45
                 return ops.BlockedStatus(
                     f"Upgrading. Verify highest unit is healthy & run `{RESUME_ACTION_NAME}` action. To rollback, `juju refresh` to last revision"
                 )

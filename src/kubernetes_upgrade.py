@@ -76,7 +76,6 @@ class Upgrade(upgrade.Upgrade):
     def _partition(self, value: int) -> None:
         partition.set(app_name=self._app_name, value=value)
 
-
     @functools.cached_property  # Cache lightkube API call for duration of charm execution
     def _unit_workload_versions(self) -> dict[str, str]:
         """{Unit name: Kubernetes controller revision hash}
