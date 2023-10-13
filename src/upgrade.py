@@ -77,8 +77,10 @@ class Upgrade(abc.ABC):
         }
         try:
             if (
-                previous_versions["charm"] > current_versions["charm"]
-                or previous_versions["charm"].major != current_versions["charm"].major
+                # TODO charm versioning: Un-comment when charm versioning specification is implemented
+                # Charm versions with git hash (temporary implementation) cannot be compared with `<`
+                # previous_versions["charm"] > current_versions["charm"] or
+                previous_versions["charm"].major != current_versions["charm"].major
             ):
                 logger.debug(
                     f'{previous_versions["charm"]=} incompatible with {current_versions["charm"]=}'
