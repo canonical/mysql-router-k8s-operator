@@ -269,10 +269,9 @@ class Upgrade(abc.ABC):
 
                 # Include "Attempting to" because (on Kubernetes) we only control the partition,
                 # not which units upgrade. Kubernetes may not upgrade a unit even if the partition
-                # allows it (e.g. if the charm container of a higher unit is not ready). We will
-                # reset the partition if another event runs on the leader unit (and the action must
-                # be run again). This is also applicable `if not force`, but is unlikely to happen
-                # since all units are "healthy" `if not force`.
+                # allows it (e.g. if the charm container of a higher unit is not ready). This is
+                # also applicable `if not force`, but is unlikely to happen since all units are
+                # "healthy" `if not force`.
                 message = f"Attempting to upgrade unit {self._partition}"
             else:
                 message = f"Upgrade resumed. Unit {self._partition} is upgrading next"
