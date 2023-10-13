@@ -155,8 +155,12 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         self.reconcile()
 
     def _on_stop(self, _) -> None:
-        # During the stop event, we don't know if the unit is upgrading, scaling down, or just
-        # restarting.
+        # During the stop event, the unit could be upgrading, scaling down, or just restarting.
+        if self._unit_lifecycle.tearing_down_and_app_active:
+            # Unit is tearing down and 1+ other units are not tearing down (scaling down)
+            # The partition should never be greater than the highest unit number, since that will
+            # cause `juju refresh` to have no effect
+            return
         unit_number = int(self.unit.name.split("/")[-1])
         # Raise partition to prevent other units from restarting if an upgrade is in progress.
         # If an upgrade is not in progress, the leader unit will reset the partition to 0.
