@@ -179,7 +179,6 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
                 self.unit.status = ops.BlockedStatus(
                     "Upgrade incompatible. Rollback to previous revision with `juju refresh`"
                 )
-                logger.debug(f"Set unit status to {self.unit.status}")
                 self.set_status(event=event, unit=False)
                 return
         workload_ = self.get_workload(event=event)
