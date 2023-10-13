@@ -215,9 +215,8 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
         if not workload_.status:
             self._upgrade.unit_state = "healthy"
         if self._unit_lifecycle.authorized_leader:
-            if self._upgrade.in_progress:
-                self._upgrade.reconcile_partition()
-            else:
+            self._upgrade.reconcile_partition()
+            if not self._upgrade.in_progress:
                 self._upgrade.set_versions_in_app_databag()
         self.set_status(event=event)
 

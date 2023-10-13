@@ -155,7 +155,11 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         self.reconcile()
 
     def _on_stop(self, _) -> None:
+        # During the stop event, we don't know if the unit is upgrading, scaling down, or just
+        # restarting.
         unit_number = int(self.unit.name.split("/")[-1])
+        # Raise partition to prevent other units from restarting if an upgrade is in progress.
+        # If an upgrade is not in progress, the leader unit will reset the partition to 0.
         if kubernetes_upgrade.partition.get(app_name=self.app.name) < unit_number:
             kubernetes_upgrade.partition.set(app_name=self.app.name, value=unit_number)
             logger.debug(f"Partition set to {unit_number} during stop event")

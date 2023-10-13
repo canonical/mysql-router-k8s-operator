@@ -205,6 +205,9 @@ class Upgrade(abc.ABC):
     def reconcile_partition(self, *, action_event: ops.ActionEvent = None) -> None:
         """If ready, lower partition to upgrade next unit.
 
+        If upgrade is not in progress, set partition to 0. (On Kubernetes, if a unit receives a
+        stop event, it may raise the partition even if an upgrade is not in progress.)
+
         Automatically upgrades next unit if all upgraded units are healthy—except if only one unit
         has upgraded (need manual user confirmation [via Juju action] to upgrade next unit)
 
@@ -217,6 +220,8 @@ class Upgrade(abc.ABC):
         units = self._sorted_units
 
         def determine_partition() -> int:
+            if not self.in_progress:
+                return 0
             logger.debug(f"{self._peer_relation.data=}")
             for upgrade_order_index, unit in enumerate(units):
                 # Note: upgrade_order_index != unit number
@@ -227,7 +232,7 @@ class Upgrade(abc.ABC):
                         # User confirmation needed to resume upgrade (i.e. upgrade second unit)
                         return _unit_number(units[0])
                     return _unit_number(unit)
-            return _unit_number(units[-1])  # Lowest unit number
+            return 0
 
         partition = determine_partition()
         logger.debug(f"{self._partition=}, {partition=}")
@@ -249,7 +254,7 @@ class Upgrade(abc.ABC):
         # that causes the unit to hang.
         if partition < self._partition:
             self._partition = partition
-            logger.debug(f"Lowered partition to {partition} {action_event=} {force=}")
+            logger.debug(f"Lowered partition to {partition} {action_event=} {force=} {self.in_progress=}")
         if action_event:
             assert len(units) >= 2
             if self._partition > _unit_number(units[1]):
