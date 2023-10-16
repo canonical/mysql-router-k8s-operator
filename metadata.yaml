@@ -1,10 +1,10 @@
 # Copyright 2023 Canonical Ltd.
 # See LICENSE file for licensing details.
 name: mysql-router-k8s
-display-name: MySQL Router
+display-name: MySQL Router K8s
 summary: Charmed K8s operator for mysql-router.
 description: |
-  Enables effective access to group replicated MySQL cluster for client applications.
+  Enables effective access to a MySQL cluster with Group Replication.
 
   This charm supports MySQL Router 8.0 in Kubernetes environments.
 docs: https://discourse.charmhub.io/t/charmed-mysql-router-k8s-documentation/12130
