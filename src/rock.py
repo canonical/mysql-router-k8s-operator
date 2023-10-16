@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 
 CONTAINER_NAME = "mysql-router"
 _UNIX_USERNAME = "mysql"
+_ROOT_USERNAME = "root"
 
 
 class _Path(container.Path):
@@ -40,10 +41,8 @@ class _Path(container.Path):
             file: io.TextIOWrapper
             return file.read()
 
-    def write_text(self, data: str):
-        self._container.push(
-            self, data, permissions=0o600, user=_UNIX_USERNAME, group=_UNIX_USERNAME
-        )
+    def write_text(self, data: str, user: str = _UNIX_USERNAME, group: str = _UNIX_USERNAME):
+        self._container.push(self, data, permissions=0o600, user=user, group=group)
 
     def unlink(self, missing_ok=False):
         if missing_ok and not self._container.exists(self):
@@ -62,6 +61,7 @@ class Rock(container.Container):
     """Workload ROCK or OCI container"""
 
     _SERVICE_NAME = "mysql_router"
+    _LOGROTATE_DISPATCHER_SERVICE_NAME = "logrotate_dispatcher"
 
     def __init__(self, *, unit: ops.Unit) -> None:
         super().__init__(mysql_router_command="mysqlrouter", mysql_shell_command="mysqlsh")
@@ -109,6 +109,41 @@ class Rock(container.Container):
             self._container.restart(self._SERVICE_NAME)
         else:
             self._container.stop(self._SERVICE_NAME)
+
+    def update_logrotate_dispatcher_service(self, *, enabled: bool) -> None:
+        """Update and restart log rotate dispatcher service.
+
+        Args:
+            enabled: Whether log rotate dispatcher service is enabled
+        """
+        command = "python3 /logrotate_dispatcher.py"
+        startup = (
+            ops.pebble.ServiceStartup.ENABLED.value
+            if enabled
+            else ops.pebble.ServiceStartup.DISABLED.value
+        )
+        layer = ops.pebble.Layer(
+            {
+                "summary": "Logrotate dispatcher layer",
+                "services": {
+                    self._LOGROTATE_DISPATCHER_SERVICE_NAME: {
+                        "override": "replace",
+                        "summary": "Logrotate dispatcher",
+                        "command": command,
+                        "startup": startup,
+                        "user": _ROOT_USERNAME,
+                        "group": _ROOT_USERNAME,
+                    },
+                },
+            }
+        )
+        self._container.add_layer(self._LOGROTATE_DISPATCHER_SERVICE_NAME, layer, combine=True)
+        # `self._container.replan()` does not stop services that have been disabled
+        # Use `restart()` and `stop()` instead
+        if enabled:
+            self._container.restart(self._LOGROTATE_DISPATCHER_SERVICE_NAME)
+        else:
+            self._container.stop(self._LOGROTATE_DISPATCHER_SERVICE_NAME)
 
     # TODO python3.10 min version: Use `list` instead of `typing.List`
     def _run_command(self, command: typing.List[str], *, timeout: typing.Optional[int]) -> str:
