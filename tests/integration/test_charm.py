@@ -59,7 +59,6 @@ async def test_database_relation(ops_test: OpsTest):
             series="jammy",
             resources=mysqlrouter_resources,
             num_units=1,
-            trust=True,
         ),
         ops_test.model.deploy(
             APPLICATION_APP_NAME,
