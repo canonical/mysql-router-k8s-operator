@@ -16,7 +16,9 @@ import kubernetes_charm
 def test_start_sets_status_if_no_relations(leader, can_connect, unit_status):
     context = scenario.Context(kubernetes_charm.KubernetesRouterCharm)
     input_state = scenario.State(
-        containers=[scenario.Container("mysql-router", can_connect=can_connect)], leader=leader
+        containers=[scenario.Container("mysql-router", can_connect=can_connect)],
+        leader=leader,
+        relations=[scenario.PeerRelation(endpoint="upgrade-version-a")],
     )
     output_state = context.run("start", input_state)
     if leader:

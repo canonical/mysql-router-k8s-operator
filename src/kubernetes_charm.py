@@ -17,8 +17,10 @@ import lightkube.resources.core_v1
 import ops
 
 import abstract_charm
+import kubernetes_upgrade
 import relations.tls
 import rock
+import upgrade
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +37,7 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         self.framework.observe(
             self.on[rock.CONTAINER_NAME].pebble_ready, self._on_workload_container_pebble_ready
         )
+        self.framework.observe(self.on.stop, self._on_stop)
         # TODO VM TLS: Move to super class
         self.tls = relations.tls.RelationEndpoint(self)
 
@@ -49,6 +52,13 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
     @property
     def _container(self) -> rock.Rock:
         return rock.Rock(unit=self.unit)
+
+    @property
+    def _upgrade(self) -> typing.Optional[kubernetes_upgrade.Upgrade]:
+        try:
+            return kubernetes_upgrade.Upgrade(self)
+        except upgrade.PeerRelationNotReady:
+            pass
 
     @property
     def model_service_domain(self) -> str:
@@ -142,7 +152,25 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
 
     def _on_workload_container_pebble_ready(self, _) -> None:
         self.unit.set_workload_version(self.get_workload(event=None).version)
-        self.reconcile_database_relations()
+        self.reconcile()
+
+    def _on_stop(self, _) -> None:
+        # During the stop event, the unit could be upgrading, scaling down, or just restarting.
+        if self._unit_lifecycle.tearing_down_and_app_active:
+            # Unit is tearing down and 1+ other units are not tearing down (scaling down)
+            # The partition should never be greater than the highest unit number, since that will
+            # cause `juju refresh` to have no effect
+            return
+        unit_number = int(self.unit.name.split("/")[-1])
+        # Raise partition to prevent other units from restarting if an upgrade is in progress.
+        # If an upgrade is not in progress, the leader unit will reset the partition to 0.
+        if kubernetes_upgrade.partition.get(app_name=self.app.name) < unit_number:
+            kubernetes_upgrade.partition.set(app_name=self.app.name, value=unit_number)
+            logger.debug(f"Partition set to {unit_number} during stop event")
+        if not self._upgrade:
+            logger.debug("Peer relation missing during stop event")
+            return
+        self._upgrade.unit_state = "restarting"
 
 
 if __name__ == "__main__":
