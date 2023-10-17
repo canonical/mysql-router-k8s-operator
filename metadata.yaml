@@ -2,7 +2,7 @@
 # See LICENSE file for licensing details.
 name: mysql-router-k8s
 display-name: MySQL Router K8s
-summary: Charmed K8s operator for mysql-router.
+summary: Charmed MySQL Router K8s operator
 description: |
   Enables effective access to a MySQL cluster with Group Replication.
 
