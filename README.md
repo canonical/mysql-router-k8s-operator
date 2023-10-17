@@ -14,12 +14,12 @@ flowchart TD
 
 ## Usage
 
-This charm must be used coupled with mysql-operator charm, through a relation, e.g.:
+This charm must be used coupled with mysql charm, through a relation, e.g.:
 
 ```bash
-juju deploy mysql-operator
-juju deploy mysql-router-operator
-juju add-relation mysql-operator mysql-router-operator
+juju deploy mysql-k8s --trust
+juju deploy mysql-router-k8s --trust
+juju integrate mysql-k8s mysql-router-k8s
 ```
 
 ## Relations

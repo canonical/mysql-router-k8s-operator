@@ -14,11 +14,21 @@ import lightkube
 import lightkube.models.apps_v1
 import lightkube.resources.apps_v1
 import lightkube.resources.core_v1
+import lightkube.core.exceptions
 import ops
 
 import upgrade
 
 logger = logging.getLogger(__name__)
+
+
+class DeployedWithoutTrust(Exception):
+    """Deployed without `juju deploy --trust` or `juju trust --scope=cluster`
+
+    Needed to access Kubernetes StatefulSet
+    """
+    def __init__(self, *, app_name: str):
+        super().__init__(f"Run `juju trust {app_name} --scope=cluster` and `juju resolve` for each unit (or remove & re-deploy {app_name} with `--trust`)")
 
 
 class _Partition:
@@ -53,6 +63,14 @@ class _Partition:
 
 class Upgrade(upgrade.Upgrade):
     """In-place upgrades on Kubernetes"""
+    def __init__(self, charm_: ops.CharmBase, *args, **kwargs):
+        try:
+            partition.get(app_name=charm_.app.name)
+        except lightkube.core.exceptions.ApiError as e:
+            if e.status.code == 403:
+                raise DeployedWithoutTrust(app_name=charm_.app.name)
+            raise
+        super().__init__(charm_, *args, **kwargs)
 
     @property
     def _unit_active_status(self) -> ops.ActiveStatus:
