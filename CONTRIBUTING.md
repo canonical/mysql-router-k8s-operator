@@ -66,8 +66,9 @@ juju add-model dev
 # Enable DEBUG logging
 juju model-config logging-config="<root>=INFO;unit=DEBUG"
 # Deploy the charm
+# `--trust` needed if Role Based Access Control (RBAC) (https://kubernetes.io/docs/concepts/security/rbac-good-practices/) is enabled on Kubernetes
 juju deploy ./mysqlrouter-operator_ubuntu-20.04-amd64.charm \
-    --resource mysql-router-image=mysql/mysql-router:8.0
+    --resource mysql-router-image=mysql/mysql-router:8.0 --trust
 ```
 
 ## Canonical Contributor Agreement

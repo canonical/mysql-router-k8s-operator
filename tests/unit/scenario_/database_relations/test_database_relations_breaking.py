@@ -16,11 +16,13 @@ def output_state(*, relations: list[scenario.Relation], event: scenario.Event) -
     context = scenario.Context(kubernetes_charm.KubernetesRouterCharm)
     container = scenario.Container("mysql-router", can_connect=True)
     input_state = scenario.State(
-        relations=relations,
+        relations=[*relations, scenario.PeerRelation(endpoint="upgrade-version-a")],
         containers=[container],
         leader=True,
     )
-    return context.run(event, input_state)
+    output = context.run(event, input_state)
+    output.relations.pop()  # Remove PeerRelation
+    return output
 
 
 @pytest.mark.parametrize("complete_provides_s", combinations.complete_provides(1, 3))

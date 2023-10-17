@@ -194,7 +194,7 @@ class RelationEndpoint(ops.Object):
         self._interface = tls_certificates.TLSCertificatesRequiresV1(self._charm, self.NAME)
 
         self.framework.observe(
-            self._charm.on.set_tls_private_key_action,
+            self._charm.on["set-tls-private-key"].action,
             self._on_set_tls_private_key,
         )
         self.framework.observe(

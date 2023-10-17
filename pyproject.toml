@@ -14,6 +14,7 @@ ops = "^2.6.0"
 lightkube = "^0.14.0"
 tenacity = "^8.2.3"
 jinja2 = "^3.1.2"
+poetry-core = "^1.7.0"
 
 [tool.poetry.group.charm-libs.dependencies]
 # data_platform_libs/v0/data_interfaces.py

@@ -19,6 +19,9 @@ parts:
           exit 1
       fi
     charm-entrypoint: src/kubernetes_charm.py
+    prime:
+      - charm_version
+      - workload_version
     build-packages:
       - libffi-dev
       - libssl-dev

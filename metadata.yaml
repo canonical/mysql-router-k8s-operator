@@ -1,16 +1,23 @@
-# Copyright 2022 Canonical Ltd.
+# Copyright 2023 Canonical Ltd.
 # See LICENSE file for licensing details.
 name: mysql-router-k8s
-display-name: MySQL Router
-maintainers:
-  - Carl Csaposs <carl.csaposs@canonical.com>
-  - Paulo Machado <paulo.machado@canonical.com>
-  - Shayan Patel <shayan.patel@canonical.com>
+display-name: MySQL Router K8s
+summary: Charmed MySQL Router K8s operator
 description: |
-  K8S charmed operator for mysql-router.
-summary: |
-  Charmed operator for mysql-router.
-  Enables effective access to group replicated MySQL cluster for client applications.
+  Enables effective access to a MySQL cluster with Group Replication.
+
+  This charm supports MySQL Router 8.0 in Kubernetes environments.
+docs: https://discourse.charmhub.io/t/charmed-mysql-router-k8s-documentation/12130
+source: https://github.com/canonical/mysql-router-k8s-operator
+issues: https://github.com/canonical/mysql-router-k8s-operator/issues
+website:
+  - https://ubuntu.com/data/mysql
+  - https://charmhub.io/mysql-router-k8s
+  - https://github.com/canonical/mysql-router-k8s-operator
+  - https://chat.charmhub.io/charmhub/channels/data-platform
+maintainers:
+  - Canonical Data Platform <data-platform@lists.launchpad.net>
+
 containers:
   mysql-router:
     resource: mysql-router-image
@@ -25,6 +32,11 @@ requires:
     interface: tls-certificates
     limit: 1
 peers:
+  upgrade-version-a:
+    # Relation versioning scheme:
+    # DA056 - Upgrading in-place upgrade protocol
+    # https://docs.google.com/document/d/1H7qy5SAwLiCOKO9xMQJbbQP5_-jGV6Lhi-mJOk4gZ08/edit
+    interface: upgrade
   mysql-router-peers:
     interface: mysql_router_peers
 resources:
