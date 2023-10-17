@@ -175,7 +175,7 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
     # =======================
 
     def reconcile(self, event=None) -> None:  # noqa: C901
-        if isinstance(event, ops.LeaderElectedEvent):
+        if isinstance(event, ops.InstallEvent):
             time.sleep(60)
         """Handle most events."""
         if not self._upgrade:
