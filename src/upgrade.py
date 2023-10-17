@@ -193,7 +193,7 @@ class Upgrade(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def _app_workload_version(self):
+    def _app_workload_version(self) -> str:
         """Unique identifier for the app's workload version
 
         This should match the workload version in the current Juju app charm version.
