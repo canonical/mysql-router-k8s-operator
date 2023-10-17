@@ -6,6 +6,7 @@
 import abc
 import logging
 import socket
+import time
 import typing
 
 import ops
@@ -174,6 +175,8 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
     # =======================
 
     def reconcile(self, event=None) -> None:  # noqa: C901
+        if isinstance(event, ops.LeaderElectedEvent):
+            time.sleep(60)
         """Handle most events."""
         if not self._upgrade:
             logger.debug("Peer relation not available")
