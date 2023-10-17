@@ -57,6 +57,7 @@ pytest-operator-groups = {git = "https://github.com/canonical/data-platform-work
 juju = "^2.9.44.1"
 mysql-connector-python = "~8.0.33"
 pyyaml = "^6.0.1"
+tenacity = "^8.2.2"
 
 
 [tool.coverage.run]
