@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 
 class DeployedWithoutTrust(Exception):
-    """Deployed without `juju deploy --trust` or `juju trust --scope=cluster`
+    """Deployed without `juju deploy --trust` or `juju trust`
 
     Needed to access Kubernetes StatefulSet
     """
