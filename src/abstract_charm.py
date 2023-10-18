@@ -76,6 +76,8 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
     def _logrotate(self) -> logrotate.LogRotate:
         """logrotate"""
 
+    @property
+    @abc.abstractmethod
     def _upgrade(self) -> typing.Optional[upgrade.Upgrade]:
         pass
 

@@ -18,6 +18,7 @@ import ops
 
 import abstract_charm
 import kubernetes_logrotate
+import kubernetes_upgrade
 import logrotate
 import relations.tls
 import rock
@@ -58,6 +59,7 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
     def _logrotate(self) -> logrotate.LogRotate:
         return kubernetes_logrotate.LogRotate(container_=self._container)
 
+    @property
     def _upgrade(self) -> typing.Optional[kubernetes_upgrade.Upgrade]:
         try:
             return kubernetes_upgrade.Upgrade(self)
