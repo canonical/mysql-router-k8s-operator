@@ -336,6 +336,8 @@ async def rotate_mysqlrouter_logs(ops_test: OpsTest, unit_name: str) -> None:
         unit_name,
         "logrotate",
         "-f",
+        "-s",
+        "/tmp/logrotate.status",
         "/etc/logrotate.d/flush_mysqlrouter_logs",
     )
 

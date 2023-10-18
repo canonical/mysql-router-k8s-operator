@@ -35,7 +35,7 @@ class LogRotate(logrotate.LogRotate):
             log_file_path=str(log_file_path),
             system_user=SYSTEM_USER,
         )
-        self._logrotate_config.write_text(rendered, user=ROOT_USER, group=ROOT_USER)
+        self._logrotate_config.write_text(rendered)
 
         logger.debug("Created logrotate config file")
         logger.debug("Copying log rotate dispatcher to workload container")

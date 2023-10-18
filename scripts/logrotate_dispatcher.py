@@ -18,7 +18,13 @@ def main():
 
     while True:
         subprocess.run(
-            ["logrotate", "-f", "/etc/logrotate.d/flush_mysqlrouter_logs"],
+            [
+                "logrotate",
+                "-f",
+                "-s",
+                "/tmp/logrotate.status",
+                "/etc/logrotate.d/flush_mysqlrouter_logs",
+            ],
             check=True,
         )
 

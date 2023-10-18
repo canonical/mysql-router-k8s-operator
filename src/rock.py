@@ -15,7 +15,6 @@ logger = logging.getLogger(__name__)
 
 CONTAINER_NAME = "mysql-router"
 _UNIX_USERNAME = "mysql"
-_ROOT_USERNAME = "root"
 
 
 class _Path(container.Path):
@@ -41,8 +40,10 @@ class _Path(container.Path):
             file: io.TextIOWrapper
             return file.read()
 
-    def write_text(self, data: str, user: str = _UNIX_USERNAME, group: str = _UNIX_USERNAME):
-        self._container.push(self, data, permissions=0o600, user=user, group=group)
+    def write_text(self, data: str):
+        self._container.push(
+            self, data, permissions=0o600, user=_UNIX_USERNAME, group=_UNIX_USERNAME
+        )
 
     def unlink(self, missing_ok=False):
         if missing_ok and not self._container.exists(self):
@@ -131,8 +132,8 @@ class Rock(container.Container):
                         "summary": "Logrotate dispatcher",
                         "command": command,
                         "startup": startup,
-                        "user": _ROOT_USERNAME,
-                        "group": _ROOT_USERNAME,
+                        "user": _UNIX_USERNAME,
+                        "group": _UNIX_USERNAME,
                     },
                 },
             }
