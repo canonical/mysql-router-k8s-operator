@@ -226,7 +226,7 @@ class Upgrade(abc.ABC):
             for upgrade_order_index, unit in enumerate(units):
                 # Note: upgrade_order_index != unit number
                 if (
-                    force is False and self._peer_relation.data[unit].get("state") != "healthy"
+                    not force and self._peer_relation.data[unit].get("state") != "healthy"
                 ) or self._unit_workload_versions[unit.name] != self._app_workload_version:
                     if not action_event and upgrade_order_index == 1:
                         # User confirmation needed to resume upgrade (i.e. upgrade second unit)
