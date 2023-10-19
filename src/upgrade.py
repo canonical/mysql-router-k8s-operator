@@ -215,7 +215,7 @@ class Upgrade(abc.ABC):
         - confirm first upgraded unit is healthy and resume upgrade
         - force upgrade of next unit if 1 or more upgraded units are unhealthy
         """
-        force = action_event and action_event.params.get("force") is True
+        force = bool(action_event and action_event.params.get("force") is True)
 
         units = self._sorted_units
 
