@@ -22,7 +22,7 @@ import relations.tls
 import rock
 import upgrade
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(f"router_charm.{__name__}")
 
 
 class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):

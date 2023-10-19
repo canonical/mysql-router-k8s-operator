@@ -16,7 +16,7 @@ import status_exception
 if typing.TYPE_CHECKING:
     import abstract_charm
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(f"router_charm.{__name__}")
 
 
 class _RelationBreaking(Exception):

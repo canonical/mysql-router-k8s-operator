@@ -16,7 +16,7 @@ import typing
 import ops
 import poetry.core.constraints.version as poetry_version
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(f"router_charm.{__name__}")
 
 PEER_RELATION_ENDPOINT_NAME = "upgrade-version-a"
 RESUME_ACTION_NAME = "resume-upgrade"

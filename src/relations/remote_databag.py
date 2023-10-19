@@ -11,7 +11,7 @@ import ops
 
 import status_exception
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(f"router_charm.{__name__}")
 
 
 class IncompleteDatabag(status_exception.StatusException):

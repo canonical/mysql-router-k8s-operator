@@ -19,7 +19,7 @@ import ops
 
 import upgrade
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(f"router_charm.{__name__}")
 
 
 class DeployedWithoutTrust(Exception):

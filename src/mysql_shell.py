@@ -15,7 +15,7 @@ import typing
 
 import container
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(f"router_charm.{__name__}")
 
 _PASSWORD_LENGTH = 24
 

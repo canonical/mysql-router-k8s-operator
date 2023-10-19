@@ -11,7 +11,7 @@ import ops
 
 import container
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(f"router_charm.{__name__}")
 
 CONTAINER_NAME = "mysql-router"
 _UNIX_USERNAME = "mysql"

@@ -18,7 +18,7 @@ import relations.database_requires
 import upgrade
 import workload
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(f"router_charm.{__name__}")
 
 
 class MySQLRouterCharm(ops.CharmBase, abc.ABC):
@@ -26,6 +26,14 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
 
     def __init__(self, *args) -> None:
         super().__init__(*args)
+        # `ops` adds juju debug-log handler to root logger and sets the root logger level to DEBUG
+        # The root logger will receive log messages from our Python dependencies (e.g. lightkube)
+        # which clutters juju debug-log.
+        # Set root logger level
+        logging.getLogger().setLevel(logging.WARNING)
+        # Set charm logger level
+        logging.getLogger("router_charm").setLevel(logging.DEBUG)
+
         # Instantiate before registering other event observers
         self._unit_lifecycle = lifecycle.Unit(
             self, subordinated_relation_endpoint_names=self._subordinate_relation_endpoint_names

@@ -19,7 +19,7 @@ if typing.TYPE_CHECKING:
     import abstract_charm
     import relations.database_requires
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(f"router_charm.{__name__}")
 
 
 class Workload:

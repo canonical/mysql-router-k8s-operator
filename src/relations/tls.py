@@ -18,7 +18,7 @@ import ops
 if typing.TYPE_CHECKING:
     import kubernetes_charm
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(f"router_charm.{__name__}")
 
 _PEER_RELATION_ENDPOINT_NAME = "mysql-router-peers"
 
