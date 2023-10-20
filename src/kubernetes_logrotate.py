@@ -1,7 +1,7 @@
 # Copyright 2023 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-"""logrotate cron configuration"""
+"""logrotate implementation for k8s"""
 
 import logging
 import pathlib
@@ -18,12 +18,12 @@ ROOT_USER = "root"
 
 
 class LogRotate(logrotate.LogRotate):
-    """logrotate cron configuration"""
+    """logrotate implementation for k8s"""
 
     def __init__(self, *, container_: container.Container):
         super().__init__(container_=container_)
         self._logrotate_config = self._container.path("/etc/logrotate.d/flush_mysqlrouter_logs")
-        self._logrotate_dispatcher = self._container.path("/logrotate_dispatcher.py")
+        self._logrotate_executor = self._container.path("/logrotate_executor.py")
 
     def enable(self) -> None:
         logger.debug("Creating logrotate config file")
@@ -38,22 +38,22 @@ class LogRotate(logrotate.LogRotate):
         self._logrotate_config.write_text(rendered)
 
         logger.debug("Created logrotate config file")
-        logger.debug("Copying log rotate dispatcher to workload container")
+        logger.debug("Copying log rotate executor script to workload container")
 
-        self._logrotate_dispatcher.write_text(
-            pathlib.Path("scripts/logrotate_dispatcher.py").read_text()
+        self._logrotate_executor.write_text(
+            pathlib.Path("scripts/logrotate_executor.py").read_text()
         )
 
-        logger.debug("Copied log rotate dispatcher to workload container")
-        logger.debug("Starting the logrotate dispatcher service")
-        self._container.update_logrotate_dispatcher_service(enabled=True)
-        logger.debug("Started the logrotate dispatcher service")
+        logger.debug("Copied log rotate executor to workload container")
+        logger.debug("Starting the logrotate executor service")
+        self._container.update_logrotate_executor_service(enabled=True)
+        logger.debug("Started the logrotate executro service")
 
     def disable(self) -> None:
-        logger.debug("Stopping the logrotate dispatcher service")
-        self._container.update_logrotate_dispatcher_service(enabled=False)
-        logger.debug("Stopped the logrotate dispatcher service")
-        logger.debug("Removing logrotate config and dispatcher files")
+        logger.debug("Stopping the logrotate executor service")
+        self._container.update_logrotate_executor_service(enabled=False)
+        logger.debug("Stopped the logrotate executor service")
+        logger.debug("Removing logrotate config and executor files")
         self._logrotate_config.unlink()
-        self._logrotate_dispatcher.unlink()
-        logger.debug("Removed logrotate config and dispatcher files")
+        self._logrotate_executor.unlink()
+        logger.debug("Removed logrotate config and executor files")

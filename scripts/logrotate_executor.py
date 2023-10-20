@@ -1,7 +1,7 @@
 # Copyright 2023 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-"""Log rotate event dispatcher."""
+"""Runs logrotate every minute."""
 
 import subprocess
 import time

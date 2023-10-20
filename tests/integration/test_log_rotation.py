@@ -16,7 +16,7 @@ from .helpers import (
     read_contents_from_file_in_unit,
     rotate_mysqlrouter_logs,
     stop_running_flush_mysqlrouter_job,
-    stop_running_log_rotate_dispatcher,
+    stop_running_log_rotate_executor,
     write_content_to_file_in_unit,
 )
 
@@ -101,8 +101,8 @@ async def test_log_rotation(ops_test: OpsTest):
             ),
         )
 
-    logger.info("Stopping the logrotate dispatcher pebble service")
-    await stop_running_log_rotate_dispatcher(ops_test, unit.name)
+    logger.info("Stopping the logrotate executor pebble service")
+    await stop_running_log_rotate_executor(ops_test, unit.name)
 
     logger.info("Stopping any running logrotate jobs")
     await stop_running_flush_mysqlrouter_job(ops_test, unit.name)

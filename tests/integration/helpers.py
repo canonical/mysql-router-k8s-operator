@@ -13,7 +13,7 @@ from tenacity import Retrying, stop_after_attempt, wait_fixed
 
 SERVER_CONFIG_USERNAME = "serverconfig"
 CONTAINER_NAME = "mysql-router"
-LOGROTATE_DISPATCHER_SERVICE = "logrotate_dispatcher"
+LOGROTATE_EXECUTOR_SERVICE = "logrotate_executor"
 
 
 async def execute_queries_on_unit(
@@ -277,14 +277,14 @@ async def ls_la_in_unit(
     ]
 
 
-async def stop_running_log_rotate_dispatcher(ops_test: OpsTest, unit_name: str):
-    """Stop running the log rotate dispatcher script.
+async def stop_running_log_rotate_executor(ops_test: OpsTest, unit_name: str):
+    """Stop running the log rotate executor script.
 
     Args:
         ops_test: The ops test object passed into every test case
         unit_name: The name of the unit to be tested
     """
-    # send KILL signal to log rotate dispatcher, which trigger shutdown process
+    # send KILL signal to log rotate executor, which trigger shutdown process
     await ops_test.juju(
         "ssh",
         "--container",
@@ -292,7 +292,7 @@ async def stop_running_log_rotate_dispatcher(ops_test: OpsTest, unit_name: str):
         unit_name,
         "pebble",
         "stop",
-        LOGROTATE_DISPATCHER_SERVICE,
+        LOGROTATE_EXECUTOR_SERVICE,
     )
 
 

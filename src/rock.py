@@ -62,7 +62,7 @@ class Rock(container.Container):
     """Workload ROCK or OCI container"""
 
     _SERVICE_NAME = "mysql_router"
-    _LOGROTATE_DISPATCHER_SERVICE_NAME = "logrotate_dispatcher"
+    _LOGROTATE_EXECUTOR_SERVICE_NAME = "logrotate_executor"
 
     def __init__(self, *, unit: ops.Unit) -> None:
         super().__init__(mysql_router_command="mysqlrouter", mysql_shell_command="mysqlsh")
@@ -111,13 +111,12 @@ class Rock(container.Container):
         else:
             self._container.stop(self._SERVICE_NAME)
 
-    def update_logrotate_dispatcher_service(self, *, enabled: bool) -> None:
-        """Update and restart log rotate dispatcher service.
+    def update_logrotate_executor_service(self, *, enabled: bool) -> None:
+        """Update and restart log rotate executor service.
 
         Args:
-            enabled: Whether log rotate dispatcher service is enabled
+            enabled: Whether log rotate executor service is enabled
         """
-        command = "python3 /logrotate_dispatcher.py"
         startup = (
             ops.pebble.ServiceStartup.ENABLED.value
             if enabled
@@ -125,12 +124,12 @@ class Rock(container.Container):
         )
         layer = ops.pebble.Layer(
             {
-                "summary": "Logrotate dispatcher layer",
+                "summary": "Logrotate executor layer",
                 "services": {
-                    self._LOGROTATE_DISPATCHER_SERVICE_NAME: {
+                    self._LOGROTATE_EXECUTOR_SERVICE_NAME: {
                         "override": "replace",
-                        "summary": "Logrotate dispatcher",
-                        "command": command,
+                        "summary": "Logrotate executor",
+                        "command": "python3 /logrotate_executor.py",
                         "startup": startup,
                         "user": _UNIX_USERNAME,
                         "group": _UNIX_USERNAME,
@@ -138,13 +137,13 @@ class Rock(container.Container):
                 },
             }
         )
-        self._container.add_layer(self._LOGROTATE_DISPATCHER_SERVICE_NAME, layer, combine=True)
+        self._container.add_layer(self._LOGROTATE_EXECUTOR_SERVICE_NAME, layer, combine=True)
         # `self._container.replan()` does not stop services that have been disabled
         # Use `restart()` and `stop()` instead
         if enabled:
-            self._container.restart(self._LOGROTATE_DISPATCHER_SERVICE_NAME)
+            self._container.restart(self._LOGROTATE_EXECUTOR_SERVICE_NAME)
         else:
-            self._container.stop(self._LOGROTATE_DISPATCHER_SERVICE_NAME)
+            self._container.stop(self._LOGROTATE_EXECUTOR_SERVICE_NAME)
 
     # TODO python3.10 min version: Use `list` instead of `typing.List`
     def _run_command(self, command: typing.List[str], *, timeout: typing.Optional[int]) -> str:
