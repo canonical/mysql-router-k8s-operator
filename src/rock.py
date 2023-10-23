@@ -90,7 +90,6 @@ class Rock(container.Container):
             startup = ops.pebble.ServiceStartup.DISABLED.value
         layer = ops.pebble.Layer(
             {
-                "summary": "MySQL Router layer",
                 "services": {
                     self._SERVICE_NAME: {
                         "override": "replace",
@@ -124,7 +123,6 @@ class Rock(container.Container):
         )
         layer = ops.pebble.Layer(
             {
-                "summary": "Logrotate executor layer",
                 "services": {
                     self._LOGROTATE_EXECUTOR_SERVICE_NAME: {
                         "override": "replace",

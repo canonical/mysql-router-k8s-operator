@@ -19,7 +19,6 @@ class LogRotate(logrotate.LogRotate):
 
     def __init__(self, *, container_: container.Container):
         super().__init__(container_=container_)
-        self._logrotate_config = self._container.path("/etc/logrotate.d/flush_mysqlrouter_logs")
         self._logrotate_executor = self._container.path("/logrotate_executor.py")
 
     def enable(self) -> None:

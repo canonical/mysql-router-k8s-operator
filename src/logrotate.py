@@ -7,10 +7,10 @@ https://manpages.ubuntu.com/manpages/jammy/man8/logrotate.8.html
 """
 
 import abc
+import logging
 import pathlib
 
 import jinja2
-import logging
 
 import container
 
@@ -24,6 +24,8 @@ class LogRotate(abc.ABC):
 
     def __init__(self, *, container_: container.Container):
         self._container = container_
+
+        self._logrotate_config = self._container.path("/etc/logrotate.d/flush_mysqlrouter_logs")
 
     def enable(self) -> None:
         """Enable logrotate."""
