@@ -7,8 +7,16 @@ https://manpages.ubuntu.com/manpages/jammy/man8/logrotate.8.html
 """
 
 import abc
+import pathlib
+
+import jinja2
+import logging
 
 import container
+
+logger = logging.getLogger(__name__)
+
+SYSTEM_USER = "root"
 
 
 class LogRotate(abc.ABC):
@@ -17,9 +25,20 @@ class LogRotate(abc.ABC):
     def __init__(self, *, container_: container.Container):
         self._container = container_
 
-    @abc.abstractmethod
     def enable(self) -> None:
         """Enable logrotate."""
+        logger.debug("Creating logrotate config file")
+
+        template = jinja2.Template(pathlib.Path("templates/logrotate.j2").read_text())
+
+        log_file_path = self._container.path("/var/log/mysqlrouter/mysqlrouter.log")
+        rendered = template.render(
+            log_file_path=str(log_file_path),
+            system_user=SYSTEM_USER,
+        )
+        self._logrotate_config.write_text(rendered)
+
+        logger.debug("Created logrotate config file")
 
     @abc.abstractmethod
     def disable(self) -> None:
