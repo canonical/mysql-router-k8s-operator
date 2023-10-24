@@ -329,16 +329,24 @@ async def rotate_mysqlrouter_logs(ops_test: OpsTest, unit_name: str) -> None:
         ops_test: The ops test object passed into every test case
         unit_name: The name of the unit to be tested
     """
-    return_code, _, _ = await ops_test.juju(
-        "ssh",
-        "--container",
-        CONTAINER_NAME,
-        unit_name,
-        "logrotate",
-        "-f",
-        "-s",
-        "/tmp/logrotate.status",
-        "/etc/logrotate.d/flush_mysqlrouter_logs",
-    )
+    pod_label = unit_name.replace("/", "-")
 
-    assert return_code == 0
+    process = subprocess.run(
+        [
+            "kubectl",
+            "exec",
+            "-n",
+            ops_test.model.info.name,
+            "-it",
+            pod_label,
+            "--container",
+            CONTAINER_NAME,
+            "--",
+            "su",
+            "-",
+            "mysql",
+            "-c",
+            "logrotate -f -s /tmp/logrotate.status /etc/logrotate.d/flush_mysqlrouter_logs",
+        ],
+        check=True,
+    )

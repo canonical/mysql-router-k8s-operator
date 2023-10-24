@@ -11,8 +11,6 @@ import logrotate
 
 logger = logging.getLogger(__name__)
 
-SYSTEM_USER = "mysql"
-
 
 class LogRotate(logrotate.LogRotate):
     """logrotate implementation for k8s"""
@@ -20,6 +18,10 @@ class LogRotate(logrotate.LogRotate):
     def __init__(self, *, container_: container.Container):
         super().__init__(container_=container_)
         self._logrotate_executor = self._container.path("/logrotate_executor.py")
+
+    @property
+    def system_user(self) -> str:
+        return "mysql"
 
     def enable(self) -> None:
         super().enable()
@@ -32,13 +34,14 @@ class LogRotate(logrotate.LogRotate):
 
         logger.debug("Starting the logrotate executor service")
         self._container.update_logrotate_executor_service(enabled=True)
-        logger.debug("Started the logrotate executro service")
+        logger.debug("Started the logrotate executor service")
 
     def disable(self) -> None:
         logger.debug("Stopping the logrotate executor service")
         self._container.update_logrotate_executor_service(enabled=False)
         logger.debug("Stopped the logrotate executor service")
+
         logger.debug("Removing logrotate config and executor files")
-        self._logrotate_config.unlink()
+        super().disable()
         self._logrotate_executor.unlink()
         logger.debug("Removed logrotate config and executor files")
