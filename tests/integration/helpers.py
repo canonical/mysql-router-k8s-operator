@@ -331,7 +331,7 @@ async def rotate_mysqlrouter_logs(ops_test: OpsTest, unit_name: str) -> None:
     """
     pod_label = unit_name.replace("/", "-")
 
-    process = subprocess.run(
+    subprocess.run(
         [
             "kubectl",
             "exec",
