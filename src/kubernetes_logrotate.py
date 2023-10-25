@@ -19,10 +19,6 @@ class LogRotate(logrotate.LogRotate):
         super().__init__(container_=container_)
         self._logrotate_executor = self._container.path("/logrotate_executor.py")
 
-    @property
-    def system_user(self) -> str:
-        return "mysql"
-
     def enable(self) -> None:
         super().enable()
 
