@@ -17,7 +17,9 @@ import lightkube.resources.core_v1
 import ops
 
 import abstract_charm
+import kubernetes_logrotate
 import kubernetes_upgrade
+import logrotate
 import relations.tls
 import rock
 import upgrade
@@ -52,6 +54,10 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
     @property
     def _container(self) -> rock.Rock:
         return rock.Rock(unit=self.unit)
+
+    @property
+    def _logrotate(self) -> logrotate.LogRotate:
+        return kubernetes_logrotate.LogRotate(container_=self._container)
 
     @property
     def _upgrade(self) -> typing.Optional[kubernetes_upgrade.Upgrade]:
