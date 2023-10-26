@@ -854,12 +854,12 @@ referencing = ">=0.28.0"
 
 [[package]]
 name = "juju"
-version = "2.9.44.1"
+version = "3.2.0.1"
 description = "Python library for Juju"
 optional = false
 python-versions = "*"
 files = [
-    {file = "juju-2.9.44.1.tar.gz", hash = "sha256:ece49d708025602c9ad8e875dc47ac5ede8229e3d3ab82616da78973189846e3"},
+    {file = "juju-3.2.0.1.tar.gz", hash = "sha256:7b167e6750002cf0a3888acbb9081f6eaf492c5d34500717784ec2aef5214545"},
 ]
 
 [package.dependencies]
@@ -1138,13 +1138,13 @@ websocket-client = "==1.*"
 
 [[package]]
 name = "ops-scenario"
-version = "5.2"
+version = "5.5"
 description = "Python library providing a state-transition testing API for Operator Framework charms."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "ops-scenario-5.2.tar.gz", hash = "sha256:2effeab9a652689a339768dfc440004ffd524fea6d4c628593492724f06b9698"},
-    {file = "ops_scenario-5.2-py3-none-any.whl", hash = "sha256:78a266071170127475f0d53b5f29e38b6968e9c27a89e574b4182a10a6ba00fc"},
+    {file = "ops-scenario-5.5.tar.gz", hash = "sha256:848fa76d39e6a39626875d27b8579cd3c841e57d0f33ef5d539fbcf6ea989b37"},
+    {file = "ops_scenario-5.5-py3-none-any.whl", hash = "sha256:72a11c2cce1370289dbf44177bf77891121b71e5aa44095a12b2224ae9d8da91"},
 ]
 
 [package.dependencies]
@@ -1578,6 +1578,23 @@ pytest = ">=4.6"
 
 [package.extras]
 testing = ["fields", "hunter", "process-tests", "pytest-xdist", "six", "virtualenv"]
+
+[[package]]
+name = "pytest-mock"
+version = "3.12.0"
+description = "Thin-wrapper around the mock package for easier use with pytest"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "pytest-mock-3.12.0.tar.gz", hash = "sha256:31a40f038c22cad32287bb43932054451ff5583ff094bca6f675df2f8bc1a6e9"},
+    {file = "pytest_mock-3.12.0-py3-none-any.whl", hash = "sha256:0972719a7263072da3a21c7f4773069bcc7486027d7e8e1f81d98a47e701bc4f"},
+]
+
+[package.dependencies]
+pytest = ">=5.0"
+
+[package.extras]
+dev = ["pre-commit", "pytest-asyncio", "tox"]
 
 [[package]]
 name = "pytest-operator"
@@ -2219,4 +2236,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "f512effa8f8ed2535c3878b2949c7ed71c39a390cf7251e7a2a00bc3b0a10cb0"
+content-hash = "d074c46009329c3f9004e74f6f58901ece84de1f54f5708cf3f7e4191aa2ef59"
