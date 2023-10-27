@@ -72,7 +72,6 @@ async def test_log_rotation(ops_test: OpsTest):
     )
 
     mysql_app, mysql_router_app, application_app = applications
-    unit = mysql_router_app.units[0]
 
     async with ops_test.fast_forward():
         logger.info("Waiting for mysqlrouter to be in BlockedStatus")
@@ -101,6 +100,7 @@ async def test_log_rotation(ops_test: OpsTest):
             ),
         )
 
+    unit = mysql_router_app.units[0]
     logger.info("Stopping the logrotate executor pebble service")
     await stop_running_log_rotate_executor(ops_test, unit.name)
 
