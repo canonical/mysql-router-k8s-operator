@@ -689,6 +689,23 @@ http2 = ["h2 (>=3,<5)"]
 socks = ["socksio (==1.*)"]
 
 [[package]]
+name = "hvac"
+version = "2.0.0"
+description = "HashiCorp Vault API client"
+optional = false
+python-versions = ">=3.8,<4.0"
+files = [
+    {file = "hvac-2.0.0-py3-none-any.whl", hash = "sha256:3b14d0979b98ea993eca73b7dac7161b5547ede369a9b28f4fa40f18e74ec3f3"},
+    {file = "hvac-2.0.0.tar.gz", hash = "sha256:6a51cb9a0d22fe13e824cb0b0a1ce2eeacb9ce6af68b7d1b6689e25ec1becaf5"},
+]
+
+[package.dependencies]
+requests = ">=2.27.1,<3.0.0"
+
+[package.extras]
+parser = ["pyhcl (>=0.4.4,<0.5.0)"]
+
+[[package]]
 name = "idna"
 version = "3.4"
 description = "Internationalized Domain Names in Applications (IDNA)"
@@ -854,38 +871,25 @@ referencing = ">=0.28.0"
 
 [[package]]
 name = "juju"
-version = "3.2.0.1"
+version = "3.2.2"
 description = "Python library for Juju"
 optional = false
 python-versions = "*"
 files = [
-    {file = "juju-3.2.0.1.tar.gz", hash = "sha256:7b167e6750002cf0a3888acbb9081f6eaf492c5d34500717784ec2aef5214545"},
+    {file = "juju-3.2.2.tar.gz", hash = "sha256:b6f51c62b605bc8bd56842892d31cdb91d26879e49641380cd67c423f69fb1bb"},
 ]
 
 [package.dependencies]
+hvac = "*"
 kubernetes = ">=12.0.1"
 macaroonbakery = ">=1.1,<2.0"
 paramiko = ">=2.4.0,<3.0.0"
 pyasn1 = ">=0.4.4"
 pyRFC3339 = ">=1.0,<2.0"
 pyyaml = ">=5.1.2"
-theblues = ">=0.5.1,<1.0"
 toposort = ">=1.5,<2"
 typing_inspect = ">=0.6.0"
-websockets = {version = ">=9.0", markers = "python_version > \"3.9\""}
-
-[[package]]
-name = "jujubundlelib"
-version = "0.5.7"
-description = "A python library for working with Juju bundles"
-optional = false
-python-versions = "*"
-files = [
-    {file = "jujubundlelib-0.5.7.tar.gz", hash = "sha256:7e2b1a679faab13c4d56256e31e0cc616d55841abd32598951735bf395ca47e3"},
-]
-
-[package.dependencies]
-PyYAML = ">=3.11"
+websockets = {version = ">=10.0", markers = "python_version > \"3.9\""}
 
 [[package]]
 name = "kubernetes"
@@ -2014,21 +2018,6 @@ files = [
 doc = ["reno", "sphinx", "tornado (>=4.5)"]
 
 [[package]]
-name = "theblues"
-version = "0.5.2"
-description = "Python library for using the juju charm store API."
-optional = false
-python-versions = "*"
-files = [
-    {file = "theblues-0.5.2.tar.gz", hash = "sha256:a9aded6b151c67d83eb9adcbcb38640872d9f29db985053259afd2fc012e5ed9"},
-]
-
-[package.dependencies]
-jujubundlelib = ">=0.5.1"
-macaroonbakery = ">=0.0.6"
-requests = ">=2.18.4"
-
-[[package]]
 name = "tomli"
 version = "2.0.1"
 description = "A lil' TOML parser"
@@ -2236,4 +2225,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "d074c46009329c3f9004e74f6f58901ece84de1f54f5708cf3f7e4191aa2ef59"
+content-hash = "512256677b8df649a88c26445942780be2581d3c166a61f46ad5f96453a1888c"
