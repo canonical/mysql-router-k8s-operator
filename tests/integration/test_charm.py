@@ -41,6 +41,7 @@ async def test_database_relation(ops_test: OpsTest):
     mysqlrouter_resources = {
         "mysql-router-image": METADATA["resources"]["mysql-router-image"]["upstream-source"]
     }
+    app_charm = await ops_test.build_charm("./tests/integration/mysql-test-app/")
 
     logger.info("Deploying mysql, mysqlrouter and application")
     applications = await asyncio.gather(
@@ -62,7 +63,7 @@ async def test_database_relation(ops_test: OpsTest):
             trust=True,
         ),
         ops_test.model.deploy(
-            APPLICATION_APP_NAME,
+            app_charm,
             channel="latest/edge",
             application_name=APPLICATION_APP_NAME,
             series="jammy",
