@@ -10,7 +10,7 @@ import kubernetes_charm
 
 @pytest.mark.parametrize(
     "can_connect,unit_status",
-    [(False, ops.MaintenanceStatus("Waiting for container")), (True, ops.ActiveStatus())],
+    [(False, ops.MaintenanceStatus("Waiting for container")), (True, ops.WaitingStatus())],
 )
 @pytest.mark.parametrize("leader", [False, True])
 def test_start_sets_status_if_no_relations(leader, can_connect, unit_status):

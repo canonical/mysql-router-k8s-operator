@@ -33,6 +33,8 @@ def patch(monkeypatch):
     monkeypatch.setattr("workload.AuthenticatedWorkload._router_username", "")
     monkeypatch.setattr("mysql_shell.Shell.is_router_in_cluster_set", lambda *args, **kwargs: True)
     monkeypatch.setattr("upgrade.Upgrade.in_progress", False)
+    monkeypatch.setattr("upgrade.Upgrade.versions_set", True)
+    monkeypatch.setattr("upgrade.Upgrade.is_compatible", True)
 
 
 @pytest.fixture(autouse=True)
