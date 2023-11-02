@@ -110,6 +110,9 @@ class Rock(container.Container):
         else:
             self._container.stop(self._SERVICE_NAME)
 
+    def upgrade(self, unit: ops.Unit) -> None:
+        raise Exception("Not supported on Kubernetes")
+
     def update_logrotate_executor_service(self, *, enabled: bool) -> None:
         """Update and restart log rotate executor service.
 
