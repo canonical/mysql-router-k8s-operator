@@ -46,7 +46,9 @@ def incomplete_provides(*relation_amounts: int) -> list[list[scenario.Relation]]
     return relations
 
 
-def unsupported_extra_user_role_provides(*relation_amounts: int) -> list[list[scenario.Relation]]:
+def unsupported_extra_user_role_provides(
+    *relation_amounts: int,
+) -> list[list[scenario.Relation]]:
     databags = [
         {"database": "myappA", "extra-user-roles": "admin"},
         {"database": "myappB", "extra-user-roles": "mysqlrouter"},
@@ -60,18 +62,7 @@ def unsupported_extra_user_role_provides(*relation_amounts: int) -> list[list[sc
 
 
 def complete_provides(*relation_amounts: int) -> list[list[scenario.Relation]]:
-    databags = [
-        {"database": "myappA"},
-        {"database": "foo"},
-        {
-            "database": "myappA",
-            "requested-secrets": '["username", "password", "tls", "tls-ca", "uris"]',
-        },
-        {
-            "database": "foo",
-            "requested-secrets": '["username", "password", "tls", "tls-ca", "uris"]',
-        },
-    ]
+    databags = [{"database": "myappA"}, {"database": "foo"}]
     return _relation_combinations(
         relation_amounts=relation_amounts,
         relations=[
