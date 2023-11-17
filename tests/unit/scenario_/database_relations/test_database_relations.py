@@ -2,7 +2,7 @@
 # See LICENSE file for licensing details.
 
 """Test app status and relation databags"""
-
+import tempfile
 import typing
 
 import ops
@@ -49,6 +49,9 @@ def output_states(*, relations: list[scenario.Relation]) -> typing.Iterable[scen
         output = context.run(event, input_state)
         output.relations.pop()  # Remove PeerRelation
         yield output
+        context.clear()
+        context._tmp.cleanup()
+        context._tmp = tempfile.TemporaryDirectory()
 
 
 def assert_complete_local_app_databag(
