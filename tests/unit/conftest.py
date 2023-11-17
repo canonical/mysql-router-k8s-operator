@@ -51,3 +51,9 @@ def kubernetes_patch(monkeypatch):
     monkeypatch.setattr("lightkube.Client", lambda *args, **kwargs: None)
     monkeypatch.setattr("kubernetes_upgrade._Partition.get", lambda *args, **kwargs: 0)
     monkeypatch.setattr("kubernetes_upgrade._Partition.set", lambda *args, **kwargs: None)
+
+
+@pytest.fixture(params=[True])
+def juju_has_secrets(request, monkeypatch):
+    monkeypatch.setattr("ops.JujuVersion.has_secrets", request.param)
+    return request.param
