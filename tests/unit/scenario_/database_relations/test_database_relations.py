@@ -51,6 +51,38 @@ def output_states(*, relations: list[scenario.Relation]) -> typing.Iterable[scen
         yield output
 
 
+def assert_complete_local_app_databag(
+    local_app_data: dict[str, str],
+    secrets: list[scenario.Secret],
+    complete_requires: scenario.Relation,
+    provides: scenario.Relation,
+    model_service_domain: str,
+    juju_has_secrets: bool,
+):
+    if juju_has_secrets and "requested-secrets" in provides.remote_app_data:
+        secret_id = local_app_data.pop("secret-user")
+        secrets_ = [secret for secret in secrets if secret.id == secret_id]
+        assert len(secrets_) == 1
+        secret = secrets_[0]
+        contents = secret.contents.pop(0)  # Revision 0
+        assert len(secret.contents) == 0  # Only 1 revision should exist
+        assert len(contents.pop("password")) > 0
+        assert contents == {
+            "username": f'{complete_requires.remote_app_data["username"]}-{provides.relation_id}'
+        }
+    else:
+        assert len(local_app_data.pop("password")) > 0
+        assert (
+            local_app_data.pop("username")
+            == f'{complete_requires.remote_app_data["username"]}-{provides.relation_id}'
+        )
+    assert local_app_data == {
+        "database": provides.remote_app_data["database"],
+        "endpoints": f"mysql-router-k8s.{model_service_domain}:6446",
+        "read-only-endpoints": f"mysql-router-k8s.{model_service_domain}:6447",
+    }
+
+
 # Tests are ordered by status priority.
 # For example, `ops.BlockedStatus("Missing relation: backend-database")` has priority over
 # `ops.BlockedStatus("Missing relation: database")`.
@@ -109,6 +141,7 @@ def test_complete_requires_and_provides_unsupported_extra_user_role(
     complete_provides_s,
     unsupported_extra_user_role_provides_s,
     model_service_domain,
+    juju_has_secrets,
 ):
     for state in output_states(
         relations=[
@@ -122,13 +155,14 @@ def test_complete_requires_and_provides_unsupported_extra_user_role(
         )
         for index, provides in enumerate(complete_provides_s, 1):
             local_app_data = state.relations[index].local_app_data
-            assert len(local_app_data.pop("password")) > 0
-            assert local_app_data == {
-                "database": provides.remote_app_data["database"],
-                "endpoints": f"mysql-router-k8s.{model_service_domain}:6446",
-                "read-only-endpoints": f"mysql-router-k8s.{model_service_domain}:6447",
-                "username": f'{complete_requires.remote_app_data["username"]}-{provides.relation_id}',
-            }
+            assert_complete_local_app_databag(
+                local_app_data,
+                state.secrets,
+                complete_requires,
+                provides,
+                model_service_domain,
+                juju_has_secrets,
+            )
         for index, provides in enumerate(
             unsupported_extra_user_role_provides_s, 1 + len(complete_provides_s)
         ):
@@ -146,24 +180,31 @@ def test_incomplete_provides(complete_requires, incomplete_provides_s):
 
 
 @pytest.mark.parametrize("complete_provides_s", combinations.complete_provides(1, 2, 4))
-def test_complete_provides(complete_requires, complete_provides_s, model_service_domain):
+def test_complete_provides(
+    complete_requires, complete_provides_s, model_service_domain, juju_has_secrets
+):
     for state in output_states(relations=[complete_requires, *complete_provides_s]):
         assert state.app_status == ops.ActiveStatus()
         for index, provides in enumerate(complete_provides_s, 1):
             local_app_data = state.relations[index].local_app_data
-            assert len(local_app_data.pop("password")) > 0
-            assert local_app_data == {
-                "database": provides.remote_app_data["database"],
-                "endpoints": f"mysql-router-k8s.{model_service_domain}:6446",
-                "read-only-endpoints": f"mysql-router-k8s.{model_service_domain}:6447",
-                "username": f'{complete_requires.remote_app_data["username"]}-{provides.relation_id}',
-            }
+            assert_complete_local_app_databag(
+                local_app_data,
+                state.secrets,
+                complete_requires,
+                provides,
+                model_service_domain,
+                juju_has_secrets,
+            )
 
 
 @pytest.mark.parametrize("incomplete_provides_s", combinations.incomplete_provides(1, 3))
 @pytest.mark.parametrize("complete_provides_s", combinations.complete_provides(1, 3))
 def test_complete_provides_and_incomplete_provides(
-    complete_requires, complete_provides_s, incomplete_provides_s, model_service_domain
+    complete_requires,
+    complete_provides_s,
+    incomplete_provides_s,
+    model_service_domain,
+    juju_has_secrets,
 ):
     for state in output_states(
         relations=[complete_requires, *complete_provides_s, *incomplete_provides_s]
@@ -173,12 +214,13 @@ def test_complete_provides_and_incomplete_provides(
         )
         for index, provides in enumerate(complete_provides_s, 1):
             local_app_data = state.relations[index].local_app_data
-            assert len(local_app_data.pop("password")) > 0
-            assert local_app_data == {
-                "database": provides.remote_app_data["database"],
-                "endpoints": f"mysql-router-k8s.{model_service_domain}:6446",
-                "read-only-endpoints": f"mysql-router-k8s.{model_service_domain}:6447",
-                "username": f'{complete_requires.remote_app_data["username"]}-{provides.relation_id}',
-            }
+            assert_complete_local_app_databag(
+                local_app_data,
+                state.secrets,
+                complete_requires,
+                provides,
+                model_service_domain,
+                juju_has_secrets,
+            )
         for index, provides in enumerate(incomplete_provides_s, 1 + len(complete_provides_s)):
             assert state.relations[index].local_app_data == {}
