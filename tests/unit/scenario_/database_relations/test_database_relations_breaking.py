@@ -122,7 +122,11 @@ def test_complete_requires_and_breaking_provides(
         assert state.app_status == ops.BlockedStatus("Missing relation: database")
     else:
         assert state.app_status == ops.ActiveStatus()
-    assert state.relations[-1].local_app_data == {}
+    local_app_data = state.relations[-1].local_app_data
+    # TODO secrets cleanup: remove
+    # (waiting on https://github.com/canonical/data-platform-libs/issues/118)
+    local_app_data.pop("secret-user", None)
+    assert local_app_data == {}
     # TODO secrets cleanup: test if secret deleted
     # (waiting on https://github.com/canonical/data-platform-libs/issues/118)
     complete_provides_s.pop()
