@@ -71,7 +71,8 @@ def test_breaking_requires_and_complete_provides(
     for index, provides in enumerate(complete_provides_s, 1):
         assert state.relations[index].local_app_data == {}
         # TODO: test if secrets deleted
-        # assert len(state.secrets) == 0
+        # (waiting on https://github.com/canonical/data-platform-libs/issues/118)
+        # assert len(state.secrets) == 0  # use a better check here—other secrets could exist
 
 
 @pytest.mark.parametrize("complete_provides_s", combinations.complete_provides(1, 3))
@@ -119,6 +120,7 @@ def test_complete_requires_and_breaking_provides(
         assert state.app_status == ops.ActiveStatus()
     assert state.relations[-1].local_app_data == {}
     # TODO: test if secret deleted
+    # (waiting on https://github.com/canonical/data-platform-libs/issues/118)
     complete_provides_s.pop()
     for index, provides in enumerate(complete_provides_s, 1):
         relation = state.relations[index]
