@@ -69,8 +69,12 @@ def test_breaking_requires_and_complete_provides(
     )
     assert state.app_status == ops.BlockedStatus("Missing relation: backend-database")
     for index, provides in enumerate(complete_provides_s, 1):
-        assert state.relations[index].local_app_data == {}
-        # TODO: test if secrets deleted
+        local_app_data = state.relations[index].local_app_data
+        # TODO secrets cleanup: remove
+        # (waiting on https://github.com/canonical/data-platform-libs/issues/118)
+        local_app_data.pop("secret-user", None)
+        assert local_app_data == {}
+        # TODO secrets cleanup: test if secrets deleted
         # (waiting on https://github.com/canonical/data-platform-libs/issues/118)
         # assert len(state.secrets) == 0  # use a better check here—other secrets could exist
 
@@ -119,7 +123,7 @@ def test_complete_requires_and_breaking_provides(
     else:
         assert state.app_status == ops.ActiveStatus()
     assert state.relations[-1].local_app_data == {}
-    # TODO: test if secret deleted
+    # TODO secrets cleanup: test if secret deleted
     # (waiting on https://github.com/canonical/data-platform-libs/issues/118)
     complete_provides_s.pop()
     for index, provides in enumerate(complete_provides_s, 1):
