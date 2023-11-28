@@ -1132,13 +1132,13 @@ websocket-client = "==1.*"
 
 [[package]]
 name = "ops-scenario"
-version = "5.5"
+version = "5.6.2"
 description = "Python library providing a state-transition testing API for Operator Framework charms."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "ops-scenario-5.5.tar.gz", hash = "sha256:848fa76d39e6a39626875d27b8579cd3c841e57d0f33ef5d539fbcf6ea989b37"},
-    {file = "ops_scenario-5.5-py3-none-any.whl", hash = "sha256:72a11c2cce1370289dbf44177bf77891121b71e5aa44095a12b2224ae9d8da91"},
+    {file = "ops-scenario-5.6.2.tar.gz", hash = "sha256:0a48e97b406ea9271ea9d683e3ef355f887fa0ab651fd7352e4de214eeaa96c1"},
+    {file = "ops_scenario-5.6.2-py3-none-any.whl", hash = "sha256:b75c9e2199b17da355eda4c4eab1f4450067f0f3feb1f4215858e4c90fa6f656"},
 ]
 
 [package.dependencies]
@@ -1614,7 +1614,7 @@ name = "pytest-operator-cache"
 version = "0.1.0"
 description = ""
 optional = false
-python-versions = "^3.10"
+python-versions = "^3.8"
 files = []
 develop = false
 
@@ -1624,8 +1624,8 @@ pyyaml = "*"
 [package.source]
 type = "git"
 url = "https://github.com/canonical/data-platform-workflows"
-reference = "v4.2.3"
-resolved_reference = "7a5223ad320058036ef8e7dac644db55e8ec16b4"
+reference = "v6.2.0"
+resolved_reference = "5781558d01530d9551fdc2de982734b385c8d940"
 subdirectory = "python/pytest_plugins/pytest_operator_cache"
 
 [[package]]
@@ -1633,7 +1633,7 @@ name = "pytest-operator-groups"
 version = "0.1.0"
 description = ""
 optional = false
-python-versions = "^3.10"
+python-versions = "^3.8"
 files = []
 develop = false
 
@@ -1643,8 +1643,8 @@ pytest = "*"
 [package.source]
 type = "git"
 url = "https://github.com/canonical/data-platform-workflows"
-reference = "v4.2.3"
-resolved_reference = "7a5223ad320058036ef8e7dac644db55e8ec16b4"
+reference = "v6.2.0"
+resolved_reference = "5781558d01530d9551fdc2de982734b385c8d940"
 subdirectory = "python/pytest_plugins/pytest_operator_groups"
 
 [[package]]
@@ -2205,4 +2205,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "512256677b8df649a88c26445942780be2581d3c166a61f46ad5f96453a1888c"
+content-hash = "8044ee901b55824f04fd9eb0fb54699b3522f58973a8fb6237680d6e3e2f0664"
