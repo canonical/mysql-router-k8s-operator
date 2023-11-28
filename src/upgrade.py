@@ -85,8 +85,7 @@ class Upgrade(abc.ABC):
         }
         try:
             if (
-                # TODO charm versioning: Use > instead of >=
-                previous_versions["charm"] >= current_versions["charm"]
+                previous_versions["charm"] > current_versions["charm"]
                 or previous_versions["charm"].major != current_versions["charm"].major
             ):
                 logger.debug(
