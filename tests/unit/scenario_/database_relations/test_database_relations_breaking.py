@@ -68,7 +68,7 @@ def test_breaking_requires_and_complete_provides(
         event=complete_requires.broken_event,
     )
     assert state.app_status == ops.BlockedStatus("Missing relation: backend-database")
-    for index, provides in enumerate(complete_provides_s, 1):
+    for index, provides in enumerate(complete_provides_s_, 1):
         local_app_data = state.relations[index].local_app_data
         # TODO secrets cleanup: remove
         # (waiting on https://github.com/canonical/data-platform-libs/issues/118)
@@ -118,7 +118,7 @@ def test_complete_requires_and_breaking_provides(
         event=complete_provides_s_[-1].broken_event,
         secrets=secrets,
     )
-    if len(complete_provides_s) == 1:
+    if len(complete_provides_s_) == 1:
         assert state.app_status == ops.BlockedStatus("Missing relation: database")
     else:
         assert state.app_status == ops.ActiveStatus()
@@ -129,8 +129,8 @@ def test_complete_requires_and_breaking_provides(
     assert local_app_data == {}
     # TODO secrets cleanup: test if secret deleted
     # (waiting on https://github.com/canonical/data-platform-libs/issues/118)
-    complete_provides_s.pop()
-    for index, provides in enumerate(complete_provides_s, 1):
+    complete_provides_s_.pop()
+    for index, provides in enumerate(complete_provides_s_, 1):
         relation = state.relations[index]
         if juju_has_secrets and "requested-secrets" in relation.remote_app_data:
             local_app_data = relation.local_app_data
