@@ -52,6 +52,7 @@ class Shell:
         commands.insert(
             0, f"shell.connect('{self.username}:{self._password}@{self._host}:{self._port}')"
         )
+        commands.append("shell.disconnect()")
         temporary_script_file = self._container.path("/tmp/script.py")
         temporary_script_file.write_text("\n".join(commands))
         try:
