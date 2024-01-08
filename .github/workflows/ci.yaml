@@ -44,11 +44,9 @@ jobs:
 
   build:
     name: Build charm
-    uses: canonical/data-platform-workflows/.github/workflows/build_charms_with_cache.yaml@v7.0.0
+    uses: canonical/data-platform-workflows/.github/workflows/build_charms_with_cache.yaml@v9.0.0
     with:
       charmcraft-snap-channel: beta
-    permissions:
-      actions: write  # Needed to manage GitHub Actions cache
 
   integration-test:
     strategy:
@@ -63,7 +61,7 @@ jobs:
       - lint
       - unit-test
       - build
-    uses: canonical/data-platform-workflows/.github/workflows/integration_test_charm.yaml@v7.0.0
+    uses: canonical/data-platform-workflows/.github/workflows/integration_test_charm.yaml@v9.0.0
     with:
       artifact-name: ${{ needs.build.outputs.artifact-name }}
       cloud: microk8s

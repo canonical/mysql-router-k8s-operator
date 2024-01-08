@@ -26,12 +26,13 @@ this operator.
   creates a linear Git commit history.
 
 ## Developing
-Install `tox` and `poetry`
+Install `tox`, `poetry`, and `charmcraftcache`
+
+Install pipx: https://pipx.pypa.io/stable/installation/
 ```shell
-python3 -m pip install --user pipx
-python3 -m pipx ensurepath
 pipx install tox
 pipx install poetry
+pipx install charmcraftcache
 ```
 
 You can create an environment for development:
@@ -55,7 +56,7 @@ tox                      # runs 'lint' and 'unit' environments
 Build the charm in this git repository using:
 
 ```shell
-tox run -e build
+tox run -e build-dev
 ```
 
 ### Deploy
