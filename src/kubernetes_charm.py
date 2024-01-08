@@ -25,6 +25,8 @@ import rock
 import upgrade
 
 logger = logging.getLogger(__name__)
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
 
 
 class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
