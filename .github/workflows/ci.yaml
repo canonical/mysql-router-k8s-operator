@@ -48,16 +48,17 @@ jobs:
     with:
       charmcraft-snap-channel: beta
 
-  name: Release charm
-  needs:
-    - build
-  uses: canonical/data-platform-workflows/.github/workflows/release_charm.yaml@strict-dependencies
-  with:
-    channel: 8.0/edge/test
-    artifact-name: ${{ needs.build.outputs.artifact-name }}
-    create-github-release: false
-  secrets:
-    charmhub-token: ${{ secrets.CHARMHUB_TOKEN }}
+  release:
+    name: Release charm
+    needs:
+      - build
+    uses: canonical/data-platform-workflows/.github/workflows/release_charm.yaml@strict-dependencies
+    with:
+      channel: 8.0/edge/test
+      artifact-name: ${{ needs.build.outputs.artifact-name }}
+      create-github-release: false
+    secrets:
+      charmhub-token: ${{ secrets.CHARMHUB_TOKEN }}
 
   integration-test:
     strategy:
