@@ -3,7 +3,7 @@
 name: Tests
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}-1
   cancel-in-progress: true
 
 on:
@@ -52,11 +52,12 @@ jobs:
     name: Release charm
     needs:
       - build
-    uses: canonical/data-platform-workflows/.github/workflows/release_charm.yaml@strict-dependencies
+    uses: canonical/data-platform-workflows/.github/workflows/release_charm.yaml@v9.0.0
     with:
       channel: 8.0/edge/test
       artifact-name: ${{ needs.build.outputs.artifact-name }}
       create-github-release: false
+      charmcraft-snap-channel: beta
     secrets:
       charmhub-token: ${{ secrets.CHARMHUB_TOKEN }}
 
