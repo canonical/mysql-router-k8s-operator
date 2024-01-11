@@ -1644,7 +1644,7 @@ pytest = "*"
 type = "git"
 url = "https://github.com/canonical/data-platform-workflows"
 reference = "runner-mark"
-resolved_reference = "03e760ea3c17cac5a41c04ae136ecfbd4896eba5"
+resolved_reference = "c9a27e7983611509a8efbbea0c4a8dccfc9b1595"
 subdirectory = "python/pytest_plugins/pytest_operator_groups"
 
 [[package]]
