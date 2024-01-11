@@ -61,7 +61,7 @@ jobs:
       - lint
       - unit-test
       - build
-    uses: canonical/data-platform-workflows/.github/workflows/integration_test_charm.yaml@v9.0.2
+    uses: canonical/data-platform-workflows/.github/workflows/integration_test_charm.yaml@runner-mark
     with:
       artifact-name: ${{ needs.build.outputs.artifact-name }}
       cloud: microk8s

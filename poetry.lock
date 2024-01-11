@@ -1643,8 +1643,8 @@ pytest = "*"
 [package.source]
 type = "git"
 url = "https://github.com/canonical/data-platform-workflows"
-reference = "v9.0.2"
-resolved_reference = "1f7cb3eac6fc12c926330a22bd5715f9d0fbac5e"
+reference = "runner-mark"
+resolved_reference = "03e760ea3c17cac5a41c04ae136ecfbd4896eba5"
 subdirectory = "python/pytest_plugins/pytest_operator_groups"
 
 [[package]]
@@ -2205,4 +2205,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "45198f15c7778f5f87e910b5e4c3eb0f254abaf6c87dbee1e58b93247337ff82"
+content-hash = "c834a312eadc6a10e460fa5158a3c8e8cbe70865e9f305ce37741c5db68f6d9b"
