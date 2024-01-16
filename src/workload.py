@@ -6,6 +6,7 @@
 import configparser
 import logging
 import pathlib
+import re
 import socket
 import string
 import typing
@@ -195,6 +196,24 @@ class AuthenticatedWorkload(Workload):
         except container.CalledProcessError as e:
             # Use `logger.error` instead of `logger.exception` so password isn't logged
             logger.error(f"Failed to bootstrap router\n{logged_command=}\nstderr:\n{e.stderr}\n")
+            stderr = e.stderr.strip()
+            if (
+                stderr
+                == "Error: The provided server is currently not in a InnoDB cluster group with quorum and thus may contain inaccurate or outdated data."
+            ):
+                raise Exception("no quorum") from None
+            # Example errors:
+            # - "Error: Unable to connect to the metadata server: Error connecting to MySQL server at mysql-k8s-primary.foo1.svc.cluster.local:3306: Can't connect to MySQL server on 'mysql-k8s-primary.foo1.svc.cluster.local:3306' (111) (2003)"
+            # - "Error: Unable to connect to the metadata server: Error connecting to MySQL server at mysql-k8s-primary.foo3.svc.cluster.local:3306: Unknown MySQL server host 'mysql-k8s-primary.foo3.svc.cluster.local' (-2) (2005)"
+            # Codes 2000-2999 are client errors
+            # (https://dev.mysql.com/doc/refman/8.0/en/error-message-elements.html#error-code-ranges)
+            elif match := re.fullmatch(r"Error:.*\((?P<code>2[0-9]{3})\)", stderr):
+                if int(match.group("code")) == 2003:
+                    # https://dev.mysql.com/doc/mysql-errors/8.0/en/client-error-reference.html#error_cr_conn_host_error
+                    raise Exception("cannot connect to mysql") from None
+                else:
+                    # TODO
+                    pass
             # Original exception contains password
             # Re-raising would log the password to Juju's debug log
             # Raise new exception
