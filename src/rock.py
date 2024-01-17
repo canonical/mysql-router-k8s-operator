@@ -35,14 +35,22 @@ class _Path(container.Path):
     def relative_to_container(self) -> "_Path":
         return self
 
+    def open(self, mode="r") -> typing.TextIO:
+        super().open(mode)
+        return self._container.pull(self, encoding="utf-8")
+
     def read_text(self) -> str:
-        with self._container.pull(self, encoding="utf-8") as file:
-            file: io.TextIOWrapper
+        with self.open("r") as file:
             return file.read()
 
     def write_text(self, data: str):
         self._container.push(
-            self, data, permissions=0o600, user=_UNIX_USERNAME, group=_UNIX_USERNAME
+            self,
+            data,
+            encoding="utf-8",
+            permissions=0o600,
+            user=_UNIX_USERNAME,
+            group=_UNIX_USERNAME,
         )
 
     def unlink(self, missing_ok=False):

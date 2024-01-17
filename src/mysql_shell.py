@@ -97,7 +97,8 @@ with open("{error_file.relative_to_container}", "w") as file:
             raise
         finally:
             temporary_script_file.unlink()
-        exception = json.loads(error_file.read_text())
+        with error_file.open("r") as file:
+            exception = json.load(file)
         error_file.unlink()
         try:
             if exception:
@@ -107,7 +108,9 @@ with open("{error_file.relative_to_container}", "w") as file:
                 # TODO: retrying?
                 logger.exception("Failed to connect to MySQL Server. Retrying...")
             else:
-                logger.exception(f"Failed to run {logged_commands=}\nMySQL client error {e.code}\nMySQL Shell traceback:\n{e.traceback_message}\n")
+                logger.exception(
+                    f"Failed to run {logged_commands=}\nMySQL client error {e.code}\nMySQL Shell traceback:\n{e.traceback_message}\n"
+                )
                 raise
         return output
 
