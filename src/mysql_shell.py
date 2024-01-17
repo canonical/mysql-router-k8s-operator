@@ -29,6 +29,15 @@ class RouterUserInformation:
     router_id: str
 
 
+class ShellDBError(Exception):
+    """TODO"""
+
+    def __init__(self, *, message: str, code: int, traceback_message: str):
+        super().__init__(message)
+        self.code = code
+        self.traceback_message = traceback_message
+
+
 # TODO python3.10 min version: Add `(kw_only=True)`
 @dataclasses.dataclass
 class Shell:
@@ -52,8 +61,28 @@ class Shell:
         commands.insert(
             0, f"shell.connect('{self.username}:{self._password}@{self._host}:{self._port}')"
         )
-        temporary_script_file = self._container.path("/tmp/script.py")
-        temporary_script_file.write_text("\n".join(commands))
+        temporary_script_file = self._container.path("/tmp/mysqlsh_script.py")
+        error_file = self._container.path("/tmp/mysqlsh_error.json")
+        command_block = "\n    ".join(commands)
+        # TODO: remove noinspection comment
+        # noinspection SqlNoDataSourceInspection
+        temporary_script_file.write_text(
+            f"""import json
+import mysqlsh
+import traceback
+
+try:
+    {command_block}"""
+            + """
+except mysqlsh.DBError as exception:
+    error = {"message": str(exception), "code": exception.code, "traceback_message": "".join(traceback.format_exception(exception))}
+else:
+    error = None"""
+            + f"""
+with open("{error_file.relative_to_container}", "w") as file:
+    json.dump(error, file)
+"""
+        )
         try:
             output = self._container.run_mysql_shell(
                 [
@@ -68,6 +97,18 @@ class Shell:
             raise
         finally:
             temporary_script_file.unlink()
+        exception = json.loads(error_file.read_text())
+        error_file.unlink()
+        try:
+            if exception:
+                raise ShellDBError(**exception)
+        except ShellDBError as e:
+            if e.code == 2003:
+                # TODO: retrying?
+                logger.exception("Failed to connect to MySQL Server. Retrying...")
+            else:
+                logger.exception(f"Failed to run {logged_commands=}\nMySQL client error {e.code}\nMySQL Shell traceback:\n{e.traceback_message}\n")
+                raise
         return output
 
     # TODO python3.10 min version: Use `list` instead of `typing.List`
