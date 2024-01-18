@@ -269,6 +269,7 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
             # If not for `unit=False`, another `server_exceptions.Error` could be thrown here
             self.set_status(event=event, unit=False)
             self.unit.status = e.status
+            logger.debug(f"Set unit status to {self.unit.status}")
 
     def _on_resume_upgrade_action(self, event: ops.ActionEvent) -> None:
         if not self._unit_lifecycle.authorized_leader:
