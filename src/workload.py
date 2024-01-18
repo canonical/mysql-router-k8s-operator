@@ -126,7 +126,7 @@ class AuthenticatedWorkload(Workload):
         *,
         container_: container.Container,
         logrotate_: logrotate.LogRotate,
-        connection_info: "relations.database_requires.ConnectionInformation",
+        connection_info: "relations.database_requires.CompleteConnectionInformation",
         charm_: "abstract_charm.MySQLRouterCharm",
     ) -> None:
         super().__init__(container_=container_, logrotate_=logrotate_)
@@ -137,11 +137,7 @@ class AuthenticatedWorkload(Workload):
     def shell(self) -> mysql_shell.Shell:
         """MySQL Shell"""
         return mysql_shell.Shell(
-            _container=self._container,
-            username=self._connection_info.username,
-            _password=self._connection_info.password,
-            _host=self._connection_info.host,
-            _port=self._connection_info.port,
+            _container=self._container, _connection_info=self._connection_info
         )
 
     @property
@@ -165,16 +161,18 @@ class AuthenticatedWorkload(Workload):
             logger.debug("Cleaned up after upgrade or container restart")
 
     # TODO python3.10 min version: Use `list` instead of `typing.List`
-    def _get_bootstrap_command(self, password: str) -> typing.List[str]:
+    def _get_bootstrap_command(
+        self, connection_info: "relations.database_requires.ConnectionInformation"
+    ) -> typing.List[str]:
         return [
             "--bootstrap",
-            self._connection_info.username
+            connection_info.username
             + ":"
-            + password
+            + connection_info.password
             + "@"
-            + self._connection_info.host
+            + connection_info.host
             + ":"
-            + self._connection_info.port,
+            + connection_info.port,
             "--strict",
             "--force",
             "--conf-set-option",
@@ -188,9 +186,9 @@ class AuthenticatedWorkload(Workload):
             f"Bootstrapping router {tls=}, {self._connection_info.host=}, {self._connection_info.port=}"
         )
         # Redact password from log
-        logged_command = self._get_bootstrap_command("***")
+        logged_command = self._get_bootstrap_command(self._connection_info.redacted)
 
-        command = self._get_bootstrap_command(self._connection_info.password)
+        command = self._get_bootstrap_command(self._connection_info)
         try:
             self._container.run_mysql_router(command, timeout=30)
         except container.CalledProcessError as e:

@@ -1,0 +1,6 @@
+import json
+
+cluster_set = dba.get_cluster_set()
+routers = cluster_set.list_routers()
+with open("{{ output_filepath }}", "w") as file:
+    json.dump(routers, file)
