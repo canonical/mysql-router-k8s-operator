@@ -17,6 +17,7 @@ import typing
 import jinja2
 
 import container
+import server_exceptions
 
 if typing.TYPE_CHECKING:
     import relations.database_requires
@@ -36,7 +37,12 @@ class RouterUserInformation:
 
 
 class ShellDBError(Exception):
-    """TODO"""
+    """`mysqlsh.DBError` raised while executing MySQL Shell script
+
+    MySQL Shell runs Python code in a separate process from the charm Python code.
+    The `mysqlsh.DBError` was caught by the shell code, serialized to JSON, and de-serialized to
+    this exception.
+    """
 
     def __init__(self, *, message: str, code: int, traceback_message: str):
         super().__init__(message)
@@ -89,7 +95,9 @@ class Shell:
                 ]
             )
         except container.CalledProcessError as e:
-            logger.exception(f"Failed to run MySQL Shell script:\n{logged_script}\n\nstderr:\n{e.stderr}\n")
+            logger.exception(
+                f"Failed to run MySQL Shell script:\n{logged_script}\n\nstderr:\n{e.stderr}\n"
+            )
             raise
         finally:
             temporary_script_file.unlink()
@@ -101,8 +109,8 @@ class Shell:
                 raise ShellDBError(**exception)
         except ShellDBError as e:
             if e.code == 2003:
-                # TODO: retrying?
-                logger.exception("Failed to connect to MySQL Server. Retrying...")
+                logger.exception(server_exceptions.ConnectionError.MESSAGE)
+                raise server_exceptions.ConnectionError
             else:
                 logger.exception(
                     f"Failed to run MySQL Shell script:\n{logged_script}\n\nMySQL client error {e.code}\nMySQL Shell traceback:\n{e.traceback_message}\n"

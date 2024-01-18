@@ -16,12 +16,22 @@ import ops
 import container
 import logrotate
 import mysql_shell
+import server_exceptions
 
 if typing.TYPE_CHECKING:
     import abstract_charm
     import relations.database_requires
 
 logger = logging.getLogger(__name__)
+
+
+class _NoQuorum(server_exceptions.Error):
+    """MySQL Server does not have quorum"""
+
+    MESSAGE = "MySQL Server does not have quorum. Will retry next Juju event"
+
+    def __init__(self):
+        super().__init__(ops.WaitingStatus(self.MESSAGE))
 
 
 class Workload:
@@ -192,6 +202,12 @@ class AuthenticatedWorkload(Workload):
         try:
             self._container.run_mysql_router(command, timeout=30)
         except container.CalledProcessError as e:
+            # Original exception contains password
+            # Re-raising would log the password to Juju's debug log
+            # Raise new exception
+            # `from None` disables exception chaining so that the original exception is not
+            # included in the traceback
+
             # Use `logger.error` instead of `logger.exception` so password isn't logged
             logger.error(f"Failed to bootstrap router\n{logged_command=}\nstderr:\n{e.stderr}\n")
             stderr = e.stderr.strip()
@@ -199,24 +215,20 @@ class AuthenticatedWorkload(Workload):
                 stderr
                 == "Error: The provided server is currently not in a InnoDB cluster group with quorum and thus may contain inaccurate or outdated data."
             ):
-                raise Exception("no quorum") from None
+                logger.error(_NoQuorum.MESSAGE)
+                raise _NoQuorum from None
             # Example errors:
             # - "Error: Unable to connect to the metadata server: Error connecting to MySQL server at mysql-k8s-primary.foo1.svc.cluster.local:3306: Can't connect to MySQL server on 'mysql-k8s-primary.foo1.svc.cluster.local:3306' (111) (2003)"
             # - "Error: Unable to connect to the metadata server: Error connecting to MySQL server at mysql-k8s-primary.foo3.svc.cluster.local:3306: Unknown MySQL server host 'mysql-k8s-primary.foo3.svc.cluster.local' (-2) (2005)"
             # Codes 2000-2999 are client errors
             # (https://dev.mysql.com/doc/refman/8.0/en/error-message-elements.html#error-code-ranges)
             elif match := re.fullmatch(r"Error:.*\((?P<code>2[0-9]{3})\)", stderr):
-                if int(match.group("code")) == 2003:
-                    # https://dev.mysql.com/doc/mysql-errors/8.0/en/client-error-reference.html#error_cr_conn_host_error
-                    raise Exception("cannot connect to mysql") from None
+                code = int(match.group("code"))
+                if code == 2003:
+                    logger.error(server_exceptions.ConnectionError.MESSAGE)
+                    raise server_exceptions.ConnectionError from None
                 else:
-                    # TODO
-                    pass
-            # Original exception contains password
-            # Re-raising would log the password to Juju's debug log
-            # Raise new exception
-            # `from None` disables exception chaining so that the original exception is not
-            # included in the traceback
+                    logger.error(f"Bootstrap failed with MySQL client error {code}")
             raise Exception("Failed to bootstrap router") from None
         logger.debug(
             f"Bootstrapped router {tls=}, {self._connection_info.host=}, {self._connection_info.port=}"
