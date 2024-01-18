@@ -38,6 +38,8 @@ class _RelationBreaking(_MissingRelation):
 
 
 class ConnectionInformation:
+    """Information for connection to MySQL cluster"""
+
     host: str
     port: str
     username: str

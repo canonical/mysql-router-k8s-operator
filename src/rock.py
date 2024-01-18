@@ -3,7 +3,6 @@
 
 """Workload ROCK or OCI container"""
 
-import io
 import logging
 import typing
 

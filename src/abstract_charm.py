@@ -256,8 +256,8 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
                 workload_.enable(tls=self._tls_certificate_saved, unit_name=self.unit.name)
             elif workload_.container_ready:
                 workload_.disable()
-            # Empty waiting status means we're waiting for database requires relation before starting
-            # workload
+            # Empty waiting status means we're waiting for database requires relation before
+            # starting workload
             if not workload_.status or workload_.status == ops.WaitingStatus():
                 self._upgrade.unit_state = "healthy"
             if self._unit_lifecycle.authorized_leader:
