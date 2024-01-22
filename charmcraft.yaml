@@ -19,7 +19,7 @@ parts:
           exit 1
       fi
     charm-strict-dependencies: true
-    charm-entrypoint: src/kubernetes_charm.py
+    charm-entrypoint: src/kubernetes_charms.py
     prime:
       - charm_version
       - workload_version
