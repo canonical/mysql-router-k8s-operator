@@ -3,7 +3,7 @@
 name: Tests
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}-1
+  group: ${{ github.workflow }}-${{ github.ref }}-2
   cancel-in-progress: true
 
 on:
@@ -30,9 +30,8 @@ jobs:
 
   build:
     name: Build charm
-    uses: canonical/data-platform-workflows/.github/workflows/build_charm.yaml@artifact-v4
+    uses: canonical/data-platform-workflows/.github/workflows/build_charm_without_cache.yaml@main
     with:
-      cache: true
       charmcraft-snap-channel: beta
 
   integration-test:
