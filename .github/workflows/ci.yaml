@@ -44,8 +44,9 @@ jobs:
 
   build:
     name: Build charm
-    uses: canonical/data-platform-workflows/.github/workflows/build_charms_with_cache.yaml@v9.0.2
+    uses: canonical/data-platform-workflows/.github/workflows/build_charm.yaml@artifact-v4
     with:
+      cache: true
       charmcraft-snap-channel: beta
 
   integration-test:
@@ -61,9 +62,9 @@ jobs:
       - lint
       - unit-test
       - build
-    uses: canonical/data-platform-workflows/.github/workflows/integration_test_charm.yaml@v9.0.2
+    uses: canonical/data-platform-workflows/.github/workflows/integration_test_charm.yaml@artifact-v4
     with:
-      artifact-name: ${{ needs.build.outputs.artifact-name }}
+      artifact-prefix: ${{ needs.build.outputs.artifact-prefix }}
       cloud: microk8s
       microk8s-snap-channel: 1.28-strict/stable
       juju-agent-version: ${{ matrix.juju.agent }}
