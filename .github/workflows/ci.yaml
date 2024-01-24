@@ -3,7 +3,7 @@
 name: Tests
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}-1
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 on:
@@ -70,3 +70,5 @@ jobs:
       juju-agent-version: ${{ matrix.juju.agent }}
       libjuju-version-constraint: ${{ matrix.juju.libjuju }}
       _beta_allure_report: ${{ matrix.juju.allure }}
+    permissions:
+      contents: write
