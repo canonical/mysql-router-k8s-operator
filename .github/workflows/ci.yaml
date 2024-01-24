@@ -57,7 +57,7 @@ jobs:
             libjuju: ^2
             allure: false
           - agent: 3.1.6
-            allure: true
+            allure: false
     name: Integration test charm | ${{ matrix.juju.agent }}
     needs:
       - lint
