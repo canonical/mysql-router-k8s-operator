@@ -3,7 +3,7 @@
 name: Tests
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}-1
   cancel-in-progress: true
 
 on:
@@ -57,7 +57,7 @@ jobs:
             libjuju: ^2
             allure: false
           - agent: 3.1.6
-            allure: false
+            allure: true
     name: Integration test charm | ${{ matrix.juju.agent }}
     needs:
       - lint
