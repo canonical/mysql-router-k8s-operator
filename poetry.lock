@@ -1654,8 +1654,8 @@ pyyaml = "*"
 [package.source]
 type = "git"
 url = "https://github.com/canonical/data-platform-workflows"
-reference = "v11.0.0"
-resolved_reference = "a298a6d504d780220e97a471188a945ef870e795"
+reference = "allure-report"
+resolved_reference = "5be93e854c22e08ede7b9145843b00555cb9476e"
 subdirectory = "python/pytest_plugins/pytest_operator_cache"
 
 [[package]]
@@ -1673,8 +1673,8 @@ pytest = "*"
 [package.source]
 type = "git"
 url = "https://github.com/canonical/data-platform-workflows"
-reference = "v11.0.0"
-resolved_reference = "a298a6d504d780220e97a471188a945ef870e795"
+reference = "allure-report"
+resolved_reference = "5be93e854c22e08ede7b9145843b00555cb9476e"
 subdirectory = "python/pytest_plugins/pytest_operator_groups"
 
 [[package]]
@@ -2235,4 +2235,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "0803d266989340ff67cc525352b583f468c880226af82cec58cb65a7d6950191"
+content-hash = "cbba95bdea832bf0a9affc9700feb436561b8b3b86ff7d3e43dfe100016119f4"
