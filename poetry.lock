@@ -1655,7 +1655,7 @@ pyyaml = "*"
 type = "git"
 url = "https://github.com/canonical/data-platform-workflows"
 reference = "allure-report"
-resolved_reference = "5be93e854c22e08ede7b9145843b00555cb9476e"
+resolved_reference = "322d36d660b83b912449e6ba1882cd43e4c4fa72"
 subdirectory = "python/pytest_plugins/pytest_operator_cache"
 
 [[package]]
@@ -1674,7 +1674,7 @@ pytest = "*"
 type = "git"
 url = "https://github.com/canonical/data-platform-workflows"
 reference = "allure-report"
-resolved_reference = "5be93e854c22e08ede7b9145843b00555cb9476e"
+resolved_reference = "322d36d660b83b912449e6ba1882cd43e4c4fa72"
 subdirectory = "python/pytest_plugins/pytest_operator_groups"
 
 [[package]]
