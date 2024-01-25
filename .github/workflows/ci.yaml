@@ -55,7 +55,9 @@ jobs:
         juju:
           - agent: 2.9.45
             libjuju: ^2
+            allure: false
           - agent: 3.1.6
+            allure: true
     name: Integration test charm | ${{ matrix.juju.agent }}
     needs:
       - lint
@@ -68,3 +70,6 @@ jobs:
       microk8s-snap-channel: 1.28-strict/stable
       juju-agent-version: ${{ matrix.juju.agent }}
       libjuju-version-constraint: ${{ matrix.juju.libjuju }}
+      _beta_allure_report: ${{ matrix.juju.allure }}
+    permissions:
+      contents: write  # Needed for Allure Report beta
