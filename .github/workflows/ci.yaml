@@ -62,7 +62,7 @@ jobs:
     needs:
       - lint
       - build
-    uses: canonical/data-platform-workflows/.github/workflows/integration_test_charm.yaml@allure-report
+    uses: canonical/data-platform-workflows/.github/workflows/integration_test_charm.yaml@faf724fd3e13ef91681f238b05d9bc697145548b
     with:
       artifact-prefix: ${{ needs.build.outputs.artifact-prefix }}
       cloud: microk8s
