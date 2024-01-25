@@ -5,6 +5,7 @@
 
 import asyncio
 import logging
+import sys
 from pathlib import Path
 
 import pytest
@@ -41,6 +42,9 @@ async def test_database_relation(ops_test: OpsTest):
     mysqlrouter_resources = {
         "mysql-router-image": METADATA["resources"]["mysql-router-image"]["upstream-source"]
     }
+
+    print("FOOBAR")
+    print("BARFOO", file=sys.stderr)
 
     logger.info("Deploying mysql, mysqlrouter and application")
     applications = await asyncio.gather(
