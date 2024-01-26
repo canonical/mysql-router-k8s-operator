@@ -163,3 +163,13 @@ async def test_log_rotation(ops_test: OpsTest):
         f"/var/log/mysqlrouter/archive_mysqlrouter/{filename}",
     )
     assert "test mysqlrouter content" in file_contents, "❌ log file mysqlrouter.log not rotated"
+
+
+@pytest.mark.group("1")
+async def test_foo():
+    print("foo")
+
+
+@pytest.mark.group("bar")
+async def test_bar():
+    print("bar")
