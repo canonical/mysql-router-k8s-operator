@@ -44,7 +44,7 @@ jobs:
 
   build:
     name: Build charm
-    uses: canonical/data-platform-workflows/.github/workflows/build_charm.yaml@v11.0.0
+    uses: canonical/data-platform-workflows/.github/workflows/build_charm.yaml@v11.0.1
     with:
       cache: true
 
@@ -55,16 +55,21 @@ jobs:
         juju:
           - agent: 2.9.45
             libjuju: ^2
+            allure: false
           - agent: 3.1.6
+            allure: true
     name: Integration test charm | ${{ matrix.juju.agent }}
     needs:
       - lint
       - unit-test
       - build
-    uses: canonical/data-platform-workflows/.github/workflows/integration_test_charm.yaml@v11.0.0
+    uses: canonical/data-platform-workflows/.github/workflows/integration_test_charm.yaml@v11.0.1
     with:
       artifact-prefix: ${{ needs.build.outputs.artifact-prefix }}
       cloud: microk8s
       microk8s-snap-channel: 1.28-strict/stable
       juju-agent-version: ${{ matrix.juju.agent }}
       libjuju-version-constraint: ${{ matrix.juju.libjuju }}
+      _beta_allure_report: ${{ matrix.juju.allure }}
+    permissions:
+      contents: write  # Needed for Allure Report beta
