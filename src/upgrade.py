@@ -72,14 +72,14 @@ class Upgrade(abc.ABC):
         except KeyError as exception:
             logger.debug("`versions` missing from peer relation", exc_info=exception)
             return False
-        # TODO charm versioning: remove `.split("-")` (which removes git hash before comparing)
-        previous_version_strs["charm"] = previous_version_strs["charm"].split("-")[0]
+        # TODO charm versioning: remove `.split("+")` (which removes git hash before comparing)
+        previous_version_strs["charm"] = previous_version_strs["charm"].split("+")[0]
         previous_versions: dict[str, poetry_version.Version] = {
             key: poetry_version.Version.parse(value)
             for key, value in previous_version_strs.items()
         }
         current_version_strs = copy.copy(self._current_versions)
-        current_version_strs["charm"] = current_version_strs["charm"].split("-")[0]
+        current_version_strs["charm"] = current_version_strs["charm"].split("+")[0]
         current_versions = {
             key: poetry_version.Version.parse(value) for key, value in current_version_strs.items()
         }
