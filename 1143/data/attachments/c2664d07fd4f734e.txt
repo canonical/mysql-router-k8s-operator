@@ -1,0 +1,65 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:675 Connecting to existing model microk8s-localhost:test on unspecified cloud
+[32mINFO    [0m integration.test_log_rotation:test_log_rotation.py:46 Deploying mysql, mysqlrouter and application
+[32mINFO    [0m juju.model:model.py:2069 Deploying ch:amd64/jammy/mysql-test-app-29
+[32mINFO    [0m juju.model:model.py:2069 Deploying ch:amd64/jammy/mysql-k8s-122
+[32mINFO    [0m juju.model:model.py:2069 Deploying local:jammy/mysql-router-k8s-0
+[32mINFO    [0m integration.test_log_rotation:test_log_rotation.py:77 Waiting for mysqlrouter to be in BlockedStatus
+[32mINFO    [0m integration.test_log_rotation:test_log_rotation.py:83 Relating mysql, mysqlrouter and application
+[33mWARNING [0m juju.model:model.py:1558 relate is deprecated and will be removed. Use integrate instead.
+[33mWARNING [0m juju.model:model.py:1558 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m integration.test_log_rotation:test_log_rotation.py:104 Stopping the logrotate executor pebble service
+[32mINFO    [0m integration.test_log_rotation:test_log_rotation.py:107 Stopping any running logrotate jobs
+[32mINFO    [0m integration.test_log_rotation:test_log_rotation.py:110 Removing existing archive directory
+[32mINFO    [0m integration.test_log_rotation:test_log_rotation.py:117 Writing some data mysqlrouter log file
+[32mINFO    [0m integration.test_log_rotation:test_log_rotation.py:121 Ensuring only log files exist
+[32mINFO    [0m integration.test_log_rotation:test_log_rotation.py:130 Executing logrotate
+[32mINFO    [0m integration.test_log_rotation:test_log_rotation.py:133 Ensuring log files and archive directories exist
+[32mINFO    [0m integration.test_log_rotation:test_log_rotation.py:144 Ensuring log files was rotated
+[32mINFO    [0m pytest_operator.plugin:plugin.py:790 Model status:
+
+Model  Controller          Cloud/Region        Version  SLA          Timestamp
+test   microk8s-localhost  microk8s/localhost  3.1.6    unsupported  01:32:11Z
+
+App               Version                  Status   Scale  Charm             Channel      Rev  Address         Exposed  Message
+mysql-k8s         8.0.35-0ubuntu0.22.04.1  waiting      3  mysql-k8s         8.0/edge     122  10.152.183.125  no       installing agent
+mysql-router-k8s  8.0.35-0ubuntu0.22.04.1  waiting      1  mysql-router-k8s                 0  10.152.183.56   no       installing agent
+mysql-test-app    0.0.2                    active       1  mysql-test-app    latest/edge   29  10.152.183.23   no       
+
+Unit                 Workload     Agent      Address       Ports  Message
+mysql-k8s/0*         active       idle       10.1.212.205         Primary
+mysql-k8s/1          waiting      idle       10.1.212.207         waiting to join the cluster
+mysql-k8s/2          maintenance  idle       10.1.212.206         joining the cluster
+mysql-router-k8s/0*  active       idle       10.1.212.201         
+mysql-test-app/0*    active       executing  10.1.212.200         
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:796 Juju error logs:
+
+unit-mysql-router-k8s-0: 01:32:03 ERROR unit.mysql-router-k8s/0.juju-log backend-database:6: Failed to bootstrap router
+logged_command=['--bootstrap', 'relation-6:***@mysql-k8s-primary.test.svc.cluster.local:3306', '--strict', '--force', '--conf-set-option', 'http_server.bind_address=127.0.0.1', '--conf-use-gr-notifications']
+stderr:
+Error: The provided server is currently not in a InnoDB cluster group with quorum and thus may contain inaccurate or outdated data.
+
+
+unit-mysql-router-k8s-0: 01:32:03 ERROR unit.mysql-router-k8s/0.juju-log backend-database:6: MySQL Server does not have quorum. Will retry next Juju event
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:862 Forgetting main...
+[31m[1mERROR   [0m websockets.client:protocol.py:1015 data transfer failed
+Traceback (most recent call last):
+  File "/home/runner/work/mysql-router-k8s-operator/mysql-router-k8s-operator/.tox/integration/lib/python3.10/site-packages/websockets/legacy/protocol.py", line 959, in transfer_data
+    message = await self.read_message()
+  File "/home/runner/work/mysql-router-k8s-operator/mysql-router-k8s-operator/.tox/integration/lib/python3.10/site-packages/websockets/legacy/protocol.py", line 1029, in read_message
+    frame = await self.read_data_frame(max_size=self.max_size)
+  File "/home/runner/work/mysql-router-k8s-operator/mysql-router-k8s-operator/.tox/integration/lib/python3.10/site-packages/websockets/legacy/protocol.py", line 1104, in read_data_frame
+    frame = await self.read_frame(max_size)
+  File "/home/runner/work/mysql-router-k8s-operator/mysql-router-k8s-operator/.tox/integration/lib/python3.10/site-packages/websockets/legacy/protocol.py", line 1161, in read_frame
+    frame = await Frame.read(
+  File "/home/runner/work/mysql-router-k8s-operator/mysql-router-k8s-operator/.tox/integration/lib/python3.10/site-packages/websockets/legacy/framing.py", line 68, in read
+    data = await reader(2)
+  File "/usr/lib/python3.10/asyncio/streams.py", line 708, in readexactly
+    await self._wait_for_data('readexactly')
+  File "/usr/lib/python3.10/asyncio/streams.py", line 501, in _wait_for_data
+    await self._waiter
+  File "/usr/lib/python3.10/asyncio/selector_events.py", line 924, in write
+    n = self._sock.send(data)
+OSError: [Errno 9] Bad file descriptor
+[33mWARNING [0m juju.client.connection:connection.py:657 RPC: Connection closed, reconnecting
