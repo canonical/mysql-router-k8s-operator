@@ -1,0 +1,3 @@
+"Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
+"passed","Thu Feb 22 01:29:11 UTC 2024","Thu Feb 22 01:30:45 UTC 2024","93162","tests.integration","test_log_rotation","","","","test_log_rotation","Test log rotation."
+"passed","Thu Feb 22 01:28:47 UTC 2024","Thu Feb 22 01:32:25 UTC 2024","218179","tests.integration","test_charm","","","","test_database_relation","Test the database relation."
