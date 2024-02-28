@@ -1,5 +1,9 @@
 # mysql-router-k8s-operator
-
+[![Charmhub](https://charmhub.io/mysql-router-k8s/badge.svg)](https://charmhub.io/mysql-router-k8s)
+[![Release](https://github.com/canonical/mysql-router-k8s-operator/actions/workflows/release.yaml/badge.svg)](https://github.com/canonical/mysql-router-k8s-operator/actions/workflows/release.yaml)
+[![Tests](https://github.com/canonical/mysql-router-k8s-operator/actions/workflows/ci.yaml/badge.svg?branch=main)](https://github.com/canonical/mysql-router-k8s-operator/actions/workflows/ci.yaml)
+[![Sync docs from Discourse](https://github.com/canonical/mysql-router-k8s-operator/actions/workflows/sync_docs.yaml/badge.svg)](https://github.com/canonical/mysql-router-k8s-operator/actions/workflows/sync_docs.yaml)
+-----------------
 ## Description
 
 Charmed operator for mysql-router under k8s. MySQL-Router is a database proxy for Group Replicated MySQL clusters.
