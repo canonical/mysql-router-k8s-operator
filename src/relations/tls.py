@@ -260,7 +260,7 @@ class RelationEndpoint(ops.Object):
         """The TLS private key"""
         if self._relation is None:
             return None
-        return self._relation.private_key
+        return self._relation.key
 
     @property
     def certificate(self) -> typing.Optional[str]:
@@ -274,7 +274,7 @@ class RelationEndpoint(ops.Object):
         """The TLS certificate authority"""
         if self._relation is None:
             return None
-        return self._relation.ca
+        return self._relation.certificate_authority
 
     @staticmethod
     def _parse_tls_key(raw_content: str) -> str:

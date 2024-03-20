@@ -68,12 +68,7 @@ class _Path(container.Path):
         self._container.remove_path(self, recursive=True)
 
     def exists(self) -> bool:
-        try:
-            self._container.list_files(self)
-        except ops.pebble.APIError:
-            return False
-        else:
-            return True
+        self._container.exists(self)
 
 
 class Rock(container.Container):
@@ -191,9 +186,9 @@ class Rock(container.Container):
         )
         self._container.add_layer(self._EXPORTER_SERVICE_NAME, layer, combine=True)
         # `self._container.replan()` does not stop services that have been disabled
-        # Use `restart()` and `stop()` instead
+        # Use `start()` and `stop()` instead
         if enabled:
-            self._container.restart(self._EXPORTER_SERVICE_NAME)
+            self._container.start(self._EXPORTER_SERVICE_NAME)
         else:
             self._container.stop(self._EXPORTER_SERVICE_NAME)
 

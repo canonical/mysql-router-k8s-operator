@@ -320,7 +320,7 @@ class AuthenticatedWorkload(Workload):
         # value changes based on whether tls is enabled or disabled
         tls_was_enabled = self._custom_tls_enabled
         if tls:
-            self._enable_tls(key, certificate)
+            self._enable_tls(key=key, certificate=certificate)
             if not tls_was_enabled and self._container.mysql_router_service_enabled:
                 self._restart(tls=tls)
         else:
@@ -335,11 +335,11 @@ class AuthenticatedWorkload(Workload):
             logger.debug("Enabling MySQL Router service")
             self._cleanup_after_upgrade_or_potential_container_restart()
             self._container.create_router_rest_api_credentials_file()  # create an empty credentials file
-            self._bootstrap_router(tls=self._custom_tls_enabled)
+            self._bootstrap_router(tls=tls)
             self.shell.add_attributes_to_mysql_router_user(
                 username=self._router_username, router_id=self._router_id, unit_name=unit_name
             )
-            self._container.update_mysql_router_service(enabled=True, tls=self._custom_tls_enabled)
+            self._container.update_mysql_router_service(enabled=True, tls=tls)
             self._logrotate.enable()
             logger.debug("Enabled MySQL Router service")
             self._charm.wait_until_mysql_router_ready()
