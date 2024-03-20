@@ -15,6 +15,7 @@ import lightkube.models.core_v1
 import lightkube.models.meta_v1
 import lightkube.resources.core_v1
 import ops
+from lightkube.resources.core_v1 import Node, Pod, Service
 
 import abstract_charm
 import kubernetes_logrotate
@@ -34,9 +35,14 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
 
     _READ_WRITE_PORT = 6446
     _READ_ONLY_PORT = 6447
+    _SVC_NAME_READ_ONLY = "mysql-ro"
+    _SVC_NAME_READ_WRITE = "mysql-rw"
 
     def __init__(self, *args) -> None:
         super().__init__(*args)
+        self.namespace = self.model.name
+        self.client = lightkube.Client()
+
         self.framework.observe(self.on.install, self._on_install)
         self.framework.observe(
             self.on[rock.CONTAINER_NAME].pebble_ready, self._on_workload_container_pebble_ready
@@ -86,11 +92,19 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         return f"{self.app.name}.{self.model_service_domain}"
 
     @property
+    def _node_port_enabled(self) -> bool:
+        return True
+
+    @property
     def _read_write_endpoint(self) -> str:
+        if self._node_port_enabled:
+            return f"{self.get_k8s_node_ip()}:{self.node_port()}"
         return f"{self._host}:{self._READ_WRITE_PORT}"
 
     @property
     def _read_only_endpoint(self) -> str:
+        if self._node_port_enabled:
+            return f"{self.get_k8s_node_ip()}:{self.node_port()}"
         return f"{self._host}:{self._READ_ONLY_PORT}"
 
     def _patch_service(self) -> None:
@@ -103,7 +117,7 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         client = lightkube.Client()
         pod0 = client.get(
             res=lightkube.resources.core_v1.Pod,
-            name=self.app.name + "-0",
+            name=self.unit.name.replace("/", "-"),
             namespace=self.model.name,
         )
         service = lightkube.resources.core_v1.Service(
@@ -118,16 +132,17 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
             spec=lightkube.models.core_v1.ServiceSpec(
                 ports=[
                     lightkube.models.core_v1.ServicePort(
-                        name="mysql-rw",
+                        name=self._SVC_NAME_READ_WRITE,
                         port=self._READ_WRITE_PORT,
-                        targetPort=self._READ_WRITE_PORT,
+                        targetPort=self._READ_WRITE_PORT,  # Dummy value if we use NodePort
                     ),
                     lightkube.models.core_v1.ServicePort(
-                        name="mysql-ro",
+                        name=self._SVC_NAME_READ_ONLY,
                         port=self._READ_ONLY_PORT,
-                        targetPort=self._READ_ONLY_PORT,
+                        targetPort=self._READ_ONLY_PORT,  # Dummy value if we use NodePort
                     ),
                 ],
+                type="NodePort" if self._node_port_enabled else "ClusterIP",
                 selector={"app.kubernetes.io/name": self.app.name},
             ),
         )
@@ -144,6 +159,34 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
     # =======================
     #  Handlers
     # =======================
+
+    def _get_node_name_for_pod(self) -> str:
+        """Return the node name for a given pod."""
+        pod = self.client.get(Pod, name=self.unit.name.replace("/", "-"), namespace=self.namespace)
+        return pod.spec.nodeName
+
+    def get_k8s_node_ip(self) -> str:
+        """Return node IP."""
+        node = self.client.get(Node, name=self._get_node_name_for_pod(), namespace=self.namespace)
+        # [
+        #    NodeAddress(address='192.168.0.228', type='InternalIP'),
+        #    NodeAddress(address='desktopdone', type='Hostname')
+        # ]
+        # TODO: not hardcode the index below, but rather search for ExternalIP, then InternalIP
+        # maybe add a config to choose Hostname instead
+        # Remember that OpenStack, for example, will return an internal hostname, which is not
+        # accessible from the outside.
+        return node.status.addresses[0].address
+
+    def node_port(self, port_type="rw") -> int:
+        """Return node port."""
+        svc = self.client.get(Service, self.app.name, namespace=self.namespace)
+        if svc and svc.spec.type == "NodePort":
+            # svc.spec.ports
+            # [ServicePort(port=3306, appProtocol=None, name=None, nodePort=31438, protocol='TCP', targetPort=3306)]
+            # TODO: check if we are getting the right 3306 port
+            return svc.spec.ports[0].nodePort
+        return None
 
     def _on_install(self, _) -> None:
         """Open ports & patch k8s service."""
