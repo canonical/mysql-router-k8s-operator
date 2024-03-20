@@ -111,6 +111,21 @@ class _Relation:
                 return False
         return True
 
+    @property
+    def key(self) -> str:
+        """The TLS private key"""
+        return self._unit_secrets.private_key
+
+    @property
+    def certificate(self) -> str:
+        """The TLS certificate"""
+        return self._peer_unit_databag.certificate
+
+    @property
+    def certificate_authority(self) -> str:
+        """The TLS certificate authority"""
+        return self._peer_unit_databag.ca
+
     def save_certificate(self, event: tls_certificates.CertificateAvailableEvent) -> None:
         """Save TLS certificate in peer relation unit databag."""
         if (
@@ -133,10 +148,7 @@ class _Relation:
         self._peer_unit_databag.chain = json.dumps(event.chain)
         self._peer_unit_databag.active_csr = self._peer_unit_databag.requested_csr
         logger.debug(f"Saved TLS certificate {event=}")
-        self._charm.get_workload(event=None).enable_tls(
-            key=self._unit_secrets.private_key,
-            certificate=self._peer_unit_databag.certificate,
-        )
+        self._charm.reconcile(event=None)
 
     def _generate_csr(self, key: bytes) -> bytes:
         """Generate certificate signing request (CSR)."""
@@ -158,6 +170,7 @@ class _Relation:
             ],
             sans_ip=[
                 str(self._charm.model.get_binding("juju-info").network.bind_address),
+                "127.0.0.1",
             ],
         )
 
@@ -242,6 +255,27 @@ class RelationEndpoint(ops.Object):
             return False
         return self._relation.certificate_saved
 
+    @property
+    def key(self) -> typing.Optional[str]:
+        """The TLS private key"""
+        if self._relation is None:
+            return None
+        return self._relation.private_key
+
+    @property
+    def certificate(self) -> typing.Optional[str]:
+        """The TLS certificate"""
+        if self._relation is None:
+            return None
+        return self._relation.certificate
+
+    @property
+    def certificate_authority(self) -> typing.Optional[str]:
+        """The TLS certificate authority"""
+        if self._relation is None:
+            return None
+        return self._relation.ca
+
     @staticmethod
     def _parse_tls_key(raw_content: str) -> str:
         """Parse TLS key from plain text or base64 format."""
@@ -289,7 +323,7 @@ class RelationEndpoint(ops.Object):
         """Delete TLS certificate."""
         logger.debug("Deleting TLS certificate")
         self._peer_unit_databag.clear()
-        self._charm.get_workload(event=None).disable_tls()
+        self._charm.reconcile(event=None)
         logger.debug("Deleted TLS certificate")
 
     def _on_certificate_available(self, event: tls_certificates.CertificateAvailableEvent) -> None:

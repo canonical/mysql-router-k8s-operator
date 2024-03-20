@@ -22,6 +22,9 @@ ops = ">=2.0.0"
 # tls_certificates_interface/v1/tls_certificates.py
 cryptography = "*"
 jsonschema = "*"
+# grafana_agent/v0/cos_agent.py
+pydantic = "<2"
+cosl = "*"
 
 [tool.poetry.group.format]
 optional = true

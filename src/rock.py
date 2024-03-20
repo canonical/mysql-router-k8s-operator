@@ -10,6 +10,9 @@ import ops
 
 import container
 
+if typing.TYPE_CHECKING:
+    import relations.cos
+
 logger = logging.getLogger(__name__)
 
 CONTAINER_NAME = "mysql-router"
@@ -64,15 +67,28 @@ class _Path(container.Path):
     def rmtree(self):
         self._container.remove_path(self, recursive=True)
 
+    def exists(self) -> bool:
+        try:
+            self._container.list_files(self)
+        except ops.pebble.APIError:
+            return False
+        else:
+            return True
+
 
 class Rock(container.Container):
     """Workload ROCK or OCI container"""
 
     _SERVICE_NAME = "mysql_router"
+    _EXPORTER_SERVICE_NAME = "mysql_router_exporter"
     _LOGROTATE_EXECUTOR_SERVICE_NAME = "logrotate_executor"
 
     def __init__(self, *, unit: ops.Unit) -> None:
-        super().__init__(mysql_router_command="mysqlrouter", mysql_shell_command="mysqlsh")
+        super().__init__(
+            mysql_router_command="mysqlrouter",
+            mysql_shell_command="mysqlsh",
+            mysql_router_password_command="mysqlrouter_passwd",
+        )
         self._container = unit.get_container(CONTAINER_NAME)
 
     @property
@@ -82,6 +98,15 @@ class Rock(container.Container):
     @property
     def mysql_router_service_enabled(self) -> bool:
         service = self._container.get_services(self._SERVICE_NAME).get(self._SERVICE_NAME)
+        if service is None:
+            return False
+        return service.startup == ops.pebble.ServiceStartup.ENABLED
+
+    @property
+    def mysql_router_exporter_service_enabled(self) -> bool:
+        service = self._container.get_services(self._EXPORTER_SERVICE_NAME).get(
+            self._EXPORTER_SERVICE_NAME
+        )
         if service is None:
             return False
         return service.startup == ops.pebble.ServiceStartup.ENABLED
@@ -116,6 +141,61 @@ class Rock(container.Container):
             self._container.restart(self._SERVICE_NAME)
         else:
             self._container.stop(self._SERVICE_NAME)
+
+    def update_mysql_router_exporter_service(
+        self,
+        *,
+        enabled: bool,
+        config: "relations.cos.ExporterConfig" = None,
+        tls: bool = None,
+        key: str = None,
+        certificate: str = None,
+        certificate_authority: str = None,
+    ) -> None:
+        super().update_mysql_router_exporter_service(enabled=enabled, config=config)
+
+        if enabled:
+            startup = ops.pebble.ServiceStartup.ENABLED.value
+        else:
+            startup = ops.pebble.ServiceStartup.DISABLED.value
+
+        environment = {
+            "MYSQLROUTER_EXPORTER_USER": config.username,
+            "MYSQLROUTER_EXPORTER_PASS": config.password,
+            "MYSQLROUTER_EXPORTER_URL": config.url,
+        }
+
+        if tls:
+            environment.update(
+                {
+                    "MYSQLROUTER_TLS_CACERT_PATH": certificate_authority,
+                    "MYSQLROUTER_TLS_CERT_PATH": certificate,
+                    "MYSQLROUTER_TLS_KEY_PATH": key,
+                }
+            )
+
+        layer = ops.pebble.Layer(
+            {
+                "services": {
+                    self._EXPORTER_SERVICE_NAME: {
+                        "override": "replace",
+                        "summary": "MySQL Router Exporter",
+                        "command": "/start-mysql-router-exporter.sh",
+                        "startup": startup,
+                        "user": _UNIX_USERNAME,
+                        "group": _UNIX_USERNAME,
+                        "environment": environment,
+                    },
+                },
+            }
+        )
+        self._container.add_layer(self._EXPORTER_SERVICE_NAME, layer, combine=True)
+        # `self._container.replan()` does not stop services that have been disabled
+        # Use `restart()` and `stop()` instead
+        if enabled:
+            self._container.restart(self._EXPORTER_SERVICE_NAME)
+        else:
+            self._container.stop(self._EXPORTER_SERVICE_NAME)
 
     def upgrade(self, unit: ops.Unit) -> None:
         raise Exception("Not supported on Kubernetes")
@@ -154,10 +234,12 @@ class Rock(container.Container):
             self._container.stop(self._LOGROTATE_EXECUTOR_SERVICE_NAME)
 
     # TODO python3.10 min version: Use `list` instead of `typing.List`
-    def _run_command(self, command: typing.List[str], *, timeout: typing.Optional[int]) -> str:
+    def _run_command(
+        self, command: typing.List[str], *, timeout: typing.Optional[int], input: str = None
+    ) -> str:
         try:
             process = self._container.exec(
-                command, user=_UNIX_USERNAME, group=_UNIX_USERNAME, timeout=timeout
+                command, user=_UNIX_USERNAME, group=_UNIX_USERNAME, timeout=timeout, stdin=input
             )
             output, _ = process.wait_output()
         except ops.pebble.ExecError as e:

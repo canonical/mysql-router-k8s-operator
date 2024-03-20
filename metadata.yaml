@@ -24,6 +24,10 @@ containers:
 provides:
   database:
     interface: mysql_client
+  metrics-endpoint:
+    interface: prometheus_scrape
+  grafana-dashboard:
+    interface: grafana_dashboard
 requires:
   backend-database:
     interface: mysql_client
@@ -31,7 +35,13 @@ requires:
   certificates:
     interface: tls-certificates
     limit: 1
+  logging:
+    interface: loki_push_api
+    limit: 1
+    optional: true
 peers:
+  cos:
+    interface: cos
   upgrade-version-a:
     # Relation versioning scheme:
     # DA056 - Upgrading in-place upgrade protocol
