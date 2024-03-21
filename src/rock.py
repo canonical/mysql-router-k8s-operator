@@ -68,7 +68,7 @@ class _Path(container.Path):
         self._container.remove_path(self, recursive=True)
 
     def exists(self) -> bool:
-        self._container.exists(self)
+        return self._container.exists(self)
 
 
 class Rock(container.Container):
@@ -151,23 +151,23 @@ class Rock(container.Container):
 
         if enabled:
             startup = ops.pebble.ServiceStartup.ENABLED.value
+
+            environment = {
+                "MYSQLROUTER_EXPORTER_USER": config.username,
+                "MYSQLROUTER_EXPORTER_PASS": config.password,
+                "MYSQLROUTER_EXPORTER_URL": config.url,
+            }
+            if tls:
+                environment.update(
+                    {
+                        "MYSQLROUTER_TLS_CACERT_PATH": certificate_authority,
+                        "MYSQLROUTER_TLS_CERT_PATH": certificate,
+                        "MYSQLROUTER_TLS_KEY_PATH": key,
+                    }
+                )
         else:
             startup = ops.pebble.ServiceStartup.DISABLED.value
-
-        environment = {
-            "MYSQLROUTER_EXPORTER_USER": config.username,
-            "MYSQLROUTER_EXPORTER_PASS": config.password,
-            "MYSQLROUTER_EXPORTER_URL": config.url,
-        }
-
-        if tls:
-            environment.update(
-                {
-                    "MYSQLROUTER_TLS_CACERT_PATH": certificate_authority,
-                    "MYSQLROUTER_TLS_CERT_PATH": certificate,
-                    "MYSQLROUTER_TLS_KEY_PATH": key,
-                }
-            )
+            environment = {}
 
         layer = ops.pebble.Layer(
             {
@@ -188,7 +188,10 @@ class Rock(container.Container):
         # `self._container.replan()` does not stop services that have been disabled
         # Use `start()` and `stop()` instead
         if enabled:
-            self._container.start(self._EXPORTER_SERVICE_NAME)
+            if self.mysql_router_exporter_service_enabled:
+                self._container.restart(self._EXPORTER_SERVICE_NAME)
+            else:
+                self._container.start(self._EXPORTER_SERVICE_NAME)
         else:
             self._container.stop(self._EXPORTER_SERVICE_NAME)
 

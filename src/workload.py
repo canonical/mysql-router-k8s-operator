@@ -150,7 +150,8 @@ class Workload:
             self._router_data_directory.mkdir()
             logger.debug("Disabled MySQL Router service")
 
-        self._disable_exporter()
+        if self._container.mysql_router_exporter_service_enabled:
+            self._disable_exporter()
 
         if tls:
             self._enable_tls(key=key, certificate=certificate)
