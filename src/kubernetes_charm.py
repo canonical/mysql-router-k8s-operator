@@ -92,18 +92,14 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         return f"{self.app.name}.{self.model_service_domain}"
 
     @property
-    def _node_port_enabled(self) -> bool:
-        return True
-
-    @property
     def _read_write_endpoint(self) -> str:
-        if self._node_port_enabled:
+        if self.is_exposed:
             return f"{self.get_k8s_node_ip()}:{self.node_port()}"
         return f"{self._host}:{self._READ_WRITE_PORT}"
 
     @property
     def _read_only_endpoint(self) -> str:
-        if self._node_port_enabled:
+        if self.is_exposed:
             return f"{self.get_k8s_node_ip()}:{self.node_port()}"
         return f"{self._host}:{self._READ_ONLY_PORT}"
 
@@ -142,7 +138,7 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
                         targetPort=self._READ_ONLY_PORT,  # Dummy value if we use NodePort
                     ),
                 ],
-                type="NodePort" if self._node_port_enabled else "ClusterIP",
+                type="NodePort" if self.is_exposed else "ClusterIP",
                 selector={"app.kubernetes.io/name": self.app.name},
             ),
         )
@@ -170,13 +166,21 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         node = self.client.get(Node, name=self._get_node_name_for_pod(), namespace=self.namespace)
         # [
         #    NodeAddress(address='192.168.0.228', type='InternalIP'),
-        #    NodeAddress(address='desktopdone', type='Hostname')
+        #    NodeAddress(address='example.com', type='Hostname')
         # ]
-        # TODO: not hardcode the index below, but rather search for ExternalIP, then InternalIP
-        # maybe add a config to choose Hostname instead
         # Remember that OpenStack, for example, will return an internal hostname, which is not
-        # accessible from the outside.
-        return node.status.addresses[0].address
+        # accessible from the outside. Give preference to ExternalIP, then InternalIP first
+        if addr := next(
+            (a.address for a in node.status.addresses if a.type == "ExternalIP"), None
+        ):
+            return addr
+        if addr := next(
+            (a.address for a in node.status.addresses if a.type == "InternalIP"), None
+        ):
+            return addr
+        if addr := next((a.address for a in node.status.addresses if a.type == "Hostname"), None):
+            return addr
+        return None
 
     def node_port(self, port_type="rw") -> int:
         """Return node port."""

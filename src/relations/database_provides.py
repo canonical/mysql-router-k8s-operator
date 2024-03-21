@@ -167,6 +167,16 @@ class RelationEndpoint:
         charm_.framework.observe(charm_.on[self._NAME].relation_broken, charm_.reconcile)
 
     @property
+    def is_exposed(self) -> bool:
+        """Whether the relation is exposed."""
+        return any(
+            [
+                rel.data[rel.app].get("external-node-connectivity", "false") == "true"
+                for rel in self._interface.relations
+            ]
+        )
+
+    @property
     # TODO python3.10 min version: Use `list` instead of `typing.List`
     def _shared_users(self) -> typing.List[_RelationWithSharedUser]:
         shared_users = []
