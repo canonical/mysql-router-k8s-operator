@@ -8,7 +8,6 @@ import logging
 import socket
 import typing
 
-import charms.data_platform_libs.v0.data_interfaces as data_interfaces
 import ops
 import tenacity
 
@@ -26,46 +25,6 @@ logger = logging.getLogger(__name__)
 
 
 PEER_RELATION_NAME = "mysql-router-peers"
-
-
-# class _ExternalDatabases:
-#     """Manages the list of external databases currently used.
-
-#     This list is used to decide if we should expose mysql-router service outside of k8s.
-#     """
-
-#     def __init__(self, charm: ops.CharmBase) -> None:
-#         self._charm = charm
-#         self._peer = charm.model.get_relation(PEER_RELATION_NAME)
-
-#     @property
-#     def is_exposed(self) -> bool:
-#         """Returns True if we have set the peer app databag to expose the service."""
-#         return self._peer.data[self.app].get("external_databases", "") == ""
-
-#     def get(self, db_name: typing.Optional[str]) -> typing.List[str]:
-#         dbs = self._peer.data[self.app].get("external_databases", "").split(",")
-#         if db_name is None or db_name not in dbs:
-#             # Database already considered, return
-#             return None
-#         return dbs
-
-#     def set(self, db_name: typing.Optional[str]):
-#         """Set the external database name to connect to."""
-#         if (dbs := self.get(db_name)) is None:
-#             return
-#         dbs.append(db_name)
-#         self._peer.data[self.app]["external_databases"] = ",".join(dbs)
-
-#     def remove(self, db_name: typing.Optional[str]):
-#         """Remove the external database name to connect to."""
-#         if (dbs := self.get(db_name)) is None:
-#             return
-#         dbs.remove(db_name)
-#         self._peer.data[self.app]["external_databases"] = ",".join(dbs)
-#         if not dbs:
-#             del self._peer.data[self.app]["external_databases"]
-#             return
 
 
 class MySQLRouterCharm(ops.CharmBase, abc.ABC):
@@ -102,7 +61,6 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
             self.on[upgrade.PEER_RELATION_ENDPOINT_NAME].relation_created,
             self._upgrade_relation_created,
         )
-        # self.external_databases = _ExternalDatabases(self)
 
     @property
     @abc.abstractmethod
@@ -241,11 +199,6 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
             # `self._upgrade.is_compatible` should return `True` during first charm
             # installation/setup
             self._upgrade.set_versions_in_app_databag()
-
-    def _on_database_request(self, event: data_interfaces.DatabaseRequestedEvent) -> None:
-        if event.external_node_connectivity and self.is_leader():
-            self.external_databases.set(event.database)
-        self.reconcile(event=event)
 
     def reconcile(self, event=None) -> None:  # noqa: C901
         """Handle most events."""
