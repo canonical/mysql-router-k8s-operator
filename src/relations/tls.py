@@ -4,8 +4,6 @@
 """Relation to TLS certificate provider"""
 
 import base64
-import dataclasses
-import inspect
 import json
 import logging
 import re
@@ -15,6 +13,8 @@ import typing
 import charms.tls_certificates_interface.v1.tls_certificates as tls_certificates
 import ops
 
+import relations.secrets
+
 if typing.TYPE_CHECKING:
     import kubernetes_charm
 
@@ -23,90 +23,26 @@ logger = logging.getLogger(__name__)
 _PEER_RELATION_ENDPOINT_NAME = "mysql-router-peers"
 
 
-@dataclasses.dataclass
-class _UnitSecrets:
-    """Secrets for charm unit
-
-    Stored in peer unit databag (to support Juju 2.9)
-    """
-
-    _peer_unit_databag: ops.RelationDataContent
-
-    @staticmethod
-    def generate_private_key() -> str:
-        """Generate TLS private key."""
-        return tls_certificates.generate_private_key().decode("utf-8")
-
-    @property
-    def private_key(self) -> str:
-        """TLS private key
-
-        Generate & save key if it doesn't exist.
-        """
-        return self._peer_unit_databag.setdefault(
-            "secrets.tls_private_key", self.generate_private_key()
-        )
-
-    @private_key.setter
-    def private_key(self, value: str) -> None:
-        self._peer_unit_databag["secrets.tls_private_key"] = value
-
-
-class _PeerUnitDatabag:
-    """Peer relation unit databag"""
-
-    # CSR stands for certificate signing request
-    requested_csr: str
-    active_csr: str
-    certificate: str
-    ca: str  # Certificate authority
-    chain: str
-
-    def __init__(self, databag: ops.RelationDataContent) -> None:
-        # Cannot use `self._databag =` since this class overrides `__setattr__()`
-        super().__setattr__("_databag", databag)
-
-    @staticmethod
-    def _get_key(key: str) -> str:
-        """Create databag key by adding a 'tls_' prefix."""
-        return f"tls_{key}"
-
-    @property
-    def _attribute_names(self) -> typing.Iterable[str]:
-        """Class attributes with type annotation"""
-        return (name for name in inspect.get_annotations(type(self)))
-
-    def __getattr__(self, name: str) -> typing.Optional[str]:
-        assert name in self._attribute_names, f"Invalid attribute {name=}"
-        return self._databag.get(self._get_key(name))
-
-    def __setattr__(self, name: str, value: str) -> None:
-        assert name in self._attribute_names, f"Invalid attribute {name=}"
-        self._databag[self._get_key(name)] = value
-
-    def __delattr__(self, name: str) -> None:
-        assert name in self._attribute_names, f"Invalid attribute {name=}"
-        self._databag.pop(self._get_key(name), None)
-
-    def clear(self) -> None:
-        """Delete all items in databag."""
-        for name in self._attribute_names:
-            delattr(self, name)
-
-
-@dataclasses.dataclass(kw_only=True)
 class _Relation:
     """Relation to TLS certificate provider"""
 
-    _charm: "kubernetes_charm.KubernetesRouterCharm"
-    _interface: tls_certificates.TLSCertificatesRequiresV1
-    _peer_unit_databag: _PeerUnitDatabag
-    _unit_secrets: _UnitSecrets
+    def __init__(
+        self,
+        charm_: "kubernetes_charm.KubernetesRouterCharm",
+        interface: tls_certificates.TLSCertificatesRequiresV1,
+        secrets: relations.secrets.RelationSecrets,
+    ) -> None:
+        self._charm = charm_
+        self._interface = interface
+        self._secrets = secrets
 
     @property
     def certificate_saved(self) -> bool:
         """Whether a TLS certificate is available to use"""
-        for value in (self._peer_unit_databag.certificate, self._peer_unit_databag.ca):
+        for value in (
+            self._secrets.get_secret(relations.secrets.UNIT_SCOPE, "tls-certificate"),
+            self._secrets.get_secret(relations.secrets.UNIT_SCOPE, "tls-ca"),
+        ):
             if not value:
                 return False
         return True
@@ -114,39 +50,51 @@ class _Relation:
     @property
     def key(self) -> str:
         """The TLS private key"""
-        return self._unit_secrets.private_key
+        private_key = self._secrets.get_secret(relations.secrets.UNIT_SCOPE, "tls-private-key")
+        if not private_key:
+            private_key = self.generate_private_key()
+            self._secrets.set_secret(relations.secrets.UNIT_SCOPE, "tls-private-key", private_key)
+        return private_key
 
     @property
     def certificate(self) -> str:
         """The TLS certificate"""
-        return self._peer_unit_databag.certificate
+        return self._secrets.get_secret(relations.secrets.UNIT_SCOPE, "tls-certificate")
 
     @property
     def certificate_authority(self) -> str:
         """The TLS certificate authority"""
-        return self._peer_unit_databag.ca
+        return self._secrets.get_secret(relations.secrets.UNIT_SCOPE, "tls-ca")
 
     def save_certificate(self, event: tls_certificates.CertificateAvailableEvent) -> None:
         """Save TLS certificate in peer relation unit databag."""
         if (
             event.certificate_signing_request.strip()
-            != self._peer_unit_databag.requested_csr.strip()
+            != self._secrets.get_secret(relations.secrets.UNIT_SCOPE, "tls-requested-csr").strip()
         ):
             logger.warning("Unknown certificate received. Ignoring.")
             return
         if (
             self.certificate_saved
             and event.certificate_signing_request.strip()
-            == self._peer_unit_databag.active_csr.strip()
+            == self._secrets.get_secret(relations.secrets.UNIT_SCOPE, "tls-active-csr")
         ):
             # Workaround for https://github.com/canonical/tls-certificates-operator/issues/34
             logger.debug("TLS certificate already saved.")
             return
         logger.debug(f"Saving TLS certificate {event=}")
-        self._peer_unit_databag.certificate = event.certificate
-        self._peer_unit_databag.ca = event.ca
-        self._peer_unit_databag.chain = json.dumps(event.chain)
-        self._peer_unit_databag.active_csr = self._peer_unit_databag.requested_csr
+        self._secrets.set_secret(
+            relations.secrets.UNIT_SCOPE, "tls-certificate", event.certificate
+        )
+        self._secrets.set_secret(relations.secrets.UNIT_SCOPE, "tls-ca", event.ca)
+        self._secrets.set_secret(
+            relations.secrets.UNIT_SCOPE, "tls-chain", json.dumps(event.chain)
+        )
+        self._secrets.set_secret(
+            relations.secrets.UNIT_SCOPE,
+            "tls-active-csr",
+            self._secrets.get_secret(relations.secrets.UNIT_SCOPE, "tls-requested-csr"),
+        )
         logger.debug(f"Saved TLS certificate {event=}")
         self._charm.reconcile(event=None)
 
@@ -174,26 +122,41 @@ class _Relation:
             ],
         )
 
+    @staticmethod
+    def generate_private_key() -> str:
+        """Generate TLS private key."""
+        return tls_certificates.generate_private_key().decode("utf-8")
+
     def request_certificate_creation(self):
         """Request new TLS certificate from related provider charm."""
         logger.debug("Requesting TLS certificate creation")
-        csr = self._generate_csr(self._unit_secrets.private_key.encode("utf-8"))
+        csr = self._generate_csr(self.key.encode("utf-8"))
         self._interface.request_certificate_creation(certificate_signing_request=csr)
-        self._peer_unit_databag.requested_csr = csr.decode("utf-8")
+        self._secrets.set_secret(
+            relations.secrets.UNIT_SCOPE, "tls-requested-csr", csr.decode("utf-8")
+        )
         logger.debug(
-            f"Requested TLS certificate creation {self._peer_unit_databag.requested_csr=}"
+            f"Requested TLS certificate creation {self._secrets.get_secret(relations.secrets.UNIT_SCOPE, 'tls-requested-csr')=}"
         )
 
     def request_certificate_renewal(self):
         """Request TLS certificate renewal from related provider charm."""
-        logger.debug(f"Requesting TLS certificate renewal {self._peer_unit_databag.active_csr=}")
-        old_csr = self._peer_unit_databag.active_csr.encode("utf-8")
-        new_csr = self._generate_csr(self._unit_secrets.private_key.encode("utf-8"))
+        logger.debug(
+            f"Requesting TLS certificate renewal {self._secrets.get_secret(relations.secrets.UNIT_SCOPE, 'tls-active-csr')=}"
+        )
+        old_csr = self._secrets.get_secret(relations.secrets.UNIT_SCOPE, "tls-active-csr").encode(
+            "utf-8"
+        )
+        new_csr = self._generate_csr(self.key.encode("utf-8"))
         self._interface.request_certificate_renewal(
             old_certificate_signing_request=old_csr, new_certificate_signing_request=new_csr
         )
-        self._peer_unit_databag.requested_csr = new_csr.decode("utf-8")
-        logger.debug(f"Requested TLS certificate renewal {self._peer_unit_databag.requested_csr=}")
+        self._secrets.set_secret(
+            relations.secrets.UNIT_SCOPE, "tls-requested-csr", new_csr.decode("utf-8")
+        )
+        logger.debug(
+            f"Requested TLS certificate renewal {self._secrets.get_secret(relations.secrets.UNIT_SCOPE, 'tls-requested-csr')=}"
+        )
 
 
 class RelationEndpoint(ops.Object):
@@ -205,6 +168,18 @@ class RelationEndpoint(ops.Object):
         super().__init__(charm_, self.NAME)
         self._charm = charm_
         self._interface = tls_certificates.TLSCertificatesRequiresV1(self._charm, self.NAME)
+
+        self._secret_fields = [
+            "tls-requested-csr",
+            "tls-active-csr",
+            "tls-certificate",
+            "tls-ca",
+            "tls-chain",
+            "tls-private-key",
+        ]
+        self._secrets = relations.secrets.RelationSecrets(
+            charm_, self._interface.relationship_name, unit_secret_fields=self._secret_fields
+        )
 
         self.framework.observe(
             self._charm.on["set-tls-private-key"].action,
@@ -225,27 +200,13 @@ class RelationEndpoint(ops.Object):
         )
 
     @property
-    def _peer_unit_raw_databag(self) -> ops.RelationDataContent:
-        peer_relation = self._charm.model.get_relation(_PEER_RELATION_ENDPOINT_NAME)
-        return peer_relation.data[self._charm.unit]
-
-    @property
-    def _peer_unit_databag(self) -> _PeerUnitDatabag:
-        return _PeerUnitDatabag(self._peer_unit_raw_databag)
-
-    @property
-    def _unit_secrets(self) -> _UnitSecrets:
-        return _UnitSecrets(self._peer_unit_raw_databag)
-
-    @property
     def _relation(self) -> typing.Optional[_Relation]:
         if not self._charm.model.get_relation(self.NAME):
             return
         return _Relation(
-            _charm=self._charm,
-            _interface=self._interface,
-            _peer_unit_databag=self._peer_unit_databag,
-            _unit_secrets=self._unit_secrets,
+            charm_=self._charm,
+            interface=self._interface,
+            secrets=self._secrets,
         )
 
     @property
@@ -293,11 +254,11 @@ class RelationEndpoint(ops.Object):
         if key := event.params.get("internal-key"):
             key = self._parse_tls_key(key)
         else:
-            key = self._unit_secrets.generate_private_key()
+            key = self._relation.generate_private_key()
             event.log("No key provided. Generated new key.")
             logger.debug("No TLS key provided via action. Generated new key.")
-        self._unit_secrets.private_key = key
         event.log("Saved TLS private key")
+        self._secrets.set_secret(relations.secrets.UNIT_SCOPE, "tls-private-key", key)
         logger.debug("Saved TLS private key")
         if self._relation is None:
             event.log(
@@ -322,7 +283,8 @@ class RelationEndpoint(ops.Object):
     def _on_tls_relation_broken(self, _) -> None:
         """Delete TLS certificate."""
         logger.debug("Deleting TLS certificate")
-        self._peer_unit_databag.clear()
+        for secret_field in self._secret_fields:
+            self._secrets.set_secret(relations.secrets.UNIT_SCOPE, secret_field, None)
         self._charm.reconcile(event=None)
         logger.debug("Deleted TLS certificate")
 
@@ -332,7 +294,7 @@ class RelationEndpoint(ops.Object):
 
     def _on_certificate_expiring(self, event: tls_certificates.CertificateExpiringEvent) -> None:
         """Request the new certificate when old certificate is expiring."""
-        if event.certificate != self._peer_unit_databag.certificate:
+        if event.certificate != self.certificate:
             logger.warning("Unknown certificate expiring")
             return
 
