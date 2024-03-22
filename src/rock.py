@@ -95,7 +95,7 @@ class Rock(container.Container):
         service = self._container.get_services(self._SERVICE_NAME).get(self._SERVICE_NAME)
         if service is None:
             return False
-        return service.startup == ops.pebble.ServiceStartup.ENABLED
+        return service.is_running()
 
     @property
     def mysql_router_exporter_service_enabled(self) -> bool:
@@ -104,7 +104,7 @@ class Rock(container.Container):
         )
         if service is None:
             return False
-        return service.startup == ops.pebble.ServiceStartup.ENABLED
+        return service.is_running()
 
     def update_mysql_router_service(self, *, enabled: bool, tls: bool = None) -> None:
         super().update_mysql_router_service(enabled=enabled, tls=tls)
@@ -186,12 +186,9 @@ class Rock(container.Container):
         )
         self._container.add_layer(self._EXPORTER_SERVICE_NAME, layer, combine=True)
         # `self._container.replan()` does not stop services that have been disabled
-        # Use `start()` and `stop()` instead
+        # Use `restart()` and `stop()` instead
         if enabled:
-            if self.mysql_router_exporter_service_enabled:
-                self._container.restart(self._EXPORTER_SERVICE_NAME)
-            else:
-                self._container.start(self._EXPORTER_SERVICE_NAME)
+            self._container.restart(self._EXPORTER_SERVICE_NAME)
         else:
             self._container.stop(self._EXPORTER_SERVICE_NAME)
 

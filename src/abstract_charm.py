@@ -127,7 +127,9 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
         cos_relation_exists = self._cos.relation_exists and not self._cos.is_relation_breaking(
             event
         )
-        return self._cos.exporter_user_config if cos_relation_exists else None
+        if cos_relation_exists:
+            return self._cos.exporter_user_config
+        return None
 
     def get_workload(self, *, event):
         """MySQL Router workload"""
@@ -265,7 +267,7 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
             f"{isinstance(workload_, workload.AuthenticatedWorkload)=}, "
             f"{workload_.container_ready=}, "
             f"{self._database_requires.is_relation_breaking(event)=}, "
-            f"{self._upgrade.in_progress=}"
+            f"{self._upgrade.in_progress=}, "
             f"{self._cos.is_relation_breaking(event)=}"
         )
 
@@ -293,6 +295,7 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
                     tls=self._tls_certificate_saved,
                     unit_name=self.unit.name,
                     exporter_config=self._cos_exporter_config(event),
+                    event_is_cos_related=self._cos.is_relation_metrics_endpoint_related(event),
                     key=self._tls_key,
                     certificate=self._tls_certificate,
                     certificate_authority=self._tls_certificate_authority,
