@@ -1,7 +1,5 @@
 # MySQL Router K8s revision 96
-<sub>WIP</sub>
-
-> **WARNING**: release is in progress, the charm is available in 8.0/candidate only!!!
+<sub>March 22, 2024</sub>
 
 Dear community, this is to inform you that new MySQL Router K8s is published in `8.0/stable` [charmhub](https://charmhub.io/mysql-router-k8s?channel=8.0/stable) channel for Kubernetes.
 
