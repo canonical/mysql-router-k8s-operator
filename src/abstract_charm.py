@@ -91,12 +91,10 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
     def _logrotate(self) -> logrotate.LogRotate:
         """logrotate"""
 
-    @property
     @abc.abstractmethod
     def _read_write_endpoint(self, event=None) -> str:
         """MySQL Router read-write endpoint"""
 
-    @property
     @abc.abstractmethod
     def _read_only_endpoint(self, event=None) -> str:
         """MySQL Router read-only endpoint"""

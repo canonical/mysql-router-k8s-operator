@@ -94,13 +94,11 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         # Example: mysql-router-k8s.my-model.svc.cluster.local
         return f"{self.app.name}.{self.model_service_domain}"
 
-    @property
     def _read_write_endpoint(self, event=None) -> str:
         if self.is_exposed(event=event):
             return f"{self.get_k8s_node_ip()}:{self.node_port('rw')}"
         return f"{self._host}:{self._READ_WRITE_PORT}"
 
-    @property
     def _read_only_endpoint(self, event=None) -> str:
         if self.is_exposed(event=event):
             return f"{self.get_k8s_node_ip()}:{self.node_port('ro')}"
