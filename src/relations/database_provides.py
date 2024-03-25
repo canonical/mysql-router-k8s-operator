@@ -166,7 +166,6 @@ class RelationEndpoint:
         charm_.framework.observe(self._interface.on.database_requested, charm_.reconcile)
         charm_.framework.observe(charm_.on[self._NAME].relation_broken, charm_.reconcile)
 
-    @property
     def is_exposed(self, event=None) -> bool:
         """Whether the relation is exposed."""
         if event and isinstance(event, ops.RelationEvent):

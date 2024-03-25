@@ -67,7 +67,6 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
         Does NOT include relations where charm is principal
         """
 
-    @property
     def is_exposed(self, event=None) -> bool:
         return self._database_provides.is_exposed(event)
 
