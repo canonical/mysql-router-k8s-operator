@@ -24,9 +24,6 @@ import workload
 logger = logging.getLogger(__name__)
 
 
-PEER_RELATION_NAME = "mysql-router-peers"
-
-
 class MySQLRouterCharm(ops.CharmBase, abc.ABC):
     """MySQL Router charm"""
 
@@ -71,8 +68,8 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
         """
 
     @property
-    def is_exposed(self) -> bool:
-        return self._database_provides.is_exposed
+    def is_exposed(self, event=None) -> bool:
+        return self._database_provides.is_exposed(event)
 
     @property
     def _tls_certificate_saved(self) -> bool:
@@ -97,12 +94,12 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def _read_write_endpoint(self) -> str:
+    def _read_write_endpoint(self, event=None) -> str:
         """MySQL Router read-write endpoint"""
 
     @property
     @abc.abstractmethod
-    def _read_only_endpoint(self) -> str:
+    def _read_only_endpoint(self, event=None) -> str:
         """MySQL Router read-only endpoint"""
 
     def get_workload(self, *, event):
@@ -208,6 +205,7 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
         if not self._upgrade.versions_set:
             logger.debug("Peer relation not ready")
             return
+
         workload_ = self.get_workload(event=event)
         if self._upgrade.unit_state == "restarting":  # Kubernetes only
             if not self._upgrade.is_compatible:
@@ -255,8 +253,8 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
                 ):
                     self._database_provides.reconcile_users(
                         event=event,
-                        router_read_write_endpoint=self._read_write_endpoint,
-                        router_read_only_endpoint=self._read_only_endpoint,
+                        router_read_write_endpoint=self._read_write_endpoint(event),
+                        router_read_only_endpoint=self._read_only_endpoint(event),
                         shell=workload_.shell,
                     )
             if isinstance(workload_, workload.AuthenticatedWorkload) and workload_.container_ready:

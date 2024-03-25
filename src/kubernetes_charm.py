@@ -13,9 +13,8 @@ import typing
 import lightkube
 import lightkube.models.core_v1
 import lightkube.models.meta_v1
-import lightkube.resources.core_v1
+import lightkube.resources.core_v1 as core_v1
 import ops
-from lightkube.resources.core_v1 import Node, Pod, Service
 
 import abstract_charm
 import kubernetes_logrotate
@@ -35,13 +34,11 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
 
     _READ_WRITE_PORT = 6446
     _READ_ONLY_PORT = 6447
-    _SVC_NAME_READ_ONLY = "mysql-ro"
-    _SVC_NAME_READ_WRITE = "mysql-rw"
 
     def __init__(self, *args) -> None:
         super().__init__(*args)
-        self.namespace = self.model.name
-        self.client = lightkube.Client()
+        self._namespace = self.model.name
+        self._client = None
 
         self.framework.observe(self.on.install, self._on_install)
         self.framework.observe(
@@ -54,6 +51,12 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
     @property
     def _subordinate_relation_endpoint_names(self) -> typing.Optional[typing.Iterable[str]]:
         return
+
+    @property
+    def client(self) -> lightkube.Client:
+        if not self._client:
+            return lightkube.Client()
+        return self._client
 
     @property
     def tls_certificate_saved(self) -> bool:
@@ -92,15 +95,15 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         return f"{self.app.name}.{self.model_service_domain}"
 
     @property
-    def _read_write_endpoint(self) -> str:
-        if self.is_exposed:
-            return f"{self.get_k8s_node_ip()}:{self.node_port()}"
+    def _read_write_endpoint(self, event=None) -> str:
+        if self.is_exposed(event=event):
+            return f"{self.get_k8s_node_ip()}:{self.node_port('rw')}"
         return f"{self._host}:{self._READ_WRITE_PORT}"
 
     @property
-    def _read_only_endpoint(self) -> str:
-        if self.is_exposed:
-            return f"{self.get_k8s_node_ip()}:{self.node_port()}"
+    def _read_only_endpoint(self, event=None) -> str:
+        if self.is_exposed(event=event):
+            return f"{self.get_k8s_node_ip()}:{self.node_port('ro')}"
         return f"{self._host}:{self._READ_ONLY_PORT}"
 
     def _patch_service(self) -> None:
@@ -113,7 +116,7 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         client = lightkube.Client()
         pod0 = client.get(
             res=lightkube.resources.core_v1.Pod,
-            name=self.unit.name.replace("/", "-"),
+            name=self.app.name + "-0",
             namespace=self.model.name,
         )
         service = lightkube.resources.core_v1.Service(
@@ -128,17 +131,17 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
             spec=lightkube.models.core_v1.ServiceSpec(
                 ports=[
                     lightkube.models.core_v1.ServicePort(
-                        name=self._SVC_NAME_READ_WRITE,
+                        name="mysql-rw",
                         port=self._READ_WRITE_PORT,
-                        targetPort=self._READ_WRITE_PORT,  # Dummy value if we use NodePort
+                        targetPort=self._READ_WRITE_PORT,  # Value ignored if NodePort
                     ),
                     lightkube.models.core_v1.ServicePort(
-                        name=self._SVC_NAME_READ_ONLY,
+                        name="mysql-ro",
                         port=self._READ_ONLY_PORT,
-                        targetPort=self._READ_ONLY_PORT,  # Dummy value if we use NodePort
+                        targetPort=self._READ_ONLY_PORT,  # Value ignored if NodePort
                     ),
                 ],
-                type="NodePort" if self.is_exposed else "ClusterIP",
+                type="NodePort" if self.is_exposed() else "ClusterIP",
                 selector={"app.kubernetes.io/name": self.app.name},
             ),
         )
@@ -152,44 +155,51 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         )
         logger.debug("Patched k8s service")
 
+    def _get_node_name_for_pod(self) -> str:
+        """Return the node name for a given pod."""
+        pod = self.client.get(
+            core_v1.Pod, name=self.unit.name.replace("/", "-"), namespace=self._namespace
+        )
+        return pod.spec.nodeName
+
     # =======================
     #  Handlers
     # =======================
 
-    def _get_node_name_for_pod(self) -> str:
-        """Return the node name for a given pod."""
-        pod = self.client.get(Pod, name=self.unit.name.replace("/", "-"), namespace=self.namespace)
-        return pod.spec.nodeName
+    def reconcile(self, event=None) -> None:
+        if self.is_exposed(event=event) and self.unit.is_leader():
+            self._patch_service()
+        super().reconcile(event)
 
-    def get_k8s_node_ip(self) -> str:
+    def get_k8s_node_ip(self) -> typing.Optional[str]:
         """Return node IP."""
-        node = self.client.get(Node, name=self._get_node_name_for_pod(), namespace=self.namespace)
+        node = self.client.get(
+            core_v1.Node, name=self._get_node_name_for_pod(), namespace=self._namespace
+        )
         # [
         #    NodeAddress(address='192.168.0.228', type='InternalIP'),
         #    NodeAddress(address='example.com', type='Hostname')
         # ]
         # Remember that OpenStack, for example, will return an internal hostname, which is not
         # accessible from the outside. Give preference to ExternalIP, then InternalIP first
-        if addr := next(
-            (a.address for a in node.status.addresses if a.type == "ExternalIP"), None
-        ):
-            return addr
-        if addr := next(
-            (a.address for a in node.status.addresses if a.type == "InternalIP"), None
-        ):
-            return addr
-        if addr := next((a.address for a in node.status.addresses if a.type == "Hostname"), None):
-            return addr
+        # Separated, as we want to give preference to ExternalIP, InternalIP and then Hostname
+        for typ in ["ExternalIP", "InternalIP", "Hostname"]:
+            for a in node.status.addresses:
+                if a.type == typ:
+                    return a.address
         return None
 
-    def node_port(self, port_type="rw") -> int:
+    def node_port(self, port_type="rw") -> typing.Optional[int]:
         """Return node port."""
-        svc = self.client.get(Service, self.app.name, namespace=self.namespace)
-        if svc and svc.spec.type == "NodePort":
-            # svc.spec.ports
-            # [ServicePort(port=3306, appProtocol=None, name=None, nodePort=31438, protocol='TCP', targetPort=3306)]
-            # TODO: check if we are getting the right 3306 port
-            return svc.spec.ports[0].nodePort
+        service = self.client.get(core_v1.Service, self.app.name, namespace=self._namespace)
+        if not service or not service.spec.type == "NodePort":
+            return None
+        # svc.spec.ports
+        # [ServicePort(port=3306, appProtocol=None, name=None, nodePort=31438, protocol='TCP', targetPort=3306)]
+        port = self._READ_ONLY_PORT if port_type == "ro" else self._READ_WRITE_PORT
+        for svc_port in service.spec.ports:
+            if svc_port.port == port:
+                return svc_port.nodePort
         return None
 
     def _on_install(self, _) -> None:

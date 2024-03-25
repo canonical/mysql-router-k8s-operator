@@ -167,8 +167,15 @@ class RelationEndpoint:
         charm_.framework.observe(charm_.on[self._NAME].relation_broken, charm_.reconcile)
 
     @property
-    def is_exposed(self) -> bool:
+    def is_exposed(self, event=None) -> bool:
         """Whether the relation is exposed."""
+        if event and isinstance(event, ops.RelationEvent):
+            # We have a relation event, which may need to trigger a node-port change
+            # check if this relation only is exposed
+            return (
+                event.relation.data[event.relation.app].get("external-node-connectivity", "false")
+                == "true"
+            )
         return any(
             [
                 rel.data[rel.app].get("external-node-connectivity", "false") == "true"
