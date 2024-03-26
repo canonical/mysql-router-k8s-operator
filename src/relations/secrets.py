@@ -56,7 +56,7 @@ class RelationSecrets:
         elif scope == UNIT_SCOPE:
             return self._peer_relation_unit
 
-    def get_secret(self, scope: Scopes, key: str) -> typing.Optional[str]:
+    def get_value(self, scope: Scopes, key: str) -> typing.Optional[str]:
         """Get secret from the secret storage."""
         if scope not in typing.get_args(Scopes):
             raise ValueError("Unknown secret scope")
@@ -64,7 +64,7 @@ class RelationSecrets:
         peers = self._charm.model.get_relation(self._peer_relation_name)
         return self.peer_relation_data(scope).fetch_my_relation_field(peers.id, key)
 
-    def set_secret(
+    def set_value(
         self, scope: Scopes, key: str, value: typing.Optional[str]
     ) -> typing.Optional[str]:
         """Set secret from the secret storage."""
@@ -72,12 +72,12 @@ class RelationSecrets:
             raise ValueError("Unknown secret scope")
 
         if not value:
-            return self.remove_secret(scope, key)
+            return self._remove_value(scope, key)
 
         peers = self._charm.model.get_relation(self._peer_relation_name)
         self.peer_relation_data(scope).update_relation_data(peers.id, {key: value})
 
-    def remove_secret(self, scope: Scopes, key: str) -> None:
+    def _remove_value(self, scope: Scopes, key: str) -> None:
         """Removing a secret."""
         if scope not in typing.get_args(Scopes):
             raise ValueError("Unknown secret scope")

@@ -94,21 +94,21 @@ class COSRelation:
 
     def _get_monitoring_password(self) -> str:
         """Gets the monitoring password from unit peer data, or generate and cache it."""
-        monitoring_password = self._secrets.get_secret(
+        monitoring_password = self._secrets.get_value(
             relations.secrets.UNIT_SCOPE, self._MONITORING_PASSWORD_KEY
         )
         if monitoring_password:
             return monitoring_password
 
         monitoring_password = utils.generate_password()
-        self._secrets.set_secret(
+        self._secrets.set_value(
             relations.secrets.UNIT_SCOPE, self._MONITORING_PASSWORD_KEY, monitoring_password
         )
         return monitoring_password
 
     def _reset_monitoring_password(self) -> None:
         """Reset the monitoring password from unit peer data."""
-        self._secrets.set_secret(relations.secrets.UNIT_SCOPE, self._MONITORING_PASSWORD_KEY, None)
+        self._secrets.set_value(relations.secrets.UNIT_SCOPE, self._MONITORING_PASSWORD_KEY, None)
 
     def is_relation_breaking(self, event) -> bool:
         """Whether relation will be broken after the current event is handled."""
@@ -121,11 +121,11 @@ class COSRelation:
         )
 
     def _wait_until_http_server_authenticates(self) -> None:
-        """Wait until the router HTTP server authenticates with the monitoring credentials."""
+        """Wait until active connection with router HTTP server using monitoring credentials."""
         logger.debug("Waiting until router HTTP server authenticates")
         try:
             for attempt in tenacity.Retrying(
-                retry=tenacity.retry_if_exception_type(AssertionError)
+                retry=tenacity.retry_if_exception_type(RuntimeError)
                 | tenacity.retry_if_exception_type(requests.exceptions.HTTPError),
                 reraise=True,
                 stop=tenacity.stop_after_delay(30),
@@ -138,8 +138,10 @@ class COSRelation:
                         verify=False,  # do not verify tls certs as default certs do not have 127.0.0.1 in its list of IP SANs
                     )
                     response.raise_for_status()
+                    if "bootstrap_rw" not in response.text:
+                        raise RuntimeError("Invalid response from router's HTTP server")
                     assert "bootstrap_rw" in response.text
-        except (requests.exceptions.HTTPError, AssertionError):
+        except (requests.exceptions.HTTPError, RuntimeError):
             logger.exception("Unable to authenticate router HTTP server")
             raise
         else:

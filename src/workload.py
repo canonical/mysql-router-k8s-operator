@@ -151,11 +151,7 @@ class Workload:
             logger.debug("Disabled MySQL Router service")
 
         self._disable_exporter()
-
-        if tls:
-            self._enable_tls(key=key, certificate=certificate)
-        else:
-            self._disable_tls()
+        self._disable_tls()
 
     @property
     def status(self) -> typing.Optional[ops.StatusBase]:
@@ -230,7 +226,7 @@ class AuthenticatedWorkload(Workload):
             "--conf-set-option",
             "http_auth_backend:default_auth_backend.backend=file",
             "--conf-set-option",
-            f"http_auth_backend:default_auth_backend.filename={self._container.path(self._container.rest_api_credentials_file).relative_to_container}",
+            f"http_auth_backend:default_auth_backend.filename={self._container.rest_api_credentials_file.relative_to_container}",
             "--conf-use-gr-notifications",
         ]
 
@@ -319,7 +315,7 @@ class AuthenticatedWorkload(Workload):
                 "`key`, `certificate`, and `certificate_authority` arguments required when tls=True"
             )
 
-        # value changes based on whether tls is enabled or disabled
+        # self._custom_tls_enabled` will change after we enable or disable TL
         tls_was_enabled = self._custom_tls_enabled
         if tls:
             self._enable_tls(key=key, certificate=certificate)

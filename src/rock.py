@@ -95,7 +95,7 @@ class Rock(container.Container):
         service = self._container.get_services(self._SERVICE_NAME).get(self._SERVICE_NAME)
         if service is None:
             return False
-        return service.is_running()
+        return service.startup == ops.pebble.ServiceStartup.ENABLED
 
     @property
     def mysql_router_exporter_service_enabled(self) -> bool:
@@ -104,7 +104,7 @@ class Rock(container.Container):
         )
         if service is None:
             return False
-        return service.is_running()
+        return service.startup == ops.pebble.ServiceStartup.ENABLED
 
     def update_mysql_router_service(self, *, enabled: bool, tls: bool = None) -> None:
         super().update_mysql_router_service(enabled=enabled, tls=tls)
