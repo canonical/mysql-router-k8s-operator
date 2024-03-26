@@ -67,8 +67,8 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
         Does NOT include relations where charm is principal
         """
 
-    def is_exposed(self, event=None) -> bool:
-        return self._database_provides.is_exposed(event)
+    def is_exposed(self, relation=None) -> bool:
+        return self._database_provides.is_exposed(relation)
 
     @property
     def _tls_certificate_saved(self) -> bool:
@@ -92,11 +92,11 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
         """logrotate"""
 
     @abc.abstractmethod
-    def _read_write_endpoint(self, event=None) -> str:
+    def _read_write_endpoint(self, relation=None) -> str:
         """MySQL Router read-write endpoint"""
 
     @abc.abstractmethod
-    def _read_only_endpoint(self, event=None) -> str:
+    def _read_only_endpoint(self, relation=None) -> str:
         """MySQL Router read-only endpoint"""
 
     def get_workload(self, *, event):
@@ -250,8 +250,7 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
                 ):
                     self._database_provides.reconcile_users(
                         event=event,
-                        router_read_write_endpoint=self._read_write_endpoint(event),
-                        router_read_only_endpoint=self._read_only_endpoint(event),
+                        charm=self,
                         shell=workload_.shell,
                     )
             if isinstance(workload_, workload.AuthenticatedWorkload) and workload_.container_ready:

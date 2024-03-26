@@ -166,15 +166,12 @@ class RelationEndpoint:
         charm_.framework.observe(self._interface.on.database_requested, charm_.reconcile)
         charm_.framework.observe(charm_.on[self._NAME].relation_broken, charm_.reconcile)
 
-    def is_exposed(self, event=None) -> bool:
+    def is_exposed(self, relation=None) -> bool:
         """Whether the relation is exposed."""
-        if event and isinstance(event, ops.RelationEvent):
+        if relation:
             # We have a relation event, which may need to trigger a node-port change
             # check if this relation only is exposed
-            return (
-                event.relation.data[event.relation.app].get("external-node-connectivity", "false")
-                == "true"
-            )
+            return relation.data[relation.app].get("external-node-connectivity", "false") == "true"
         return any(
             [
                 rel.data[rel.app].get("external-node-connectivity", "false") == "true"
@@ -199,8 +196,7 @@ class RelationEndpoint:
         self,
         *,
         event,
-        router_read_write_endpoint: str,
-        router_read_only_endpoint: str,
+        charm: ops.charm.CharmBase,
         shell: mysql_shell.Shell,
     ) -> None:
         """Create requested users and delete inactive users.
@@ -209,9 +205,6 @@ class RelationEndpoint:
         created by this charm. Therefore, this charm does not need to delete users when that
         relation is broken.
         """
-        logger.debug(
-            f"Reconciling users {event=}, {router_read_write_endpoint=}, {router_read_only_endpoint=}"
-        )
         requested_users = []
         for relation in self._interface.relations:
             try:
@@ -228,18 +221,22 @@ class RelationEndpoint:
                 pass
         logger.debug(f"State of reconcile users {requested_users=}, {self._shared_users=}")
         for relation in requested_users:
+            logger.debug(
+                f"Reconciling users {event=}, {charm._read_write_endpoint(relation)=}, {charm._read_only_endpoint(relation)=}"
+            )
             if relation not in self._shared_users:
                 relation.create_database_and_user(
-                    router_read_write_endpoint=router_read_write_endpoint,
-                    router_read_only_endpoint=router_read_only_endpoint,
+                    router_read_write_endpoint=charm._read_write_endpoint(relation),
+                    router_read_only_endpoint=charm._read_only_endpoint(relation),
                     shell=shell,
                 )
+            logger.debug(
+                f"Reconciled users {event=}, {charm._read_write_endpoint(relation)=}, {charm._read_only_endpoint(relation)=}"
+            )
+
         for relation in self._shared_users:
             if relation not in requested_users:
                 relation.delete_user(shell=shell)
-        logger.debug(
-            f"Reconciled users {event=}, {router_read_write_endpoint=}, {router_read_only_endpoint=}"
-        )
 
     def delete_all_databags(self) -> None:
         """Remove connection information from all databags.
