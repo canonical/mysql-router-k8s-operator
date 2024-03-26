@@ -200,7 +200,10 @@ class RelationEndpoint:
         self,
         *,
         event,
-        charm: ops.charm.CharmBase,
+        router_read_write_endpoint: str,
+        router_read_only_endpoint: str,
+        exposed_read_write_endpoint: str,
+        exposed_read_only_endpoint: str,
         shell: mysql_shell.Shell,
     ) -> None:
         """Create requested users and delete inactive users.
@@ -226,18 +229,23 @@ class RelationEndpoint:
         logger.debug(f"State of reconcile users {requested_users=}, {self._shared_users=}")
         for request in requested_users:
             relation = request.relation
-            logger.debug(
-                f"Reconciling users {event=}, {charm._read_write_endpoint(relation)=}, {charm._read_only_endpoint(relation)=}"
-            )
             if request not in self._shared_users:
+                read_write_endpoint = (
+                    exposed_read_write_endpoint
+                    if self.is_exposed(relation)
+                    else router_read_write_endpoint
+                )
+                read_only_endpoint = (
+                    exposed_read_only_endpoint
+                    if self.is_exposed(relation)
+                    else router_read_only_endpoint
+                )
                 request.create_database_and_user(
-                    router_read_write_endpoint=charm._read_write_endpoint(relation),
-                    router_read_only_endpoint=charm._read_only_endpoint(relation),
+                    router_read_write_endpoint=read_write_endpoint,
+                    router_read_only_endpoint=read_only_endpoint,
                     shell=shell,
                 )
-            logger.debug(
-                f"Reconciled users {event=}, {charm._read_write_endpoint(relation)=}, {charm._read_only_endpoint(relation)=}"
-            )
+            logger.debug(f"Reconciled users {event=}")
 
         for relation in self._shared_users:
             if relation not in requested_users:

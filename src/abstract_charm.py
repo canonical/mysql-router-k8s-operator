@@ -92,11 +92,11 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
         """logrotate"""
 
     @abc.abstractmethod
-    def _read_write_endpoint(self, relation=None) -> str:
+    def _read_write_endpoint(self, relation=None, is_internal: bool = True) -> str:
         """MySQL Router read-write endpoint"""
 
     @abc.abstractmethod
-    def _read_only_endpoint(self, relation=None) -> str:
+    def _read_only_endpoint(self, relation=None, is_internal: bool = True) -> str:
         """MySQL Router read-only endpoint"""
 
     def get_workload(self, *, event):
@@ -250,7 +250,10 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
                 ):
                     self._database_provides.reconcile_users(
                         event=event,
-                        charm=self,
+                        router_read_write_endpoint=self._read_write_endpoint(),
+                        router_read_only_endpoint=self._read_only_endpoint(),
+                        exposed_read_write_endpoint=self._read_write_endpoint(is_internal=False),
+                        exposed_read_only_endpoint=self._read_only_endpoint(is_internal=False),
                         shell=workload_.shell,
                     )
             if isinstance(workload_, workload.AuthenticatedWorkload) and workload_.container_ready:

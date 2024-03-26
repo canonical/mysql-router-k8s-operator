@@ -98,13 +98,13 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         # Example: mysql-router-k8s.my-model.svc.cluster.local
         return f"{self.app.name}.{self.model_service_domain}"
 
-    def _read_write_endpoint(self, relation=None) -> str:
-        if self.is_exposed(relation=relation):
+    def _read_write_endpoint(self, relation=None, is_internal: bool = True) -> str:
+        if not is_internal and self.is_exposed(relation=relation):
             return f"{self.get_k8s_node_ip()}:{self.node_port('rw')}"
         return f"{self._host}:{self._READ_WRITE_PORT}"
 
-    def _read_only_endpoint(self, relation=None) -> str:
-        if self.is_exposed(relation=relation):
+    def _read_only_endpoint(self, relation=None, is_internal: bool = True) -> str:
+        if not is_internal and self.is_exposed(relation=relation):
             return f"{self.get_k8s_node_ip()}:{self.node_port('ro')}"
         return f"{self._host}:{self._READ_ONLY_PORT}"
 
@@ -181,6 +181,19 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
             # - The relation is broken: we need to verify if we should unexpose the service
             self._patch_service()
         super().reconcile(event)
+
+    def get_all_k8s_node_hostnames_and_ips(self) -> typing.Tuple[typing.List[str]]:
+        """Return all node hostnames and IPs registered in k8s."""
+        node = self.client.get(
+            core_v1.Node, name=self._get_node_name_for_pod(), namespace=self._namespace
+        )
+        hostnames, ips = [], []
+        for a in node.status.addresses:
+            if a.type in ["ExternalIP", "InternalIP"]:
+                ips.append(a.address)
+            elif a.type == "Hostname":
+                hostnames.append(a.address)
+        return hostnames, ips
 
     def get_k8s_node_ip(self) -> typing.Optional[str]:
         """Return node IP."""

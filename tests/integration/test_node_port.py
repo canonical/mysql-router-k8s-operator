@@ -15,7 +15,9 @@ from .helpers import (
     execute_queries_on_unit,
     get_inserted_data_by_application,
     get_server_config_credentials,
+    get_tls_ca,
     get_unit_address,
+    is_connection_possible,
 )
 
 logger = logging.getLogger(__name__)
@@ -24,10 +26,14 @@ METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 
 MYSQL_APP_NAME = "mysql-k8s"
 MYSQL_ROUTER_APP_NAME = "mysql-router-k8s"
+SELF_SIGNED_CERTIFICATE_NAME = "self-signed-certificates"
 APPLICATION_APP_NAME = "mysql-test-app"
 DATA_INTEGRATOR = "data-integrator"
 SLOW_TIMEOUT = 15 * 60
 MODEL_CONFIG = {"logging-config": "<root>=INFO;unit=DEBUG"}
+
+
+server_config_credentials = None
 
 
 @pytest.mark.group(1)
@@ -86,7 +92,6 @@ async def test_node_port_with_data_integrator(ops_test: OpsTest):
             lambda: ops_test.model.applications[MYSQL_ROUTER_APP_NAME].status == "blocked",
             timeout=SLOW_TIMEOUT,
         )
-
         logger.info("Relating mysql, mysqlrouter and application")
         # Relate the database with mysqlrouter
         await ops_test.model.relate(
@@ -96,10 +101,6 @@ async def test_node_port_with_data_integrator(ops_test: OpsTest):
         await ops_test.model.relate(
             f"{DATA_INTEGRATOR}:mysql", f"{MYSQL_ROUTER_APP_NAME}:database"
         )
-        await ops_test.model.wait_for_idle(
-            apps=[MYSQL_ROUTER_APP_NAME], status="active", timeout=SLOW_TIMEOUT
-        )
-
         # Relate mysqlrouter with application next
         await ops_test.model.relate(
             f"{APPLICATION_APP_NAME}:database", f"{MYSQL_ROUTER_APP_NAME}:database"
@@ -119,6 +120,8 @@ async def test_node_port_with_data_integrator(ops_test: OpsTest):
 
     mysql_unit = mysql_app.units[0]
     mysql_unit_address = await get_unit_address(ops_test, mysql_unit.name)
+
+    global server_config_credentials
     server_config_credentials = await get_server_config_credentials(mysql_unit)
 
     select_inserted_data_sql = [
@@ -154,3 +157,63 @@ async def test_node_port_with_data_integrator(ops_test: OpsTest):
         except subprocess.CalledProcessError as e:
             logger.error(f"Failed to get the unit info for {app_name}: {e.output}")
             raise
+
+
+@pytest.mark.group(1)
+@pytest.mark.abort_on_fail
+async def test_tls(ops_test: OpsTest):
+    """Test the database relation."""
+    # Build and deploy applications
+    logger.info(f"Deploying {SELF_SIGNED_CERTIFICATE_NAME}")
+    await ops_test.model.deploy(
+        SELF_SIGNED_CERTIFICATE_NAME,
+        application_name=SELF_SIGNED_CERTIFICATE_NAME,
+        series="jammy",
+        num_units=1,
+    )
+    await ops_test.model.wait_for_idle(
+        apps=[SELF_SIGNED_CERTIFICATE_NAME],
+        status="active",
+        raise_on_blocked=True,
+        timeout=SLOW_TIMEOUT,
+    )
+
+    asyncio.sleep(120)
+
+    async with ops_test.fast_forward():
+        # Relate the certificates with the other apps
+        await asyncio.gather(
+            ops_test.model.relate(
+                f"{APPLICATION_APP_NAME}", f"{SELF_SIGNED_CERTIFICATE_NAME}:certificates"
+            ),
+            ops_test.model.relate(
+                f"{MYSQL_ROUTER_APP_NAME}", f"{SELF_SIGNED_CERTIFICATE_NAME}:certificates"
+            ),
+        )
+        # Now, we should have one
+        await ops_test.model.wait_for_idle(
+            apps=[MYSQL_APP_NAME, MYSQL_ROUTER_APP_NAME, APPLICATION_APP_NAME, DATA_INTEGRATOR],
+            status="active",
+            raise_on_blocked=True,
+            timeout=SLOW_TIMEOUT,
+        )
+
+    # test for ca presence in a given unit
+    logger.info("Assert TLS file exists")
+    assert await get_tls_ca(
+        ops_test, MYSQL_ROUTER_APP_NAME + "/0"
+    ), "No CA found after TLS relation"
+
+    # After relating to only encrypted connection should be possible
+    logger.info("Asserting connections after relation")
+    unit_name = MYSQL_ROUTER_APP_NAME + "/0"
+    unit_ip = await get_unit_address(ops_test, unit_name)
+
+    global server_config_credentials
+    config = dict(server_config_credentials | {"host": unit_ip})
+    assert is_connection_possible(
+        config, **{"ssl_disabled": False}
+    ), f"Encrypted connection not possible to unit {unit_name} with enabled TLS"
+    assert not is_connection_possible(
+        config, **{"ssl_disabled": True}
+    ), f"Unencrypted connection possible to unit {unit_name} with enabled TLS"
