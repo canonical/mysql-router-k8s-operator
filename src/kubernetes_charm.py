@@ -169,7 +169,11 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
     # =======================
 
     def reconcile(self, event=None) -> None:
-        if self.is_exposed(event=event) and self.unit.is_leader():
+        if (
+            isinstance(event, ops.charm.RelationEvent)
+            and self.is_exposed(relation=event.relation)
+            and self.unit.is_leader()
+        ):
             self._patch_service()
         super().reconcile(event)
 
