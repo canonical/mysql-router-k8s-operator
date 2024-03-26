@@ -175,8 +175,6 @@ class RelationEndpoint:
     def is_exposed(self, relation=None) -> bool:
         """Whether the relation is exposed."""
         if relation:
-            # We have a relation event, which may need to trigger a node-port change
-            # check if this relation only is exposed
             return relation.data[relation.app].get("external-node-connectivity", "false") == "true"
         return any(
             [

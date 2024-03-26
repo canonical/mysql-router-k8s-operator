@@ -2,9 +2,9 @@
 # Copyright 2024 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-
 import asyncio
 import logging
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -133,3 +133,24 @@ async def test_node_port_with_data_integrator(ops_test: OpsTest):
 
     assert len(selected_data) > 0
     assert inserted_data == selected_data[0]
+
+    # Ensure the endpoints are set respectively to NodePort and ClusterIP for the data-integrator
+    # and the application-app
+    for app_name in [DATA_INTEGRATOR, APPLICATION_APP_NAME]:
+        try:
+            endpoint = yaml.safe_load(
+                subprocess.check_output(
+                    [
+                        "juju",
+                        "show-unit",
+                        f"{app_name}/0",
+                    ]
+                )
+            )[f"{app_name}/0"]["relation-info"][1]["application-data"]["endpoints"]
+            if app_name == DATA_INTEGRATOR:
+                assert "svc.cluster.local" not in endpoint
+            else:
+                assert "svc.cluster.local" in endpoint
+        except subprocess.CalledProcessError as e:
+            logger.error(f"Failed to get the unit info for {app_name}: {e.output}")
+            raise
