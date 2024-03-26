@@ -42,6 +42,12 @@ class _Relation:
 
     def __init__(self, *, relation: ops.Relation) -> None:
         self._id = relation.id
+        self._relation = relation
+
+    @property
+    def relation(self) -> ops.Relation:
+        """Relation to application charm"""
+        return self._relation
 
     def __eq__(self, other) -> bool:
         if not isinstance(other, _Relation):
@@ -220,12 +226,13 @@ class RelationEndpoint:
             ):
                 pass
         logger.debug(f"State of reconcile users {requested_users=}, {self._shared_users=}")
-        for relation in requested_users:
+        for request in requested_users:
+            relation = request.relation
             logger.debug(
                 f"Reconciling users {event=}, {charm._read_write_endpoint(relation)=}, {charm._read_only_endpoint(relation)=}"
             )
-            if relation not in self._shared_users:
-                relation.create_database_and_user(
+            if request not in self._shared_users:
+                request.create_database_and_user(
                     router_read_write_endpoint=charm._read_write_endpoint(relation),
                     router_read_only_endpoint=charm._read_only_endpoint(relation),
                     shell=shell,

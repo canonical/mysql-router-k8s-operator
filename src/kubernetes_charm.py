@@ -143,6 +143,7 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
                         targetPort=self._READ_ONLY_PORT,  # Value ignored if NodePort
                     ),
                 ],
+                # If all exposed services are removed, the NodePort will be removed
                 type="NodePort" if self.is_exposed() else "ClusterIP",
                 selector={"app.kubernetes.io/name": self.app.name},
             ),
@@ -174,6 +175,10 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
             and self.is_exposed(relation=event.relation)
             and self.unit.is_leader()
         ):
+            # This is going to be called in any of the following cases:
+            # - The relation is created: we need to verify if we should expose the service
+            # - The relation is updated: we need to verify if we should expose the service
+            # - The relation is broken: we need to verify if we should unexpose the service
             self._patch_service()
         super().reconcile(event)
 
