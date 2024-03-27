@@ -7,8 +7,6 @@ import typing
 from dataclasses import dataclass
 
 import ops
-import requests
-import tenacity
 from charms.grafana_k8s.v0.grafana_dashboard import GrafanaDashboardProvider
 from charms.loki_k8s.v0.loki_push_api import LogProxyConsumer
 from charms.prometheus_k8s.v0.prometheus_scrape import MetricsEndpointProvider
@@ -37,13 +35,13 @@ class COSRelation:
     """Relation with the cos bundle."""
 
     _EXPORTER_PORT = "49152"
-    _HTTP_SERVER_PORT = "8443"
+    HTTP_SERVER_PORT = "8443"
     _METRICS_RELATION_NAME = "metrics-endpoint"
     _LOGGING_RELATION_NAME = "logging"
     _PEER_RELATION_NAME = "cos"
     _ROUTER_LOG_FILE = "/var/log/mysqlrouter/mysqlrouter.log"
 
-    _MONITORING_USERNAME = "monitoring"
+    MONITORING_USERNAME = "monitoring"
     _MONITORING_PASSWORD_KEY = "monitoring-password"
 
     def __init__(self, charm_: "abstract_charm.MySQLRouterCharm", container_: container.Container):
@@ -82,9 +80,9 @@ class COSRelation:
     def exporter_user_config(self) -> ExporterConfig:
         """Returns user config needed for the router exporter service."""
         return ExporterConfig(
-            url=f"https://127.0.0.1:{self._HTTP_SERVER_PORT}",
-            username=self._MONITORING_USERNAME,
-            password=self._get_monitoring_password(),
+            url=f"https://127.0.0.1:{self.HTTP_SERVER_PORT}",
+            username=self.MONITORING_USERNAME,
+            password=self.get_monitoring_password(),
         )
 
     @property
@@ -92,7 +90,7 @@ class COSRelation:
         """Whether relation with cos exists."""
         return len(self._charm.model.relations.get(self._METRICS_RELATION_NAME, [])) == 1
 
-    def _get_monitoring_password(self) -> str:
+    def get_monitoring_password(self) -> str:
         """Gets the monitoring password from unit peer data, or generate and cache it."""
         monitoring_password = self._secrets.get_value(
             relations.secrets.UNIT_SCOPE, self._MONITORING_PASSWORD_KEY
@@ -119,50 +117,3 @@ class COSRelation:
             isinstance(event, ops.RelationBrokenEvent)
             and event.relation.id == self._charm.model.relations[self._METRICS_RELATION_NAME][0].id
         )
-
-    def _wait_until_http_server_authenticates(self) -> None:
-        """Wait until active connection with router HTTP server using monitoring credentials."""
-        logger.debug("Waiting until router HTTP server authenticates")
-        try:
-            for attempt in tenacity.Retrying(
-                retry=tenacity.retry_if_exception_type(RuntimeError)
-                | tenacity.retry_if_exception_type(requests.exceptions.HTTPError),
-                reraise=True,
-                stop=tenacity.stop_after_delay(30),
-                wait=tenacity.wait_fixed(5),
-            ):
-                with attempt:
-                    response = requests.get(
-                        f"https://127.0.0.1:{self._HTTP_SERVER_PORT}/api/20190715/routes",
-                        auth=(self._MONITORING_USERNAME, self._get_monitoring_password()),
-                        verify=False,  # do not verify tls certs as default certs do not have 127.0.0.1 in its list of IP SANs
-                    )
-                    response.raise_for_status()
-                    if "bootstrap_rw" not in response.text:
-                        raise RuntimeError("Invalid response from router's HTTP server")
-                    assert "bootstrap_rw" in response.text
-        except (requests.exceptions.HTTPError, RuntimeError):
-            logger.exception("Unable to authenticate router HTTP server")
-            raise
-        else:
-            logger.debug("Successfully authenticated router HTTP server")
-
-    def setup_monitoring_user(self) -> None:
-        """Set up a router REST API use for mysqlrouter exporter."""
-        logger.debug("Setting up router REST API user for mysqlrouter exporter")
-        self._container.set_mysql_router_rest_api_password(
-            user=self._MONITORING_USERNAME,
-            password=self._get_monitoring_password(),
-        )
-        self._wait_until_http_server_authenticates()
-        logger.debug("Set up router REST API user for mysqlrouter exporter")
-
-    def cleanup_monitoring_user(self) -> None:
-        """Clean up router REST API user for mysqlrouter exporter."""
-        logger.debug("Cleaning router REST API user for mysqlrouter exporter")
-        self._container.set_mysql_router_rest_api_password(
-            user=self._MONITORING_USERNAME,
-            password=None,
-        )
-        self._reset_monitoring_password()
-        logger.debug("Cleaned router REST API user for mysqlrouter exporter")

@@ -12,6 +12,8 @@ import string
 import typing
 
 import ops
+import requests
+import tenacity
 
 import container
 import mysql_shell
@@ -98,13 +100,23 @@ class Workload:
         """Whether custom TLS certs are enabled for MySQL Router"""
         return self._tls_key_file.exists() and self._tls_certificate_file.exists()
 
+    def cleanup_monitoring_user(self) -> None:
+        """Clean up router REST API user for mysqlrouter exporter."""
+        logger.debug("Cleaning router REST API user for mysqlrouter exporter")
+        self._container.set_mysql_router_rest_api_password(
+            user=self._cos.MONITORING_USERNAME,
+            password=None,
+        )
+        self._cos._reset_monitoring_password()
+        logger.debug("Cleaned router REST API user for mysqlrouter exporter")
+
     def _disable_exporter(self) -> None:
         """Stop and disable MySQL Router exporter service, keeping router enabled."""
         if not self._container.mysql_router_exporter_service_enabled:
             return
         logger.debug("Disabling MySQL Router exporter service")
-        self._cos.cleanup_monitoring_user()
         self._container.update_mysql_router_exporter_service(enabled=False)
+        self.cleanup_monitoring_user()
         logger.debug("Disabled MySQL Router exporter service")
 
     def _enable_tls(self, *, key: str, certificate: str) -> None:
@@ -315,7 +327,7 @@ class AuthenticatedWorkload(Workload):
                 "`key`, `certificate`, and `certificate_authority` arguments required when tls=True"
             )
 
-        # self._custom_tls_enabled` will change after we enable or disable TL
+        # self._custom_tls_enabled` will change after we enable or disable TLS
         tls_was_enabled = self._custom_tls_enabled
         if tls:
             self._enable_tls(key=key, certificate=certificate)
@@ -344,7 +356,7 @@ class AuthenticatedWorkload(Workload):
 
         if not self._container.mysql_router_exporter_service_enabled and exporter_config:
             logger.debug("Enabling MySQL Router exporter service")
-            self._cos.setup_monitoring_user()
+            self.setup_monitoring_user()
             self._container.update_mysql_router_exporter_service(
                 enabled=True,
                 config=exporter_config,
@@ -380,3 +392,39 @@ class AuthenticatedWorkload(Workload):
         if enabled:
             logger.debug("Re-enabling MySQL Router service after upgrade")
             self.enable(tls=tls, unit_name=unit.name)
+
+    def _wait_until_http_server_authenticates(self) -> None:
+        """Wait until active connection with router HTTP server using monitoring credentials."""
+        logger.debug("Waiting until router HTTP server authenticates")
+        try:
+            for attempt in tenacity.Retrying(
+                retry=tenacity.retry_if_exception_type(RuntimeError)
+                | tenacity.retry_if_exception_type(requests.exceptions.HTTPError),
+                reraise=True,
+                stop=tenacity.stop_after_delay(30),
+                wait=tenacity.wait_fixed(5),
+            ):
+                with attempt:
+                    response = requests.get(
+                        f"https://127.0.0.1:{self._cos.HTTP_SERVER_PORT}/api/20190715/routes",
+                        auth=(self._cos.MONITORING_USERNAME, self._cos.get_monitoring_password()),
+                        verify=False,  # do not verify tls certs as default certs do not have 127.0.0.1 in its list of IP SANs
+                    )
+                    response.raise_for_status()
+                    if "bootstrap_rw" not in response.text:
+                        raise RuntimeError("Invalid response from router's HTTP server")
+        except (requests.exceptions.HTTPError, RuntimeError):
+            logger.exception("Unable to authenticate router HTTP server")
+            raise
+        else:
+            logger.debug("Successfully authenticated router HTTP server")
+
+    def setup_monitoring_user(self) -> None:
+        """Set up a router REST API use for mysqlrouter exporter."""
+        logger.debug("Setting up router REST API user for mysqlrouter exporter")
+        self._container.set_mysql_router_rest_api_password(
+            user=self._cos.MONITORING_USERNAME,
+            password=self._cos.get_monitoring_password(),
+        )
+        self._wait_until_http_server_authenticates()
+        logger.debug("Set up router REST API user for mysqlrouter exporter")

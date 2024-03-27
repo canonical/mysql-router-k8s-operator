@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 _PEER_RELATION_ENDPOINT_NAME = "mysql-router-peers"
 
 
-def generate_private_key() -> str:
+def _generate_private_key() -> str:
     """Generate TLS private key."""
     return tls_certificates.generate_private_key().decode("utf-8")
 
@@ -53,7 +53,7 @@ class _Relation:
         """The TLS private key"""
         private_key = self._secrets.get_value(relations.secrets.UNIT_SCOPE, "tls-private-key")
         if not private_key:
-            private_key = generate_private_key()
+            private_key = _generate_private_key()
             self._secrets.set_value(relations.secrets.UNIT_SCOPE, "tls-private-key", private_key)
         return private_key
 
@@ -240,7 +240,7 @@ class RelationEndpoint(ops.Object):
         if key := event.params.get("internal-key"):
             key = self._parse_tls_key(key)
         else:
-            key = generate_private_key()
+            key = _generate_private_key()
             event.log("No key provided. Generated new key.")
             logger.debug("No TLS key provided via action. Generated new key.")
         self._secrets.set_value(relations.secrets.UNIT_SCOPE, "tls-private-key", key)
