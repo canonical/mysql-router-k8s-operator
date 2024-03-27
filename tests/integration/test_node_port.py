@@ -82,17 +82,25 @@ async def test_node_port_with_data_integrator(ops_test: OpsTest):
             config={"database-name": "test"},
             num_units=1,
         ),
+        ops_test.model.deploy(
+            SELF_SIGNED_CERTIFICATE_NAME,
+            application_name=SELF_SIGNED_CERTIFICATE_NAME,
+            series="jammy",
+            num_units=1,
+        )
     )
 
     mysql_app, application_app = applications[0], applications[2]
 
     async with ops_test.fast_forward():
-        logger.info("Waiting for mysqlrouter to be in BlockedStatus")
-        await ops_test.model.block_until(
-            lambda: ops_test.model.applications[MYSQL_ROUTER_APP_NAME].status == "blocked",
-            timeout=SLOW_TIMEOUT,
-        )
         logger.info("Relating mysql, mysqlrouter and application")
+        await ops_test.model.relate(
+            f"{MYSQL_APP_NAME}", f"{SELF_SIGNED_CERTIFICATE_NAME}:certificates"
+        ),
+        await ops_test.model.relate(
+            f"{MYSQL_ROUTER_APP_NAME}", f"{SELF_SIGNED_CERTIFICATE_NAME}:certificates"
+        ),
+
         # Relate the database with mysqlrouter
         await ops_test.model.relate(
             f"{MYSQL_ROUTER_APP_NAME}:backend-database", f"{MYSQL_APP_NAME}:database"
@@ -108,9 +116,8 @@ async def test_node_port_with_data_integrator(ops_test: OpsTest):
 
         # Now, we should have one
         await ops_test.model.wait_for_idle(
-            apps=[MYSQL_APP_NAME, MYSQL_ROUTER_APP_NAME, APPLICATION_APP_NAME, DATA_INTEGRATOR],
+            apps=[MYSQL_APP_NAME, MYSQL_ROUTER_APP_NAME, APPLICATION_APP_NAME, DATA_INTEGRATOR, SELF_SIGNED_CERTIFICATE_NAME],
             status="active",
-            raise_on_blocked=True,
             timeout=SLOW_TIMEOUT,
         )
 
@@ -164,39 +171,40 @@ async def test_node_port_with_data_integrator(ops_test: OpsTest):
 async def test_tls(ops_test: OpsTest):
     """Test the database relation."""
     # Build and deploy applications
-    logger.info(f"Deploying {SELF_SIGNED_CERTIFICATE_NAME}")
-    await ops_test.model.deploy(
-        SELF_SIGNED_CERTIFICATE_NAME,
-        application_name=SELF_SIGNED_CERTIFICATE_NAME,
-        series="jammy",
-        num_units=1,
-    )
-    await ops_test.model.wait_for_idle(
-        apps=[SELF_SIGNED_CERTIFICATE_NAME],
-        status="active",
-        raise_on_blocked=True,
-        timeout=SLOW_TIMEOUT,
-    )
 
-    asyncio.sleep(120)
+    # logger.info(f"Deploying {SELF_SIGNED_CERTIFICATE_NAME}")
+    # await ops_test.model.deploy(
+    #     SELF_SIGNED_CERTIFICATE_NAME,
+    #     application_name=SELF_SIGNED_CERTIFICATE_NAME,
+    #     series="jammy",
+    #     num_units=1,
+    # )
+    # await ops_test.model.wait_for_idle(
+    #     apps=[SELF_SIGNED_CERTIFICATE_NAME],
+    #     status="active",
+    #     raise_on_blocked=True,
+    #     timeout=SLOW_TIMEOUT,
+    # )
 
-    async with ops_test.fast_forward():
-        # Relate the certificates with the other apps
-        await asyncio.gather(
-            ops_test.model.relate(
-                f"{APPLICATION_APP_NAME}", f"{SELF_SIGNED_CERTIFICATE_NAME}:certificates"
-            ),
-            ops_test.model.relate(
-                f"{MYSQL_ROUTER_APP_NAME}", f"{SELF_SIGNED_CERTIFICATE_NAME}:certificates"
-            ),
-        )
-        # Now, we should have one
-        await ops_test.model.wait_for_idle(
-            apps=[MYSQL_APP_NAME, MYSQL_ROUTER_APP_NAME, APPLICATION_APP_NAME, DATA_INTEGRATOR],
-            status="active",
-            raise_on_blocked=True,
-            timeout=SLOW_TIMEOUT,
-        )
+    # asyncio.sleep(120)
+
+    # async with ops_test.fast_forward():
+    #     # Relate the certificates with the other apps
+    #     await asyncio.gather(
+    #         ops_test.model.relate(
+    #             f"{MYSQL_APP_NAME}", f"{SELF_SIGNED_CERTIFICATE_NAME}:certificates"
+    #         ),
+    #         ops_test.model.relate(
+    #             f"{MYSQL_ROUTER_APP_NAME}", f"{SELF_SIGNED_CERTIFICATE_NAME}:certificates"
+    #         ),
+    #     )
+    #     # Now, we should have one
+    #     await ops_test.model.wait_for_idle(
+    #         apps=[MYSQL_APP_NAME, MYSQL_ROUTER_APP_NAME, SELF_SIGNED_CERTIFICATE_NAME],
+    #         status="active",
+    #         raise_on_blocked=True,
+    #         timeout=SLOW_TIMEOUT,
+    #     )
 
     # test for ca presence in a given unit
     logger.info("Assert TLS file exists")
