@@ -186,8 +186,8 @@ async def test_node_port_and_clusterip_setup():
 @pytest.mark.abort_on_fail
 async def test_data_integrator(ops_test: OpsTest):
     """Test the nodeport."""
-    application_app = ops_test.model.applications.get(MYSQL_APP_NAME)
-    mysql_app = ops_test.model.applications.get(MYSQL_ROUTER_APP_NAME)
+    application_app = ops_test.model.applications.get(APPLICATION_APP_NAME)
+    mysql_app = ops_test.model.applications.get(MYSQL_APP_NAME)
 
     # Ensure that the data inserted by sample application is present in the database
     application_unit = application_app.units[0]
