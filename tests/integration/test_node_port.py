@@ -35,8 +35,8 @@ MODEL_CONFIG = {"logging-config": "<root>=INFO;unit=DEBUG"}
 
 @pytest.mark.group(1)
 @pytest.mark.abort_on_fail
-async def test_node_port_with_data_integrator(ops_test: OpsTest):
-    """Test the database relation."""
+async def test_build_and_deploy(ops_test: OpsTest):
+    """Test the deployment of the charm."""
     # Build and deploy applications
     mysqlrouter_charm = await ops_test.build_charm(".")
     await ops_test.model.set_config(MODEL_CONFIG)
@@ -46,7 +46,7 @@ async def test_node_port_with_data_integrator(ops_test: OpsTest):
     }
 
     logger.info("Deploying mysql, mysqlrouter and application")
-    applications = await asyncio.gather(
+    await asyncio.gather(
         ops_test.model.deploy(
             MYSQL_APP_NAME,
             channel="8.0/edge",
@@ -87,8 +87,6 @@ async def test_node_port_with_data_integrator(ops_test: OpsTest):
         ),
     )
 
-    mysql_app, application_app = applications[0], applications[2]
-
     async with ops_test.fast_forward():
         logger.info("Relating mysql, mysqlrouter and application")
         await ops_test.model.relate(
@@ -124,49 +122,6 @@ async def test_node_port_with_data_integrator(ops_test: OpsTest):
             timeout=SLOW_TIMEOUT,
         )
 
-    # Ensure that the data inserted by sample application is present in the database
-    application_unit = application_app.units[0]
-    inserted_data = await get_inserted_data_by_application(application_unit)
-
-    mysql_unit = mysql_app.units[0]
-    mysql_unit_address = await get_unit_address(ops_test, mysql_unit.name)
-
-    server_config_credentials = await get_server_config_credentials(mysql_unit)
-
-    select_inserted_data_sql = [
-        f"SELECT data FROM continuous_writes_database.random_data WHERE data = '{inserted_data}'",
-    ]
-    selected_data = await execute_queries_on_unit(
-        mysql_unit_address,
-        server_config_credentials["username"],
-        server_config_credentials["password"],
-        select_inserted_data_sql,
-    )
-
-    assert len(selected_data) > 0
-    assert inserted_data == selected_data[0]
-
-    # Ensure the endpoints are set respectively to NodePort and ClusterIP for the data-integrator
-    # and the application-app
-    for app_name in [DATA_INTEGRATOR, APPLICATION_APP_NAME]:
-        try:
-            endpoint = yaml.safe_load(
-                subprocess.check_output(
-                    [
-                        "juju",
-                        "show-unit",
-                        f"{app_name}/0",
-                    ]
-                )
-            )[f"{app_name}/0"]["relation-info"][1]["application-data"]["endpoints"]
-            if app_name == DATA_INTEGRATOR:
-                assert "svc.cluster.local" not in endpoint
-            else:
-                assert "svc.cluster.local" in endpoint
-        except subprocess.CalledProcessError as e:
-            logger.error(f"Failed to get the unit info for {app_name}: {e.output}")
-            raise
-
 
 @pytest.mark.group(1)
 @pytest.mark.abort_on_fail
@@ -195,3 +150,63 @@ async def test_tls(ops_test: OpsTest):
     assert is_connection_possible(
         config, **extra_opts
     ), f"Encryption enabled - connection not possible to unit {MYSQL_ROUTER_APP_NAME}/0"
+
+
+@pytest.mark.group(1)
+@pytest.mark.abort_on_fail
+async def test_node_port_and_clusterip_setup():
+    """Test the nodeport."""
+    for app_name in [DATA_INTEGRATOR, APPLICATION_APP_NAME]:
+        try:
+            relation_info = yaml.safe_load(
+                subprocess.check_output(
+                    [
+                        "juju",
+                        "show-unit",
+                        f"{app_name}/0",
+                    ]
+                )
+            )[f"{app_name}/0"]["relation-info"]
+            if app_name == DATA_INTEGRATOR:
+                endpoint = list(filter(lambda x: x["endpoint"] == "mysql", relation_info))[0][
+                    "application-data"
+                ]["endpoints"]
+                assert "svc.cluster.local" not in endpoint
+            else:
+                endpoint = list(filter(lambda x: x["endpoint"] == "database", relation_info))[0][
+                    "application-data"
+                ]["endpoints"]
+                assert "svc.cluster.local" in endpoint
+        except subprocess.CalledProcessError as e:
+            logger.error(f"Failed to get the unit info for {app_name}: {e.output}")
+            raise
+
+
+@pytest.mark.group(1)
+@pytest.mark.abort_on_fail
+async def test_data_integrator(ops_test: OpsTest):
+    """Test the nodeport."""
+    application_app = ops_test.model.applications.get(MYSQL_APP_NAME)
+    mysql_app = ops_test.model.applications.get(MYSQL_ROUTER_APP_NAME)
+
+    # Ensure that the data inserted by sample application is present in the database
+    application_unit = application_app.units[0]
+    inserted_data = await get_inserted_data_by_application(application_unit)
+
+    mysql_unit = mysql_app.units[0]
+    mysql_unit_address = await get_unit_address(ops_test, mysql_unit.name)
+
+    server_config_credentials = await get_server_config_credentials(mysql_unit)
+
+    select_inserted_data_sql = [
+        f"SELECT data FROM continuous_writes_database.random_data WHERE data = '{inserted_data}'",
+    ]
+    selected_data = await execute_queries_on_unit(
+        mysql_unit_address,
+        server_config_credentials["username"],
+        server_config_credentials["password"],
+        select_inserted_data_sql,
+    )
+
+    assert len(selected_data) > 0
+    assert inserted_data == selected_data[0]
