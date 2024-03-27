@@ -11,6 +11,7 @@ import pytest
 import yaml
 from pytest_operator.plugin import OpsTest
 
+from . import markers
 from .helpers import (
     execute_queries_on_unit,
     get_inserted_data_by_application,
@@ -35,6 +36,7 @@ MODEL_CONFIG = {"logging-config": "<root>=INFO;unit=DEBUG"}
 
 @pytest.mark.group(1)
 @pytest.mark.abort_on_fail
+@markers.skip_juju_2_9
 async def test_build_and_deploy(ops_test: OpsTest):
     """Test the deployment of the charm."""
     # Build and deploy applications
@@ -125,6 +127,7 @@ async def test_build_and_deploy(ops_test: OpsTest):
 
 @pytest.mark.group(1)
 @pytest.mark.abort_on_fail
+@markers.skip_juju_2_9
 async def test_tls(ops_test: OpsTest):
     """Test the database relation."""
     logger.info("Assert TLS file exists")
@@ -154,6 +157,7 @@ async def test_tls(ops_test: OpsTest):
 
 @pytest.mark.group(1)
 @pytest.mark.abort_on_fail
+@markers.skip_juju_2_9
 async def test_node_port_and_clusterip_setup():
     """Test the nodeport."""
     for app_name in [DATA_INTEGRATOR, APPLICATION_APP_NAME]:
@@ -184,6 +188,7 @@ async def test_node_port_and_clusterip_setup():
 
 @pytest.mark.group(1)
 @pytest.mark.abort_on_fail
+@markers.skip_juju_2_9
 async def test_data_integrator(ops_test: OpsTest):
     """Test the nodeport."""
     application_app = ops_test.model.applications.get(APPLICATION_APP_NAME)
