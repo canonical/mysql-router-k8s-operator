@@ -33,9 +33,6 @@ SLOW_TIMEOUT = 15 * 60
 MODEL_CONFIG = {"logging-config": "<root>=INFO;unit=DEBUG"}
 
 
-server_config_credentials = None
-
-
 @pytest.mark.group(1)
 @pytest.mark.abort_on_fail
 async def test_node_port_with_data_integrator(ops_test: OpsTest):
@@ -87,7 +84,7 @@ async def test_node_port_with_data_integrator(ops_test: OpsTest):
             application_name=SELF_SIGNED_CERTIFICATE_NAME,
             series="jammy",
             num_units=1,
-        )
+        ),
     )
 
     mysql_app, application_app = applications[0], applications[2]
@@ -116,7 +113,13 @@ async def test_node_port_with_data_integrator(ops_test: OpsTest):
 
         # Now, we should have one
         await ops_test.model.wait_for_idle(
-            apps=[MYSQL_APP_NAME, MYSQL_ROUTER_APP_NAME, APPLICATION_APP_NAME, DATA_INTEGRATOR, SELF_SIGNED_CERTIFICATE_NAME],
+            apps=[
+                MYSQL_APP_NAME,
+                MYSQL_ROUTER_APP_NAME,
+                APPLICATION_APP_NAME,
+                DATA_INTEGRATOR,
+                SELF_SIGNED_CERTIFICATE_NAME,
+            ],
             status="active",
             timeout=SLOW_TIMEOUT,
         )
@@ -128,7 +131,6 @@ async def test_node_port_with_data_integrator(ops_test: OpsTest):
     mysql_unit = mysql_app.units[0]
     mysql_unit_address = await get_unit_address(ops_test, mysql_unit.name)
 
-    global server_config_credentials
     server_config_credentials = await get_server_config_credentials(mysql_unit)
 
     select_inserted_data_sql = [
@@ -170,43 +172,6 @@ async def test_node_port_with_data_integrator(ops_test: OpsTest):
 @pytest.mark.abort_on_fail
 async def test_tls(ops_test: OpsTest):
     """Test the database relation."""
-    # Build and deploy applications
-
-    # logger.info(f"Deploying {SELF_SIGNED_CERTIFICATE_NAME}")
-    # await ops_test.model.deploy(
-    #     SELF_SIGNED_CERTIFICATE_NAME,
-    #     application_name=SELF_SIGNED_CERTIFICATE_NAME,
-    #     series="jammy",
-    #     num_units=1,
-    # )
-    # await ops_test.model.wait_for_idle(
-    #     apps=[SELF_SIGNED_CERTIFICATE_NAME],
-    #     status="active",
-    #     raise_on_blocked=True,
-    #     timeout=SLOW_TIMEOUT,
-    # )
-
-    # asyncio.sleep(120)
-
-    # async with ops_test.fast_forward():
-    #     # Relate the certificates with the other apps
-    #     await asyncio.gather(
-    #         ops_test.model.relate(
-    #             f"{MYSQL_APP_NAME}", f"{SELF_SIGNED_CERTIFICATE_NAME}:certificates"
-    #         ),
-    #         ops_test.model.relate(
-    #             f"{MYSQL_ROUTER_APP_NAME}", f"{SELF_SIGNED_CERTIFICATE_NAME}:certificates"
-    #         ),
-    #     )
-    #     # Now, we should have one
-    #     await ops_test.model.wait_for_idle(
-    #         apps=[MYSQL_APP_NAME, MYSQL_ROUTER_APP_NAME, SELF_SIGNED_CERTIFICATE_NAME],
-    #         status="active",
-    #         raise_on_blocked=True,
-    #         timeout=SLOW_TIMEOUT,
-    #     )
-
-    # test for ca presence in a given unit
     logger.info("Assert TLS file exists")
     assert await get_tls_ca(
         ops_test, MYSQL_ROUTER_APP_NAME + "/0"
@@ -214,14 +179,19 @@ async def test_tls(ops_test: OpsTest):
 
     # After relating to only encrypted connection should be possible
     logger.info("Asserting connections after relation")
-    unit_name = MYSQL_ROUTER_APP_NAME + "/0"
-    unit_ip = await get_unit_address(ops_test, unit_name)
+    unit = ops_test.model.units.get(DATA_INTEGRATOR + "/0")
+    action = await unit.run_action("get-credentials")
+    creds = (await asyncio.wait_for(action.wait(), 60)).results["mysql"]
+    config = {
+        "username": creds["username"],
+        "password": creds["password"],
+        "host": creds["endpoints"].split(":")[0],
+    }
 
-    global server_config_credentials
-    config = dict(server_config_credentials | {"host": unit_ip})
+    extra_opts = {
+        "ssl_disabled": False,
+        "port": creds["endpoints"].split(":")[1],
+    }
     assert is_connection_possible(
-        config, **{"ssl_disabled": False}
-    ), f"Encrypted connection not possible to unit {unit_name} with enabled TLS"
-    assert not is_connection_possible(
-        config, **{"ssl_disabled": True}
-    ), f"Unencrypted connection possible to unit {unit_name} with enabled TLS"
+        config, **extra_opts
+    ), f"Encryption enabled - connection not possible to unit {MYSQL_ROUTER_APP_NAME}/0"

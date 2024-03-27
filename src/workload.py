@@ -34,6 +34,10 @@ class _NoQuorum(server_exceptions.Error):
         super().__init__(ops.WaitingStatus(self.MESSAGE))
 
 
+class WorkloadNotReadyError(Exception):
+    """Workload not ready"""
+
+
 class Workload:
     """MySQL Router workload"""
 
@@ -103,10 +107,15 @@ class Workload:
     def enable_tls(self, *, key: str, certificate: str):
         """Enable TLS."""
         logger.debug("Enabling TLS")
-        self._container.tls_config_file.write_text(self._tls_config_file_data)
-        self._tls_key_file.write_text(key)
-        self._tls_certificate_file.write_text(certificate)
-        logger.debug("Enabled TLS")
+        try:
+            self._container.tls_config_file.write_text(self._tls_config_file_data)
+            self._tls_key_file.write_text(key)
+            self._tls_certificate_file.write_text(certificate)
+        except ops.pebble.ConnectionError as e:
+            if "No such file or directory" in e.reason:
+                logger.warning(f"Seems the workload is not ready yet: {e}")
+                raise WorkloadNotReadyError
+            raise
 
     def disable_tls(self) -> None:
         """Disable TLS."""

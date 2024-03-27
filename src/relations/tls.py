@@ -18,6 +18,8 @@ import ops
 if typing.TYPE_CHECKING:
     import kubernetes_charm
 
+import workload
+
 logger = logging.getLogger(__name__)
 
 _PEER_RELATION_ENDPOINT_NAME = "mysql-router-peers"
@@ -133,10 +135,14 @@ class _Relation:
         self._peer_unit_databag.chain = json.dumps(event.chain)
         self._peer_unit_databag.active_csr = self._peer_unit_databag.requested_csr
         logger.debug(f"Saved TLS certificate {event=}")
-        self._charm.get_workload(event=None).enable_tls(
-            key=self._unit_secrets.private_key,
-            certificate=self._peer_unit_databag.certificate,
-        )
+        try:
+            self._charm.get_workload(event=None).enable_tls(
+                key=self._unit_secrets.private_key,
+                certificate=self._peer_unit_databag.certificate,
+            )
+        except workload.WorkloadNotReadyError:
+            event.defer()
+            return
 
     def _generate_csr(self, key: bytes) -> bytes:
         """Generate certificate signing request (CSR)."""

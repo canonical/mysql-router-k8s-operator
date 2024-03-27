@@ -378,7 +378,6 @@ def is_connection_possible(credentials: Dict, **extra_opts) -> bool:
         "connection_timeout": 10,
         **extra_opts,
     }
-
     try:
         with MySQLConnector(config) as cursor:
             cursor.execute("SELECT 1")
