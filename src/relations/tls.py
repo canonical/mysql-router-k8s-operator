@@ -18,6 +18,8 @@ import ops
 if typing.TYPE_CHECKING:
     import kubernetes_charm
 
+import workload
+
 logger = logging.getLogger(__name__)
 
 _PEER_RELATION_ENDPOINT_NAME = "mysql-router-peers"
@@ -133,14 +135,19 @@ class _Relation:
         self._peer_unit_databag.chain = json.dumps(event.chain)
         self._peer_unit_databag.active_csr = self._peer_unit_databag.requested_csr
         logger.debug(f"Saved TLS certificate {event=}")
-        self._charm.get_workload(event=None).enable_tls(
-            key=self._unit_secrets.private_key,
-            certificate=self._peer_unit_databag.certificate,
-        )
+        try:
+            self._charm.get_workload(event=None).enable_tls(
+                key=self._unit_secrets.private_key,
+                certificate=self._peer_unit_databag.certificate,
+            )
+        except workload.WorkloadNotReadyError:
+            event.defer()
+            return
 
     def _generate_csr(self, key: bytes) -> bytes:
         """Generate certificate signing request (CSR)."""
         unit_name = self._charm.unit.name.replace("/", "-")
+        extra_hosts, extra_ips = self._charm.get_all_k8s_node_hostnames_and_ips()
         return tls_certificates.generate_csr(
             private_key=key,
             subject=socket.getfqdn(),
@@ -155,10 +162,12 @@ class _Relation:
                 f"{unit_name}.{self._charm.app.name}.{self._charm.model_service_domain}",
                 self._charm.app.name,
                 f"{self._charm.app.name}.{self._charm.model_service_domain}",
-            ],
+            ]
+            + extra_hosts,
             sans_ip=[
                 str(self._charm.model.get_binding("juju-info").network.bind_address),
-            ],
+            ]
+            + extra_ips,
         )
 
     def request_certificate_creation(self):

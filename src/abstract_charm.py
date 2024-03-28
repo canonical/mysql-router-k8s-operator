@@ -67,6 +67,9 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
         Does NOT include relations where charm is principal
         """
 
+    def is_exposed(self, relation=None) -> bool:
+        return self._database_provides.is_exposed(relation)
+
     @property
     def _tls_certificate_saved(self) -> bool:
         """Whether a TLS certificate is available to use"""
@@ -88,14 +91,12 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
     def _logrotate(self) -> logrotate.LogRotate:
         """logrotate"""
 
-    @property
     @abc.abstractmethod
-    def _read_write_endpoint(self) -> str:
+    def _read_write_endpoint(self, relation=None, is_internal: bool = True) -> str:
         """MySQL Router read-write endpoint"""
 
-    @property
     @abc.abstractmethod
-    def _read_only_endpoint(self) -> str:
+    def _read_only_endpoint(self, relation=None, is_internal: bool = True) -> str:
         """MySQL Router read-only endpoint"""
 
     def get_workload(self, *, event):
@@ -201,6 +202,7 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
         if not self._upgrade.versions_set:
             logger.debug("Peer relation not ready")
             return
+
         workload_ = self.get_workload(event=event)
         if self._upgrade.unit_state == "restarting":  # Kubernetes only
             if not self._upgrade.is_compatible:
@@ -248,8 +250,10 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
                 ):
                     self._database_provides.reconcile_users(
                         event=event,
-                        router_read_write_endpoint=self._read_write_endpoint,
-                        router_read_only_endpoint=self._read_only_endpoint,
+                        router_read_write_endpoint=self._read_write_endpoint(),
+                        router_read_only_endpoint=self._read_only_endpoint(),
+                        exposed_read_write_endpoint=self._read_write_endpoint(is_internal=False),
+                        exposed_read_only_endpoint=self._read_only_endpoint(is_internal=False),
                         shell=workload_.shell,
                     )
             if isinstance(workload_, workload.AuthenticatedWorkload) and workload_.container_ready:

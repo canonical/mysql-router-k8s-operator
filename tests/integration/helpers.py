@@ -2,14 +2,24 @@
 # See LICENSE file for licensing details.
 
 import itertools
+import json
 import subprocess
 import tempfile
 from typing import Dict, List
 
 import mysql.connector
+import yaml
 from juju.unit import Unit
+from mysql.connector.errors import (
+    DatabaseError,
+    InterfaceError,
+    OperationalError,
+    ProgrammingError,
+)
 from pytest_operator.plugin import OpsTest
-from tenacity import Retrying, stop_after_attempt, wait_fixed
+from tenacity import Retrying, retry, stop_after_attempt, wait_fixed
+
+from .connector import MySQLConnector
 
 SERVER_CONFIG_USERNAME = "serverconfig"
 CONTAINER_NAME = "mysql-router"
@@ -350,3 +360,54 @@ async def rotate_mysqlrouter_logs(ops_test: OpsTest, unit_name: str) -> None:
         ],
         check=True,
     )
+
+
+@retry(stop=stop_after_attempt(8), wait=wait_fixed(15), reraise=True)
+def is_connection_possible(credentials: Dict, **extra_opts) -> bool:
+    """Test a connection to a MySQL server.
+
+    Args:
+        credentials: A dictionary with the credentials to test
+        extra_opts: extra options for mysql connection
+    """
+    config = {
+        "user": credentials["username"],
+        "password": credentials["password"],
+        "host": credentials["host"],
+        "raise_on_warnings": False,
+        "connection_timeout": 10,
+        **extra_opts,
+    }
+    try:
+        with MySQLConnector(config) as cursor:
+            cursor.execute("SELECT 1")
+            return cursor.fetchone()[0] == 1
+    except (DatabaseError, InterfaceError, OperationalError, ProgrammingError):
+        # Errors raised when the connection is not possible
+        return False
+
+
+async def get_tls_ca(
+    ops_test: OpsTest,
+    unit_name: str,
+) -> str:
+    """Returns the TLS CA used by the unit.
+
+    Args:
+        ops_test: The ops test framework instance
+        unit_name: The name of the unit
+
+    Returns:
+        TLS CA or an empty string if there is no CA.
+    """
+    raw_data = (await ops_test.juju("show-unit", unit_name))[1]
+    if not raw_data:
+        raise ValueError(f"no unit info could be grabbed for {unit_name}")
+    data = yaml.safe_load(raw_data)
+    # Filter the data based on the relation name.
+    relation_data = [
+        v for v in data[unit_name]["relation-info"] if v["endpoint"] == "certificates"
+    ]
+    if len(relation_data) == 0:
+        return ""
+    return json.loads(relation_data[0]["application-data"]["certificates"])[0].get("ca")
