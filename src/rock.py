@@ -143,11 +143,18 @@ class Rock(container.Container):
         enabled: bool,
         config: "relations.cos.ExporterConfig" = None,
         tls: bool = None,
-        key: str = None,
-        certificate: str = None,
-        certificate_authority: str = None,
+        key_filename: str = None,
+        certificate_filename: str = None,
+        certificate_authority_filename: str = None,
     ) -> None:
-        super().update_mysql_router_exporter_service(enabled=enabled, config=config)
+        super().update_mysql_router_exporter_service(
+            enabled=enabled,
+            config=config,
+            tls=tls,
+            key_filename=key_filename,
+            certificate_filename=certificate_filename,
+            certificate_authority_filename=certificate_authority_filename,
+        )
 
         if enabled:
             startup = ops.pebble.ServiceStartup.ENABLED.value
@@ -160,9 +167,9 @@ class Rock(container.Container):
             if tls:
                 environment.update(
                     {
-                        "MYSQLROUTER_TLS_CACERT_PATH": certificate_authority,
-                        "MYSQLROUTER_TLS_CERT_PATH": certificate,
-                        "MYSQLROUTER_TLS_KEY_PATH": key,
+                        "MYSQLROUTER_TLS_CACERT_PATH": certificate_authority_filename,
+                        "MYSQLROUTER_TLS_CERT_PATH": certificate_filename,
+                        "MYSQLROUTER_TLS_KEY_PATH": key_filename,
                     }
                 )
         else:

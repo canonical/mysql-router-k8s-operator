@@ -155,14 +155,7 @@ class RelationEndpoint(ops.Object):
         self._charm = charm_
         self._interface = tls_certificates.TLSCertificatesRequiresV1(self._charm, self.NAME)
 
-        self._secret_fields = [
-            "tls-requested-csr",
-            "tls-active-csr",
-            "tls-certificate",
-            "tls-ca",
-            "tls-chain",
-            "tls-private-key",
-        ]
+        self._secret_fields = ["tls-private-key"]
         self._secrets = relations.secrets.RelationSecrets(
             charm_, self._interface.relationship_name, unit_secret_fields=self._secret_fields
         )
@@ -190,9 +183,9 @@ class RelationEndpoint(ops.Object):
         if not self._charm.model.get_relation(self.NAME):
             return
         return _Relation(
-            charm_=self._charm,
-            interface=self._interface,
-            secrets=self._secrets,
+            _charm=self._charm,
+            _interface=self._interface,
+            _secrets=self._secrets,
         )
 
     @property

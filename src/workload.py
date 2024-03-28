@@ -55,6 +55,9 @@ class Workload:
         self._tls_certificate_file = (
             self._container.router_config_directory / "custom-certificate.pem"
         )
+        self._tls_certificate_authority_file = (
+            self._container.router_config_directory / "custom-certificate-authority.pem"
+        )
 
     @property
     def container_ready(self) -> bool:
@@ -119,12 +122,13 @@ class Workload:
         self.cleanup_monitoring_user()
         logger.debug("Disabled MySQL Router exporter service")
 
-    def _enable_tls(self, *, key: str, certificate: str) -> None:
+    def _enable_tls(self, *, key: str, certificate: str, certificate_authority: str) -> None:
         """Enable TLS."""
         logger.debug("Creating TLS files")
         self._container.tls_config_file.write_text(self._tls_config_file_data)
         self._tls_key_file.write_text(key)
         self._tls_certificate_file.write_text(certificate)
+        self._tls_certificate_authority_file.write_text(certificate_authority)
         logger.debug("Created TLS files")
 
     def _disable_tls(self) -> None:
@@ -330,7 +334,9 @@ class AuthenticatedWorkload(Workload):
         # self._custom_tls_enabled` will change after we enable or disable TLS
         tls_was_enabled = self._custom_tls_enabled
         if tls:
-            self._enable_tls(key=key, certificate=certificate)
+            self._enable_tls(
+                key=key, certificate=certificate, certificate_authority=certificate_authority
+            )
             if not tls_was_enabled and self._container.mysql_router_service_enabled:
                 self._restart(tls=tls)
         else:
@@ -354,16 +360,18 @@ class AuthenticatedWorkload(Workload):
             logger.debug("Enabled MySQL Router service")
             self._charm.wait_until_mysql_router_ready()
 
-        if not self._container.mysql_router_exporter_service_enabled and exporter_config:
+        if (not self._container.mysql_router_exporter_service_enabled and exporter_config) or (
+            self._container.mysql_router_exporter_service_enabled and tls_was_enabled != tls
+        ):
             logger.debug("Enabling MySQL Router exporter service")
             self.setup_monitoring_user()
             self._container.update_mysql_router_exporter_service(
                 enabled=True,
                 config=exporter_config,
                 tls=tls,
-                key=key,
-                certificate=certificate,
-                certificate_authority=certificate_authority,
+                key_filename=str(self._tls_key_file),
+                certificate_filename=str(self._tls_certificate_file),
+                certificate_authority_filename=str(self._tls_certificate_authority_file),
             )
             logger.debug("Enabled MySQL Router exporter service")
         elif self._container.mysql_router_exporter_service_enabled and not exporter_config:
