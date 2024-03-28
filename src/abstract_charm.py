@@ -15,6 +15,7 @@ import container
 import lifecycle
 import logrotate
 import machine_upgrade
+import relations.cos
 import relations.database_provides
 import relations.database_requires
 import server_exceptions
@@ -38,6 +39,7 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
         self._authenticated_workload_type = workload.AuthenticatedWorkload
         self._database_requires = relations.database_requires.RelationEndpoint(self)
         self._database_provides = relations.database_provides.RelationEndpoint(self)
+        self._cos_relation = relations.cos.COSRelation(self, self._container)
         self.framework.observe(self.on.update_status, self.reconcile)
         self.framework.observe(
             self.on[upgrade.PEER_RELATION_ENDPOINT_NAME].relation_changed, self.reconcile
@@ -68,12 +70,6 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
         """
 
     @property
-    def _tls_certificate_saved(self) -> bool:
-        """Whether a TLS certificate is available to use"""
-        # TODO VM TLS: Remove property after implementing TLS on machine charm
-        return False
-
-    @property
     @abc.abstractmethod
     def _container(self) -> container.Container:
         """Workload container (snap or ROCK)"""
@@ -98,6 +94,38 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
     def _read_only_endpoint(self) -> str:
         """MySQL Router read-only endpoint"""
 
+    @property
+    def _tls_certificate_saved(self) -> bool:
+        """Whether a TLS certificate is available to use"""
+        # TODO VM TLS: Update property after implementing TLS on machine_charm
+        return False
+
+    @property
+    def _tls_key(self) -> typing.Optional[str]:
+        """Custom TLS key"""
+        # TODO VM TLS: Update property after implementing TLS on machine_charm
+        return None
+
+    @property
+    def _tls_certificate(self) -> typing.Optional[str]:
+        """Custom TLS certificate"""
+        # TODO VM TLS: Update property after implementing TLS on machine_charm
+        return None
+
+    @property
+    def _tls_certificate_authority(self) -> typing.Optional[str]:
+        # TODO VM TLS: Update property after implementing TLS on machine charm
+        return None
+
+    def _cos_exporter_config(self, event) -> typing.Optional[relations.cos.ExporterConfig]:
+        """Returns the exporter config for MySQLRouter exporter if cos relation exists"""
+        cos_relation_exists = (
+            self._cos_relation.relation_exists
+            and not self._cos_relation.is_relation_breaking(event)
+        )
+        if cos_relation_exists:
+            return self._cos_relation.exporter_user_config
+
     def get_workload(self, *, event):
         """MySQL Router workload"""
         if connection_info := self._database_requires.get_connection_info(event=event):
@@ -105,9 +133,12 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
                 container_=self._container,
                 logrotate_=self._logrotate,
                 connection_info=connection_info,
+                cos=self._cos_relation,
                 charm_=self,
             )
-        return self._workload_type(container_=self._container, logrotate_=self._logrotate)
+        return self._workload_type(
+            container_=self._container, logrotate_=self._logrotate, cos=self._cos_relation
+        )
 
     @staticmethod
     # TODO python3.10 min version: Use `list` instead of `typing.List`
@@ -231,8 +262,10 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
             f"{isinstance(workload_, workload.AuthenticatedWorkload)=}, "
             f"{workload_.container_ready=}, "
             f"{self._database_requires.is_relation_breaking(event)=}, "
-            f"{self._upgrade.in_progress=}"
+            f"{self._upgrade.in_progress=}, "
+            f"{self._cos_relation.is_relation_breaking(event)=}"
         )
+
         try:
             if self._unit_lifecycle.authorized_leader:
                 if self._database_requires.is_relation_breaking(event):
@@ -252,10 +285,15 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
                         router_read_only_endpoint=self._read_only_endpoint,
                         shell=workload_.shell,
                     )
-            if isinstance(workload_, workload.AuthenticatedWorkload) and workload_.container_ready:
-                workload_.enable(tls=self._tls_certificate_saved, unit_name=self.unit.name)
-            elif workload_.container_ready:
-                workload_.disable()
+            if workload_.container_ready:
+                workload_.reconcile(
+                    tls=self._tls_certificate_saved,
+                    unit_name=self.unit.name,
+                    exporter_config=self._cos_exporter_config(event),
+                    key=self._tls_key,
+                    certificate=self._tls_certificate,
+                    certificate_authority=self._tls_certificate_authority,
+                )
             # Empty waiting status means we're waiting for database requires relation before
             # starting workload
             if not workload_.status or workload_.status == ops.WaitingStatus():
