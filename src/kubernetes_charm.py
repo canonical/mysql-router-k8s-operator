@@ -29,10 +29,6 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("httpcore").setLevel(logging.WARNING)
 
 
-class MysqlRouterK8sError(Exception):
-    """MySQL Router Kubernetes error"""
-
-
 class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
     """MySQL Router Kubernetes charm"""
 
@@ -213,11 +209,10 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
                     return a.address
         return None
 
-    def node_port(self, port_type="rw") -> typing.Optional[int]:
+    def node_port(self, port_type="rw") -> int:
         """Return node port."""
         service = self.client.get(core_v1.Service, self.app.name, namespace=self._namespace)
-        if not service or not service.spec.type == "NodePort":
-            raise MysqlRouterK8sError("Service not found or not of type NodePort")
+        assert service and service.spec.type == "NodePort"
         # svc.spec.ports
         # [ServicePort(port=3306, appProtocol=None, name=None, nodePort=31438, protocol='TCP', targetPort=3306)]
         port = self._READ_ONLY_PORT if port_type == "ro" else self._READ_WRITE_PORT
@@ -225,7 +220,7 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         for svc_port in service.spec.ports:
             if svc_port.port == port:
                 return svc_port.nodePort
-        raise MysqlRouterK8sError(f"NodePort not found for {port_type}")
+        raise Exception(f"NodePort not found for {port_type}")
 
     def _on_install(self, _) -> None:
         """Open ports & patch k8s service."""
