@@ -23,6 +23,21 @@ logger = logging.getLogger(__name__)
 
 _PEER_RELATION_ENDPOINT_NAME = "mysql-router-peers"
 
+_TLS_REQUESTED_CSR = "tls-requested-csr"
+_TLS_ACTIVE_CSR = "tls-active-csr"
+_TLS_CERTIFICATE = "tls-certificate"
+_TLS_CA = "tls-ca"
+_TLS_CHAIN = "tls-chain"
+_TLS_PRIVATE_KEY = "tls-private-key"
+_TLS_FIELDS = [
+    _TLS_REQUESTED_CSR,
+    _TLS_ACTIVE_CSR,
+    _TLS_CERTIFICATE,
+    _TLS_CA,
+    _TLS_CHAIN,
+    _TLS_PRIVATE_KEY,
+]
+
 
 def _generate_private_key() -> str:
     """Generate TLS private key."""
@@ -41,8 +56,8 @@ class _Relation:
     def certificate_saved(self) -> bool:
         """Whether a TLS certificate is available to use"""
         for value in (
-            self._secrets.get_value(relations.secrets.UNIT_SCOPE, "tls-certificate"),
-            self._secrets.get_value(relations.secrets.UNIT_SCOPE, "tls-ca"),
+            self._secrets.get_value(relations.secrets.UNIT_SCOPE, _TLS_CERTIFICATE),
+            self._secrets.get_value(relations.secrets.UNIT_SCOPE, _TLS_CA),
         ):
             if not value:
                 return False
@@ -51,46 +66,46 @@ class _Relation:
     @property
     def key(self) -> str:
         """The TLS private key"""
-        private_key = self._secrets.get_value(relations.secrets.UNIT_SCOPE, "tls-private-key")
+        private_key = self._secrets.get_value(relations.secrets.UNIT_SCOPE, _TLS_PRIVATE_KEY)
         if not private_key:
             private_key = _generate_private_key()
-            self._secrets.set_value(relations.secrets.UNIT_SCOPE, "tls-private-key", private_key)
+            self._secrets.set_value(relations.secrets.UNIT_SCOPE, _TLS_PRIVATE_KEY, private_key)
         return private_key
 
     @property
     def certificate(self) -> str:
         """The TLS certificate"""
-        return self._secrets.get_value(relations.secrets.UNIT_SCOPE, "tls-certificate")
+        return self._secrets.get_value(relations.secrets.UNIT_SCOPE, _TLS_CERTIFICATE)
 
     @property
     def certificate_authority(self) -> str:
         """The TLS certificate authority"""
-        return self._secrets.get_value(relations.secrets.UNIT_SCOPE, "tls-ca")
+        return self._secrets.get_value(relations.secrets.UNIT_SCOPE, _TLS_CA)
 
     def save_certificate(self, event: tls_certificates.CertificateAvailableEvent) -> None:
         """Save TLS certificate in peer relation unit databag."""
         if (
             event.certificate_signing_request.strip()
-            != self._secrets.get_value(relations.secrets.UNIT_SCOPE, "tls-requested-csr").strip()
+            != self._secrets.get_value(relations.secrets.UNIT_SCOPE, _TLS_REQUESTED_CSR).strip()
         ):
             logger.warning("Unknown certificate received. Ignoring.")
             return
         if (
             self.certificate_saved
             and event.certificate_signing_request.strip()
-            == self._secrets.get_value(relations.secrets.UNIT_SCOPE, "tls-active-csr")
+            == self._secrets.get_value(relations.secrets.UNIT_SCOPE, _TLS_ACTIVE_CSR)
         ):
             # Workaround for https://github.com/canonical/tls-certificates-operator/issues/34
             logger.debug("TLS certificate already saved.")
             return
         logger.debug(f"Saving TLS certificate {event=}")
-        self._secrets.set_value(relations.secrets.UNIT_SCOPE, "tls-certificate", event.certificate)
-        self._secrets.set_value(relations.secrets.UNIT_SCOPE, "tls-ca", event.ca)
-        self._secrets.set_value(relations.secrets.UNIT_SCOPE, "tls-chain", json.dumps(event.chain))
+        self._secrets.set_value(relations.secrets.UNIT_SCOPE, _TLS_CERTIFICATE, event.certificate)
+        self._secrets.set_value(relations.secrets.UNIT_SCOPE, _TLS_CA, event.ca)
+        self._secrets.set_value(relations.secrets.UNIT_SCOPE, _TLS_CHAIN, json.dumps(event.chain))
         self._secrets.set_value(
             relations.secrets.UNIT_SCOPE,
-            "tls-active-csr",
-            self._secrets.get_value(relations.secrets.UNIT_SCOPE, "tls-requested-csr"),
+            _TLS_ACTIVE_CSR,
+            self._secrets.get_value(relations.secrets.UNIT_SCOPE, _TLS_REQUESTED_CSR),
         )
         logger.debug(f"Saved TLS certificate {event=}")
         self._charm.reconcile(event=None)
@@ -125,14 +140,14 @@ class _Relation:
         csr = self._generate_csr(self.key.encode("utf-8"))
         self._interface.request_certificate_creation(certificate_signing_request=csr)
         self._secrets.set_value(
-            relations.secrets.UNIT_SCOPE, "tls-requested-csr", csr.decode("utf-8")
+            relations.secrets.UNIT_SCOPE, _TLS_REQUESTED_CSR, csr.decode("utf-8")
         )
         logger.debug("Requested TLS certificate creation")
 
     def request_certificate_renewal(self):
         """Request TLS certificate renewal from related provider charm."""
         logger.debug("Requesting TLS certificate renewal")
-        old_csr = self._secrets.get_value(relations.secrets.UNIT_SCOPE, "tls-active-csr").encode(
+        old_csr = self._secrets.get_value(relations.secrets.UNIT_SCOPE, _TLS_ACTIVE_CSR).encode(
             "utf-8"
         )
         new_csr = self._generate_csr(self.key.encode("utf-8"))
@@ -140,7 +155,7 @@ class _Relation:
             old_certificate_signing_request=old_csr, new_certificate_signing_request=new_csr
         )
         self._secrets.set_value(
-            relations.secrets.UNIT_SCOPE, "tls-requested-csr", new_csr.decode("utf-8")
+            relations.secrets.UNIT_SCOPE, _TLS_REQUESTED_CSR, new_csr.decode("utf-8")
         )
         logger.debug("Requested TLS certificate renewal")
 
@@ -155,9 +170,8 @@ class RelationEndpoint(ops.Object):
         self._charm = charm_
         self._interface = tls_certificates.TLSCertificatesRequiresV1(self._charm, self.NAME)
 
-        self._secret_fields = ["tls-private-key"]
         self._secrets = relations.secrets.RelationSecrets(
-            charm_, self._interface.relationship_name, unit_secret_fields=self._secret_fields
+            charm_, self._interface.relationship_name, unit_secret_fields=[_TLS_PRIVATE_KEY]
         )
 
         self.framework.observe(
@@ -236,7 +250,7 @@ class RelationEndpoint(ops.Object):
             key = _generate_private_key()
             event.log("No key provided. Generated new key.")
             logger.debug("No TLS key provided via action. Generated new key.")
-        self._secrets.set_value(relations.secrets.UNIT_SCOPE, "tls-private-key", key)
+        self._secrets.set_value(relations.secrets.UNIT_SCOPE, _TLS_PRIVATE_KEY, key)
         event.log("Saved TLS private key")
         logger.debug("Saved TLS private key")
         if self._relation is None:
@@ -262,8 +276,8 @@ class RelationEndpoint(ops.Object):
     def _on_tls_relation_broken(self, _) -> None:
         """Delete TLS certificate."""
         logger.debug("Deleting TLS certificate")
-        for secret_field in self._secret_fields:
-            self._secrets.set_value(relations.secrets.UNIT_SCOPE, secret_field, None)
+        for field in _TLS_FIELDS:
+            self._secrets.set_value(relations.secrets.UNIT_SCOPE, field, None)
         self._charm.reconcile(event=None)
         logger.debug("Deleted TLS certificate")
 
