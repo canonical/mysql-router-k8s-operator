@@ -1,0 +1,80 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:675 Connecting to existing model microk8s-localhost:test on unspecified cloud
+[32mINFO    [0m integration.test_charm:test_charm.py:45 Deploying mysql, mysqlrouter and application
+[32mINFO    [0m juju.model:model.py:2069 Deploying ch:amd64/jammy/mysql-test-app-35
+[32mINFO    [0m juju.model:model.py:2069 Deploying ch:amd64/jammy/mysql-k8s-132
+[32mINFO    [0m juju.model:model.py:2069 Deploying local:jammy/mysql-router-k8s-0
+[32mINFO    [0m integration.test_charm:test_charm.py:76 Waiting for mysqlrouter to be in BlockedStatus
+[32mINFO    [0m integration.test_charm:test_charm.py:82 Relating mysql, mysqlrouter and application
+[33mWARNING [0m juju.model:model.py:1558 relate is deprecated and will be removed. Use integrate instead.
+[33mWARNING [0m juju.model:model.py:1558 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m juju.model:model.py:2759 Waiting for model:
+  mysql-router-k8s/0 [executing] maintenance: Waiting for container
+[32mINFO    [0m juju.model:model.py:2759 Waiting for model:
+  mysql-router-k8s/0 [idle] waiting: 
+[32mINFO    [0m juju.model:model.py:2759 Waiting for model:
+  mysql-router-k8s/0 [executing] waiting: 
+[32mINFO    [0m juju.model:model.py:2759 Waiting for model:
+  mysql-k8s/0 [idle] active: 
+  mysql-k8s/1 [idle] maintenance: joining the cluster
+  mysql-k8s/2 [idle] active: Primary
+  mysql-router-k8s/0 [idle] active: 
+  mysql-test-app/0 [idle] active: Last written value=728
+[32mINFO    [0m juju.model:model.py:2759 Waiting for model:
+  mysql-k8s/0 [idle] active: 
+  mysql-k8s/1 [idle] active: 
+  mysql-k8s/2 [idle] active: Primary
+[32mINFO    [0m juju.model:model.py:2759 Waiting for model:
+  mysql-router-k8s (waiting for exactly 2 units, current : 1)
+[32mINFO    [0m juju.model:model.py:2759 Waiting for model:
+  mysql-router-k8s/0 [idle] active: 
+  mysql-router-k8s/1 [executing] active: 
+[32mINFO    [0m juju.model:model.py:2759 Waiting for model:
+  mysql-test-app (waiting for exactly 2 units, current : 1)
+[32mINFO    [0m pytest_operator.plugin:plugin.py:790 Model status:
+
+Model  Controller          Cloud/Region        Version  SLA          Timestamp
+test   microk8s-localhost  microk8s/localhost  3.1.6    unsupported  01:35:44Z
+
+App               Version                  Status   Scale  Charm             Channel      Rev  Address         Exposed  Message
+mysql-k8s         8.0.36-0ubuntu0.22.04.1  active       3  mysql-k8s         8.0/edge     132  10.152.183.247  no       
+mysql-router-k8s  8.0.36-0ubuntu0.22.04.1  active       2  mysql-router-k8s                 0  10.152.183.173  no       
+mysql-test-app    0.0.2                    waiting      2  mysql-test-app    latest/edge   35  10.152.183.60   no       installing agent
+
+Unit                 Workload  Agent  Address     Ports  Message
+mysql-k8s/0          active    idle   10.1.76.13         
+mysql-k8s/1          active    idle   10.1.76.15         
+mysql-k8s/2*         active    idle   10.1.76.14         Primary
+mysql-router-k8s/0*  active    idle   10.1.76.9          
+mysql-router-k8s/1   active    idle   10.1.76.16         
+mysql-test-app/0*    active    idle   10.1.76.8          
+mysql-test-app/1     error     idle   10.1.76.17         hook failed: "start"
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:796 Juju error logs:
+
+unit-mysql-test-app-1: 01:35:43 ERROR unit.mysql-test-app/1.juju-log Uncaught exception while in charm code:
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-mysql-test-app-1/charm/./src/charm.py", line 447, in <module>
+    main(MySQLTestApplication)
+  File "/var/lib/juju/agents/unit-mysql-test-app-1/charm/venv/ops/main.py", line 544, in main
+    manager.run()
+  File "/var/lib/juju/agents/unit-mysql-test-app-1/charm/venv/ops/main.py", line 520, in run
+    self._emit()
+  File "/var/lib/juju/agents/unit-mysql-test-app-1/charm/venv/ops/main.py", line 509, in _emit
+    _emit_charm_event(self.charm, self.dispatcher.event_name)
+  File "/var/lib/juju/agents/unit-mysql-test-app-1/charm/venv/ops/main.py", line 143, in _emit_charm_event
+    event_to_emit.emit(*args, **kwargs)
+  File "/var/lib/juju/agents/unit-mysql-test-app-1/charm/venv/ops/framework.py", line 352, in emit
+    framework._emit(event)
+  File "/var/lib/juju/agents/unit-mysql-test-app-1/charm/venv/ops/framework.py", line 851, in _emit
+    self._reemit(event_path)
+  File "/var/lib/juju/agents/unit-mysql-test-app-1/charm/venv/ops/framework.py", line 941, in _reemit
+    custom_handler(event)
+  File "/var/lib/juju/agents/unit-mysql-test-app-1/charm/./src/charm.py", line 290, in _on_start
+    self.app_peer_data["initialized"] = "true"
+  File "/var/lib/juju/agents/unit-mysql-test-app-1/charm/venv/ops/model.py", line 1685, in __setitem__
+    self._validate_write(key, value)
+  File "/var/lib/juju/agents/unit-mysql-test-app-1/charm/venv/ops/model.py", line 1671, in _validate_write
+    raise RelationDataAccessError(
+ops.model.RelationDataAccessError: mysql-test-app/1 is not leader and cannot write application data.
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:862 Forgetting main...
