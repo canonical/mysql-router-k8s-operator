@@ -50,8 +50,20 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         return
 
     @property
-    def tls_certificate_saved(self) -> bool:
+    def _tls_certificate_saved(self) -> bool:
         return self.tls.certificate_saved
+
+    @property
+    def _tls_key(self) -> typing.Optional[str]:
+        return self.tls.key
+
+    @property
+    def _tls_certificate(self) -> typing.Optional[str]:
+        return self.tls.certificate
+
+    @property
+    def _tls_certificate_authority(self) -> typing.Optional[str]:
+        return self.tls.certificate_authority
 
     @property
     def _container(self) -> rock.Rock:
