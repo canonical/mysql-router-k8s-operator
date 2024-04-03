@@ -37,6 +37,10 @@ class _NoQuorum(server_exceptions.Error):
         super().__init__(ops.WaitingStatus(self.MESSAGE))
 
 
+class WorkloadNotReadyError(Exception):
+    """Workload not ready"""
+
+
 class Workload:
     """MySQL Router workload"""
 

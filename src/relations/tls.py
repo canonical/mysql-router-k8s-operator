@@ -113,6 +113,7 @@ class _Relation:
     def _generate_csr(self, key: bytes) -> bytes:
         """Generate certificate signing request (CSR)."""
         unit_name = self._charm.unit.name.replace("/", "-")
+        extra_hosts, extra_ips = self._charm.get_all_k8s_node_hostnames_and_ips()
         return tls_certificates.generate_csr(
             private_key=key,
             subject=socket.getfqdn(),
@@ -127,11 +128,13 @@ class _Relation:
                 f"{unit_name}.{self._charm.app.name}.{self._charm.model_service_domain}",
                 self._charm.app.name,
                 f"{self._charm.app.name}.{self._charm.model_service_domain}",
-            ],
+            ]
+            + extra_hosts,
             sans_ip=[
                 str(self._charm.model.get_binding("juju-info").network.bind_address),
                 "127.0.0.1",
-            ],
+            ]
+            + extra_ips,
         )
 
     def request_certificate_creation(self):

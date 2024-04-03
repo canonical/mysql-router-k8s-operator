@@ -13,7 +13,7 @@ import typing
 import lightkube
 import lightkube.models.core_v1
 import lightkube.models.meta_v1
-import lightkube.resources.core_v1
+import lightkube.resources.core_v1 as core_v1
 import ops
 
 import abstract_charm
@@ -37,6 +37,9 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
 
     def __init__(self, *args) -> None:
         super().__init__(*args)
+        self._namespace = self.model.name
+        self._client = None
+
         self.framework.observe(self.on.install, self._on_install)
         self.framework.observe(
             self.on[rock.CONTAINER_NAME].pebble_ready, self._on_workload_container_pebble_ready
@@ -50,7 +53,13 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         return
 
     @property
-    def _tls_certificate_saved(self) -> bool:
+    def client(self) -> lightkube.Client:
+        if not self._client:
+            return lightkube.Client()
+        return self._client
+
+    @property
+    def tls_certificate_saved(self) -> bool:
         return self.tls.certificate_saved
 
     @property
@@ -80,6 +89,14 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         except upgrade.PeerRelationNotReady:
             pass
 
+    def expose(self) -> None:
+        """Expose MySQL Router service."""
+        self._patch_service()
+
+    def unexpose(self) -> None:
+        """Unexpose MySQL Router service."""
+        self._patch_service(unexpose=True)
+
     @property
     def model_service_domain(self) -> str:
         """K8s service domain for Juju model"""
@@ -97,19 +114,25 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         # Example: mysql-router-k8s.my-model.svc.cluster.local
         return f"{self.app.name}.{self.model_service_domain}"
 
-    @property
-    def _read_write_endpoint(self) -> str:
+    def _read_write_endpoint(self, relation=None, is_internal: bool = True) -> str:
+        if not is_internal and self._database_provides.is_exposed(relation=relation):
+            return f"{self.get_k8s_node_ip()}:{self.node_port('rw')}"
         return f"{self._host}:{self._READ_WRITE_PORT}"
 
-    @property
-    def _read_only_endpoint(self) -> str:
+    def _read_only_endpoint(self, relation=None, is_internal: bool = True) -> str:
+        if not is_internal and self._database_provides.is_exposed(relation=relation):
+            return f"{self.get_k8s_node_ip()}:{self.node_port('ro')}"
         return f"{self._host}:{self._READ_ONLY_PORT}"
 
-    def _patch_service(self) -> None:
+    def _patch_service(self, unexpose: bool = False) -> None:
         """Patch Juju-created k8s service.
 
         The k8s service will be tied to pod-0 so that the service is auto cleaned by
         k8s when the last pod is scaled down.
+
+        If the service is set for unexpose=True, the NodePort will be removed.
+        Otherwise, the service will be set to NodePort if at least one client requests
+        that the service be exposed.
         """
         logger.debug("Patching k8s service")
         client = lightkube.Client()
@@ -132,14 +155,20 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
                     lightkube.models.core_v1.ServicePort(
                         name="mysql-rw",
                         port=self._READ_WRITE_PORT,
-                        targetPort=self._READ_WRITE_PORT,
+                        targetPort=self._READ_WRITE_PORT,  # Value ignored if NodePort
                     ),
                     lightkube.models.core_v1.ServicePort(
                         name="mysql-ro",
                         port=self._READ_ONLY_PORT,
-                        targetPort=self._READ_ONLY_PORT,
+                        targetPort=self._READ_ONLY_PORT,  # Value ignored if NodePort
                     ),
                 ],
+                # If all exposed services are removed, the NodePort will be removed
+                type=(
+                    "NodePort"
+                    if self._database_provides.is_exposed(relation=None) and not unexpose
+                    else "ClusterIP"
+                ),
                 selector={"app.kubernetes.io/name": self.app.name},
             ),
         )
@@ -153,9 +182,74 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         )
         logger.debug("Patched k8s service")
 
+    def _get_node_name_for_pod(self) -> str:
+        """Return the node name for a given pod."""
+        pod = self.client.get(
+            core_v1.Pod, name=self.unit.name.replace("/", "-"), namespace=self._namespace
+        )
+        return pod.spec.nodeName
+
     # =======================
     #  Handlers
     # =======================
+
+    def reconcile(self, event=None) -> None:
+        if (
+            isinstance(event, ops.charm.RelationEvent)
+            and self._database_provides.is_exposed(relation=event.relation)
+            and self.unit.is_leader()
+            and not self._upgrade.in_progress
+        ):
+            # This is going to be called in any of the following cases:
+            # - The relation is created: we need to verify if we should expose the service
+            # - The relation is updated: we need to verify if we should expose the service
+            # - The relation is broken: we need to verify if we should unexpose the service
+            self._patch_service()
+        super().reconcile(event)
+
+    def get_all_k8s_node_hostnames_and_ips(self) -> typing.Tuple[typing.List[str]]:
+        """Return all node hostnames and IPs registered in k8s."""
+        node = self.client.get(
+            core_v1.Node, name=self._get_node_name_for_pod(), namespace=self._namespace
+        )
+        hostnames, ips = [], []
+        for a in node.status.addresses:
+            if a.type in ["ExternalIP", "InternalIP"]:
+                ips.append(a.address)
+            elif a.type == "Hostname":
+                hostnames.append(a.address)
+        return hostnames, ips
+
+    def get_k8s_node_ip(self) -> typing.Optional[str]:
+        """Return node IP."""
+        node = self.client.get(
+            core_v1.Node, name=self._get_node_name_for_pod(), namespace=self._namespace
+        )
+        # [
+        #    NodeAddress(address='192.168.0.228', type='InternalIP'),
+        #    NodeAddress(address='example.com', type='Hostname')
+        # ]
+        # Remember that OpenStack, for example, will return an internal hostname, which is not
+        # accessible from the outside. Give preference to ExternalIP, then InternalIP first
+        # Separated, as we want to give preference to ExternalIP, InternalIP and then Hostname
+        for typ in ["ExternalIP", "InternalIP", "Hostname"]:
+            for a in node.status.addresses:
+                if a.type == typ:
+                    return a.address
+        return None
+
+    def node_port(self, port_type="rw") -> int:
+        """Return node port."""
+        service = self.client.get(core_v1.Service, self.app.name, namespace=self._namespace)
+        assert service and service.spec.type == "NodePort"
+        # svc.spec.ports
+        # [ServicePort(port=3306, appProtocol=None, name=None, nodePort=31438, protocol='TCP', targetPort=3306)]
+        port = self._READ_ONLY_PORT if port_type == "ro" else self._READ_WRITE_PORT
+        logger.debug(f"Looking for NodePort for {port_type} in {service.spec.ports}")
+        for svc_port in service.spec.ports:
+            if svc_port.port == port:
+                return svc_port.nodePort
+        raise Exception(f"NodePort not found for {port_type}")
 
     def _on_install(self, _) -> None:
         """Open ports & patch k8s service."""

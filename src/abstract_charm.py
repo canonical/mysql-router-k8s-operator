@@ -84,14 +84,12 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
     def _logrotate(self) -> logrotate.LogRotate:
         """logrotate"""
 
-    @property
     @abc.abstractmethod
-    def _read_write_endpoint(self) -> str:
+    def _read_write_endpoint(self, relation=None, is_internal: bool = True) -> str:
         """MySQL Router read-write endpoint"""
 
-    @property
     @abc.abstractmethod
-    def _read_only_endpoint(self) -> str:
+    def _read_only_endpoint(self, relation=None, is_internal: bool = True) -> str:
         """MySQL Router read-only endpoint"""
 
     @property
@@ -214,6 +212,14 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
         else:
             logger.debug("MySQL Router is ready")
 
+    def expose(self) -> None:
+        """Expose MySQL Router."""
+        pass
+
+    def unexpose(self) -> None:
+        """Unexpose MySQL Router."""
+        pass
+
     # =======================
     #  Handlers
     # =======================
@@ -232,6 +238,7 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
         if not self._upgrade.versions_set:
             logger.debug("Peer relation not ready")
             return
+
         workload_ = self.get_workload(event=event)
         if self._upgrade.unit_state == "restarting":  # Kubernetes only
             if not self._upgrade.is_compatible:
@@ -281,11 +288,14 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
                 ):
                     self._database_provides.reconcile_users(
                         event=event,
-                        router_read_write_endpoint=self._read_write_endpoint,
-                        router_read_only_endpoint=self._read_only_endpoint,
+                        router_read_write_endpoint=self._read_write_endpoint(),
+                        router_read_only_endpoint=self._read_only_endpoint(),
+                        exposed_read_write_endpoint=self._read_write_endpoint(is_internal=False),
+                        exposed_read_only_endpoint=self._read_only_endpoint(is_internal=False),
                         shell=workload_.shell,
                     )
             if workload_.container_ready:
+                self.expose()
                 workload_.reconcile(
                     tls=self._tls_certificate_saved,
                     unit_name=self.unit.name,
@@ -294,6 +304,8 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
                     certificate=self._tls_certificate,
                     certificate_authority=self._tls_certificate_authority,
                 )
+            else:
+                self.unexpose()
             # Empty waiting status means we're waiting for database requires relation before
             # starting workload
             if not workload_.status or workload_.status == ops.WaitingStatus():

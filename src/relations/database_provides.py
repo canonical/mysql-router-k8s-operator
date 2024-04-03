@@ -42,6 +42,12 @@ class _Relation:
 
     def __init__(self, *, relation: ops.Relation) -> None:
         self._id = relation.id
+        self._relation = relation
+
+    @property
+    def relation(self) -> ops.Relation:
+        """Relation to application charm"""
+        return self._relation
 
     def __eq__(self, other) -> bool:
         if not isinstance(other, _Relation):
@@ -166,6 +172,15 @@ class RelationEndpoint:
         charm_.framework.observe(self._interface.on.database_requested, charm_.reconcile)
         charm_.framework.observe(charm_.on[self._NAME].relation_broken, charm_.reconcile)
 
+    def is_exposed(self, relation=None) -> bool:
+        """Whether the relation is exposed."""
+        if relation:
+            return relation.data[relation.app].get("external-node-connectivity", "false") == "true"
+        relation_data = self._interface.fetch_relation_data(fields=["external-node-connectivity"])
+        return any(
+            [data.get("external-node-connectivity") == "true" for data in relation_data.values()]
+        )
+
     @property
     # TODO python3.10 min version: Use `list` instead of `typing.List`
     def _shared_users(self) -> typing.List[_RelationWithSharedUser]:
@@ -185,6 +200,8 @@ class RelationEndpoint:
         event,
         router_read_write_endpoint: str,
         router_read_only_endpoint: str,
+        exposed_read_write_endpoint: str,
+        exposed_read_only_endpoint: str,
         shell: mysql_shell.Shell,
     ) -> None:
         """Create requested users and delete inactive users.
@@ -193,9 +210,6 @@ class RelationEndpoint:
         created by this charm. Therefore, this charm does not need to delete users when that
         relation is broken.
         """
-        logger.debug(
-            f"Reconciling users {event=}, {router_read_write_endpoint=}, {router_read_only_endpoint=}"
-        )
         requested_users = []
         for relation in self._interface.relations:
             try:
@@ -211,19 +225,29 @@ class RelationEndpoint:
             ):
                 pass
         logger.debug(f"State of reconcile users {requested_users=}, {self._shared_users=}")
-        for relation in requested_users:
-            if relation not in self._shared_users:
-                relation.create_database_and_user(
-                    router_read_write_endpoint=router_read_write_endpoint,
-                    router_read_only_endpoint=router_read_only_endpoint,
+        for request in requested_users:
+            relation = request.relation
+            if request not in self._shared_users:
+                read_write_endpoint = (
+                    exposed_read_write_endpoint
+                    if self.is_exposed(relation)
+                    else router_read_write_endpoint
+                )
+                read_only_endpoint = (
+                    exposed_read_only_endpoint
+                    if self.is_exposed(relation)
+                    else router_read_only_endpoint
+                )
+                request.create_database_and_user(
+                    router_read_write_endpoint=read_write_endpoint,
+                    router_read_only_endpoint=read_only_endpoint,
                     shell=shell,
                 )
+            logger.debug(f"Reconciled users {event=}")
+
         for relation in self._shared_users:
             if relation not in requested_users:
                 relation.delete_user(shell=shell)
-        logger.debug(
-            f"Reconciled users {event=}, {router_read_write_endpoint=}, {router_read_only_endpoint=}"
-        )
 
     def delete_all_databags(self) -> None:
         """Remove connection information from all databags.
