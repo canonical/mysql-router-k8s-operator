@@ -66,7 +66,7 @@ class _RelationThatRequestedUser(_Relation):
     ) -> None:
         super().__init__(relation=relation)
         self._interface = interface
-        if isinstance(event, ops.RelationBrokenEvent) and event.relation.id == self._id:
+        if event and isinstance(event, ops.RelationBrokenEvent) and event.relation.id == self._id:
             raise _RelationBreaking
         # Application charm databag
         databag = remote_databag.RemoteDatabag(interface=interface, relation=relation)
@@ -184,7 +184,7 @@ class RelationEndpoint:
 
     @property
     def is_exposed(self) -> bool:
-        return any(relation.is_exposed for relation in self._requested_users)
+        return any([relation.is_exposed for relation in self._requested_users()])
 
     @property
     # TODO python3.10 min version: Use `list` instead of `typing.List`
@@ -198,6 +198,23 @@ class RelationEndpoint:
             except _UserNotShared:
                 pass
         return shared_users
+
+    def _requested_users(self, event=None) -> typing.List[_RelationThatRequestedUser]:
+        requested_users = []
+        for relation in self._interface.relations:
+            try:
+                requested_users.append(
+                    _RelationThatRequestedUser(
+                        relation=relation, interface=self._interface, event=event
+                    )
+                )
+            except (
+                _RelationBreaking,
+                remote_databag.IncompleteDatabag,
+                _UnsupportedExtraUserRole,
+            ):
+                pass
+        return requested_users
 
     def reconcile_users(
         self,
@@ -219,22 +236,9 @@ class RelationEndpoint:
             f"Reconciling users {event=}, {router_read_write_endpoint=}, {router_read_only_endpoint=}, "
             f"{exposed_read_write_endpoint=}, {exposed_read_only_endpoint=}"
         )
-        requested_users = []
-        for relation in self._interface.relations:
-            try:
-                requested_users.append(
-                    _RelationThatRequestedUser(
-                        relation=relation, interface=self._interface, event=event
-                    )
-                )
-            except (
-                _RelationBreaking,
-                remote_databag.IncompleteDatabag,
-                _UnsupportedExtraUserRole,
-            ):
-                pass
-        logger.debug(f"State of reconcile users {requested_users=}, {self._shared_users=}")
-        for request in requested_users:
+
+        logger.debug(f"State of reconcile users {self._requested_users(event)=}, {self._shared_users=}")
+        for request in self._requested_users(event):
             relation = request.relation
             if request not in self._shared_users:
                 request.create_database_and_user(
@@ -247,7 +251,7 @@ class RelationEndpoint:
             logger.debug(f"Reconciled users {event=}")
 
         for relation in self._shared_users:
-            if relation not in requested_users:
+            if relation not in self._requested_users(event):
                 relation.delete_user(shell=shell)
 
     def delete_all_databags(self) -> None:
