@@ -56,6 +56,9 @@ def kubernetes_patch(monkeypatch):
     monkeypatch.setattr(
         "kubernetes_charm.KubernetesRouterCharm._patch_service", lambda *args, **kwargs: None
     )
+    monkeypatch.setattr(
+        "kubernetes_charm.KubernetesRouterCharm.get_k8s_node_ip", lambda *args, **kwargs: None
+    )
     monkeypatch.setattr("kubernetes_upgrade._Partition.get", lambda *args, **kwargs: 0)
     monkeypatch.setattr("kubernetes_upgrade._Partition.set", lambda *args, **kwargs: None)
 
