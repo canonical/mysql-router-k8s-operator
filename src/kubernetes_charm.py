@@ -248,7 +248,8 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         service = lightkube.Client().get(
             lightkube.resources.core_v1.Service, self.app.name, namespace=self._namespace
         )
-        assert service and service.spec.type == "NodePort"
+        if not service or not service.spec.type == "NodePort":
+            return -1
         # svc.spec.ports
         # [ServicePort(port=3306, appProtocol=None, name=None, nodePort=31438, protocol='TCP', targetPort=3306)]
         port = self._READ_ONLY_PORT if port_type == "ro" else self._READ_WRITE_PORT
