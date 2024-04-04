@@ -84,13 +84,25 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
     def _logrotate(self) -> logrotate.LogRotate:
         """logrotate"""
 
+    @property
     @abc.abstractmethod
-    def _read_write_endpoint(self, relation=None, is_internal: bool = True) -> str:
+    def _read_write_endpoint(self) -> str:
         """MySQL Router read-write endpoint"""
 
+    @property
     @abc.abstractmethod
-    def _read_only_endpoint(self, relation=None, is_internal: bool = True) -> str:
+    def _read_only_endpoint(self) -> str:
         """MySQL Router read-only endpoint"""
+
+    @property
+    @abc.abstractmethod
+    def _exposed_read_write_endpoint(self) -> str:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def _exposed_read_only_endpoint(self) -> str:
+        pass
 
     @property
     def _tls_certificate_saved(self) -> bool:
@@ -301,10 +313,10 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
 
                     self._database_provides.reconcile_users(
                         event=event,
-                        router_read_write_endpoint=self._read_write_endpoint(),
-                        router_read_only_endpoint=self._read_only_endpoint(),
-                        exposed_read_write_endpoint=self._read_write_endpoint(is_internal=False),
-                        exposed_read_only_endpoint=self._read_only_endpoint(is_internal=False),
+                        router_read_write_endpoint=self._read_write_endpoint,
+                        router_read_only_endpoint=self._read_only_endpoint,
+                        exposed_read_write_endpoint=self._exposed_read_write_endpoint,
+                        exposed_read_only_endpoint=self._exposed_read_only_endpoint,
                         shell=workload_.shell,
                     )
             if workload_.container_ready:

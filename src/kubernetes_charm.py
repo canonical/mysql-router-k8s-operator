@@ -107,15 +107,21 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         # Example: mysql-router-k8s.my-model.svc.cluster.local
         return f"{self.app.name}.{self.model_service_domain}"
 
-    def _read_write_endpoint(self, relation=None, is_internal: bool = True) -> str:
-        if not is_internal and self._database_provides.is_exposed:
-            return f"{self.get_k8s_node_ip()}:{self.node_port('rw')}"
+    @property
+    def _read_write_endpoint(self) -> str:
         return f"{self._host}:{self._READ_WRITE_PORT}"
 
-    def _read_only_endpoint(self, relation=None, is_internal: bool = True) -> str:
-        if not is_internal and self._database_provides.is_exposed:
-            return f"{self.get_k8s_node_ip()}:{self.node_port('ro')}"
+    @property
+    def _read_only_endpoint(self) -> str:
         return f"{self._host}:{self._READ_ONLY_PORT}"
+
+    @property
+    def _exposed_read_write_endpoint(self) -> str:
+        return f"{self.get_k8s_node_ip()}:{self.node_port('rw')}"
+
+    @property
+    def _exposed_read_only_endpoint(self) -> str:
+        return f"{self.get_k8s_node_ip()}:{self.node_port('ro')}"
 
     def _patch_service(self, unexpose: bool = False) -> None:
         """Patch Juju-created k8s service.

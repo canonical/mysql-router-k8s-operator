@@ -237,7 +237,9 @@ class RelationEndpoint:
             f"{exposed_read_write_endpoint=}, {exposed_read_only_endpoint=}"
         )
 
-        logger.debug(f"State of reconcile users {self._requested_users(event)=}, {self._shared_users=}")
+        logger.debug(
+            f"State of reconcile users {self._requested_users(event)=}, {self._shared_users=}"
+        )
         for request in self._requested_users(event):
             relation = request.relation
             if request not in self._shared_users:
