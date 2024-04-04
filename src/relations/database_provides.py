@@ -44,11 +44,6 @@ class _Relation:
         self._id = relation.id
         self._relation = relation
 
-    @property
-    def relation(self) -> ops.Relation:
-        """Relation to application charm"""
-        return self._relation
-
     def __eq__(self, other) -> bool:
         if not isinstance(other, _Relation):
             return False
@@ -81,6 +76,14 @@ class _RelationThatRequestedUser(_Relation):
                 app_name=relation.app.name, endpoint_name=relation.name
             )
 
+    @property
+    def is_exposed(self) -> bool:
+        """Whether the relation is exposed."""
+        return (
+            self._relation.data[self._relation.app].get("external-node-connectivity", "false")
+            == "true"
+        )
+
     def _set_databag(
         self,
         *,
@@ -106,6 +109,8 @@ class _RelationThatRequestedUser(_Relation):
         *,
         router_read_write_endpoint: str,
         router_read_only_endpoint: str,
+        exposed_read_write_endpoint: str,
+        exposed_read_only_endpoint: str,
         shell: mysql_shell.Shell,
     ) -> None:
         """Create database & user and update databag."""
@@ -121,11 +126,16 @@ class _RelationThatRequestedUser(_Relation):
         password = shell.create_application_database_and_user(
             username=username, database=self._database
         )
+
+        rw_endpoint = (
+            exposed_read_write_endpoint if self.is_exposed else router_read_write_endpoint
+        )
+        ro_endpoint = exposed_read_only_endpoint if self.is_exposed else router_read_only_endpoint
         self._set_databag(
             username=username,
             password=password,
-            router_read_write_endpoint=router_read_write_endpoint,
-            router_read_only_endpoint=router_read_only_endpoint,
+            router_read_write_endpoint=rw_endpoint,
+            router_read_only_endpoint=ro_endpoint,
         )
 
 
@@ -172,14 +182,9 @@ class RelationEndpoint:
         charm_.framework.observe(self._interface.on.database_requested, charm_.reconcile)
         charm_.framework.observe(charm_.on[self._NAME].relation_broken, charm_.reconcile)
 
-    def is_exposed(self, relation=None) -> bool:
-        """Whether the relation is exposed."""
-        if relation:
-            return relation.data[relation.app].get("external-node-connectivity", "false") == "true"
-        relation_data = self._interface.fetch_relation_data(fields=["external-node-connectivity"])
-        return any(
-            [data.get("external-node-connectivity") == "true" for data in relation_data.values()]
-        )
+    @property
+    def is_exposed(self) -> bool:
+        return any(relation.is_exposed for relation in self._requested_users)
 
     @property
     # TODO python3.10 min version: Use `list` instead of `typing.List`
@@ -210,6 +215,10 @@ class RelationEndpoint:
         created by this charm. Therefore, this charm does not need to delete users when that
         relation is broken.
         """
+        logger.debug(
+            f"Reconciling users {event=}, {router_read_write_endpoint=}, {router_read_only_endpoint=}, "
+            f"{exposed_read_write_endpoint=}, {exposed_read_only_endpoint=}"
+        )
         requested_users = []
         for relation in self._interface.relations:
             try:
@@ -228,19 +237,11 @@ class RelationEndpoint:
         for request in requested_users:
             relation = request.relation
             if request not in self._shared_users:
-                read_write_endpoint = (
-                    exposed_read_write_endpoint
-                    if self.is_exposed(relation)
-                    else router_read_write_endpoint
-                )
-                read_only_endpoint = (
-                    exposed_read_only_endpoint
-                    if self.is_exposed(relation)
-                    else router_read_only_endpoint
-                )
                 request.create_database_and_user(
-                    router_read_write_endpoint=read_write_endpoint,
-                    router_read_only_endpoint=read_only_endpoint,
+                    router_read_write_endpoint=router_read_write_endpoint,
+                    router_read_only_endpoint=router_read_only_endpoint,
+                    exposed_read_write_endpoint=exposed_read_write_endpoint,
+                    exposed_read_only_endpoint=exposed_read_only_endpoint,
                     shell=shell,
                 )
             logger.debug(f"Reconciled users {event=}")

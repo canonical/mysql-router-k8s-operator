@@ -1,8 +1,6 @@
 # Copyright 2023 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-from unittest.mock import Mock
-
 import pytest
 
 
@@ -54,7 +52,10 @@ def kubernetes_patch(monkeypatch):
     monkeypatch.setattr("rock._Path.unlink", lambda *args, **kwargs: None)
     monkeypatch.setattr("rock._Path.mkdir", lambda *args, **kwargs: None)
     monkeypatch.setattr("rock._Path.rmtree", lambda *args, **kwargs: None)
-    monkeypatch.setattr("lightkube.Client", lambda *args, **kwargs: Mock())
+    monkeypatch.setattr("lightkube.Client", lambda *args, **kwargs: None)
+    monkeypatch.setattr(
+        "kubernetes_charm.KubernetesRouterCharm._patch_service", lambda *args, **kwargs: None
+    )
     monkeypatch.setattr("kubernetes_upgrade._Partition.get", lambda *args, **kwargs: 0)
     monkeypatch.setattr("kubernetes_upgrade._Partition.set", lambda *args, **kwargs: None)
 

@@ -212,13 +212,24 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
         else:
             logger.debug("MySQL Router is ready")
 
+    @abc.abstractmethod
     def expose(self) -> None:
         """Expose MySQL Router."""
         pass
 
+    @abc.abstractmethod
     def unexpose(self) -> None:
         """Unexpose MySQL Router."""
         pass
+
+    def reconcile_node_port(self) -> None:
+        """Reconcile node port."""
+        if not self._unit_lifecycle.authorized_leader:
+            return
+        if self._database_provides.is_exposed:
+            self.expose()
+        else:
+            self.unexpose()
 
     # =======================
     #  Handlers
@@ -286,6 +297,8 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
                     and isinstance(workload_, workload.AuthenticatedWorkload)
                     and workload_.container_ready
                 ):
+                    self.reconcile_node_port()
+
                     self._database_provides.reconcile_users(
                         event=event,
                         router_read_write_endpoint=self._read_write_endpoint(),
@@ -295,7 +308,6 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
                         shell=workload_.shell,
                     )
             if workload_.container_ready:
-                self.expose()
                 workload_.reconcile(
                     tls=self._tls_certificate_saved,
                     unit_name=self.unit.name,

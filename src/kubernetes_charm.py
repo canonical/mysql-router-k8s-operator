@@ -38,7 +38,6 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
     def __init__(self, *args) -> None:
         super().__init__(*args)
         self._namespace = self.model.name
-        self._client = None
 
         self.framework.observe(self.on.install, self._on_install)
         self.framework.observe(
@@ -51,12 +50,6 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
     @property
     def _subordinate_relation_endpoint_names(self) -> typing.Optional[typing.Iterable[str]]:
         return
-
-    @property
-    def client(self) -> lightkube.Client:
-        if not self._client:
-            return lightkube.Client()
-        return self._client
 
     @property
     def tls_certificate_saved(self) -> bool:
@@ -115,12 +108,12 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         return f"{self.app.name}.{self.model_service_domain}"
 
     def _read_write_endpoint(self, relation=None, is_internal: bool = True) -> str:
-        if not is_internal and self._database_provides.is_exposed(relation=relation):
+        if not is_internal and self._database_provides.is_exposed:
             return f"{self.get_k8s_node_ip()}:{self.node_port('rw')}"
         return f"{self._host}:{self._READ_WRITE_PORT}"
 
     def _read_only_endpoint(self, relation=None, is_internal: bool = True) -> str:
-        if not is_internal and self._database_provides.is_exposed(relation=relation):
+        if not is_internal and self._database_provides.is_exposed:
             return f"{self.get_k8s_node_ip()}:{self.node_port('ro')}"
         return f"{self._host}:{self._READ_ONLY_PORT}"
 
@@ -166,7 +159,7 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
                 # If all exposed services are removed, the NodePort will be removed
                 type=(
                     "NodePort"
-                    if self._database_provides.is_exposed(relation=None) and not unexpose
+                    if self._database_provides.is_exposed and not unexpose
                     else "ClusterIP"
                 ),
                 selector={"app.kubernetes.io/name": self.app.name},
@@ -184,7 +177,7 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
 
     def _get_node_name_for_pod(self) -> str:
         """Return the node name for a given pod."""
-        pod = self.client.get(
+        pod = lightkube.Client().get(
             lightkube.resources.core_v1.Pod,
             name=self.unit.name.replace("/", "-"),
             namespace=self._namespace,
@@ -198,7 +191,7 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
     def reconcile(self, event=None) -> None:
         if (
             isinstance(event, ops.charm.RelationEvent)
-            and self._database_provides.is_exposed(relation=event.relation)
+            and self._database_provides.is_exposed
             and self.unit.is_leader()
             and not self._upgrade.in_progress
         ):
@@ -211,7 +204,7 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
 
     def get_all_k8s_node_hostnames_and_ips(self) -> typing.Tuple[typing.List[str]]:
         """Return all node hostnames and IPs registered in k8s."""
-        node = self.client.get(
+        node = lightkube.Client().get(
             lightkube.resources.core_v1.Node,
             name=self._get_node_name_for_pod(),
             namespace=self._namespace,
@@ -226,7 +219,7 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
 
     def get_k8s_node_ip(self) -> typing.Optional[str]:
         """Return node IP."""
-        node = self.client.get(
+        node = lightkube.Client().get(
             lightkube.resources.core_v1.Node,
             name=self._get_node_name_for_pod(),
             namespace=self._namespace,
@@ -246,7 +239,7 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
 
     def node_port(self, port_type="rw") -> int:
         """Return node port."""
-        service = self.client.get(
+        service = lightkube.Client().get(
             lightkube.resources.core_v1.Service, self.app.name, namespace=self._namespace
         )
         assert service and service.spec.type == "NodePort"
