@@ -241,7 +241,6 @@ class RelationEndpoint:
             f"State of reconcile users {self._requested_users(event)=}, {self._shared_users=}"
         )
         for request in self._requested_users(event):
-            relation = request.relation
             if request not in self._shared_users:
                 request.create_database_and_user(
                     router_read_write_endpoint=router_read_write_endpoint,

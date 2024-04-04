@@ -60,10 +60,12 @@ def kubernetes_patch(monkeypatch):
         "kubernetes_charm.KubernetesRouterCharm.get_k8s_node_ip", lambda *args, **kwargs: None
     )
     monkeypatch.setattr(
-        "kubernetes_charm.KubernetesRouterCharm._get_node_name_for_pod", lambda *args, **kwargs: None
+        "kubernetes_charm.KubernetesRouterCharm._get_node_name_for_pod",
+        lambda *args, **kwargs: None,
     )
     monkeypatch.setattr(
-        "kubernetes_charm.KubernetesRouterCharm.get_all_k8s_node_hostnames_and_ips", lambda *args, **kwargs: None
+        "kubernetes_charm.KubernetesRouterCharm.get_all_k8s_node_hostnames_and_ips",
+        lambda *args, **kwargs: None,
     )
     monkeypatch.setattr(
         "kubernetes_charm.KubernetesRouterCharm.node_port", lambda *args, **kwargs: None
