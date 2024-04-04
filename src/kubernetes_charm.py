@@ -13,7 +13,7 @@ import typing
 import lightkube
 import lightkube.models.core_v1
 import lightkube.models.meta_v1
-import lightkube.resources.core_v1 as core_v1
+import lightkube.resources.core_v1
 import ops
 
 import abstract_charm
@@ -185,7 +185,9 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
     def _get_node_name_for_pod(self) -> str:
         """Return the node name for a given pod."""
         pod = self.client.get(
-            core_v1.Pod, name=self.unit.name.replace("/", "-"), namespace=self._namespace
+            lightkube.resources.core_v1.Pod,
+            name=self.unit.name.replace("/", "-"),
+            namespace=self._namespace,
         )
         return pod.spec.nodeName
 
@@ -210,7 +212,9 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
     def get_all_k8s_node_hostnames_and_ips(self) -> typing.Tuple[typing.List[str]]:
         """Return all node hostnames and IPs registered in k8s."""
         node = self.client.get(
-            core_v1.Node, name=self._get_node_name_for_pod(), namespace=self._namespace
+            lightkube.resources.core_v1.Node,
+            name=self._get_node_name_for_pod(),
+            namespace=self._namespace,
         )
         hostnames, ips = [], []
         for a in node.status.addresses:
@@ -223,7 +227,9 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
     def get_k8s_node_ip(self) -> typing.Optional[str]:
         """Return node IP."""
         node = self.client.get(
-            core_v1.Node, name=self._get_node_name_for_pod(), namespace=self._namespace
+            lightkube.resources.core_v1.Node,
+            name=self._get_node_name_for_pod(),
+            namespace=self._namespace,
         )
         # [
         #    NodeAddress(address='192.168.0.228', type='InternalIP'),
@@ -240,7 +246,9 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
 
     def node_port(self, port_type="rw") -> int:
         """Return node port."""
-        service = self.client.get(core_v1.Service, self.app.name, namespace=self._namespace)
+        service = self.client.get(
+            lightkube.resources.core_v1.Service, self.app.name, namespace=self._namespace
+        )
         assert service and service.spec.type == "NodePort"
         # svc.spec.ports
         # [ServicePort(port=3306, appProtocol=None, name=None, nodePort=31438, protocol='TCP', targetPort=3306)]
