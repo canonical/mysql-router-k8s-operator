@@ -128,13 +128,13 @@ class _Relation:
                 f"{unit_name}.{self._charm.app.name}.{self._charm.model_service_domain}",
                 self._charm.app.name,
                 f"{self._charm.app.name}.{self._charm.model_service_domain}",
+                *extra_hosts,
             ],
-            *extra_hosts,
             sans_ip=[
                 str(self._charm.model.get_binding("juju-info").network.bind_address),
                 "127.0.0.1",
+                *extra_ips,
             ],
-            *extra_ips,
         )
 
     def request_certificate_creation(self):
