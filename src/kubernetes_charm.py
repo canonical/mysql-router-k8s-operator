@@ -52,7 +52,7 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         return
 
     @property
-    def tls_certificate_saved(self) -> bool:
+    def _tls_certificate_saved(self) -> bool:
         return self.tls.certificate_saved
 
     @property
@@ -82,7 +82,7 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         except upgrade.PeerRelationNotReady:
             pass
 
-    def reconcile_node_port(self, event) -> None:
+    def _reconcile_node_port(self) -> None:
         """Reconcile node port."""
         self._patch_service()
 
@@ -113,21 +113,17 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
 
     @property
     def _exposed_read_write_endpoint(self) -> str:
-        return f"{self.get_k8s_node_ip()}:{self.node_port('rw')}"
+        return f"{self._node_ip}:{self._node_port('rw')}"
 
     @property
     def _exposed_read_only_endpoint(self) -> str:
-        return f"{self.get_k8s_node_ip()}:{self.node_port('ro')}"
+        return f"{self._node_ip}:{self._node_port('ro')}"
 
     def _patch_service(self) -> None:
         """Patch Juju-created k8s service.
 
         The k8s service will be tied to pod-0 so that the service is auto cleaned by
         k8s when the last pod is scaled down.
-
-        If the service is set for unexpose=True, the NodePort will be removed.
-        Otherwise, the service will be set to NodePort if at least one client requests
-        that the service be exposed.
         """
         logger.debug("Patching k8s service")
         client = lightkube.Client()
@@ -158,7 +154,6 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
                         targetPort=self._READ_ONLY_PORT,  # Value ignored if NodePort
                     ),
                 ],
-                # If all exposed services are removed, the NodePort will be removed
                 type=(
                     "NodePort" if self._database_provides.external_connectivity else "ClusterIP"
                 ),
@@ -175,8 +170,8 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         )
         logger.debug("Patched k8s service")
 
-    def _get_node_name_for_pod(self) -> str:
-        """Return the node name for a given pod."""
+    def _get_node_name(self) -> str:
+        """Return the node name for this unit's pod ip."""
         pod = lightkube.Client().get(
             lightkube.resources.core_v1.Pod,
             name=self.unit.name.replace("/", "-"),
@@ -188,14 +183,17 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
     #  Handlers
     # =======================
 
-    def get_all_k8s_node_hostnames_and_ips(self) -> typing.Tuple[typing.List[str]]:
+    def get_all_k8s_node_hostnames_and_ips(
+        self,
+    ) -> typing.Tuple[typing.List[str], typing.List[str]]:
         """Return all node hostnames and IPs registered in k8s."""
         node = lightkube.Client().get(
             lightkube.resources.core_v1.Node,
-            name=self._get_node_name_for_pod(),
+            name=self._get_node_name(),
             namespace=self._namespace,
         )
-        hostnames, ips = [], []
+        hostnames = []
+        ips = []
         for a in node.status.addresses:
             if a.type in ["ExternalIP", "InternalIP"]:
                 ips.append(a.address)
@@ -203,11 +201,12 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
                 hostnames.append(a.address)
         return hostnames, ips
 
-    def get_k8s_node_ip(self) -> typing.Optional[str]:
+    @property
+    def _node_ip(self) -> typing.Optional[str]:
         """Return node IP."""
         node = lightkube.Client().get(
             lightkube.resources.core_v1.Node,
-            name=self._get_node_name_for_pod(),
+            name=self._get_node_name(),
             namespace=self._namespace,
         )
         # [
@@ -223,7 +222,7 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
                     return a.address
         return None
 
-    def node_port(self, port_type="rw") -> int:
+    def _node_port(self, port_type: str) -> int:
         """Return node port."""
         service = lightkube.Client().get(
             lightkube.resources.core_v1.Service, self.app.name, namespace=self._namespace

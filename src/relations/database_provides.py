@@ -42,7 +42,6 @@ class _Relation:
 
     def __init__(self, *, relation: ops.Relation) -> None:
         self._id = relation.id
-        self._relation = relation
 
     def __eq__(self, other) -> bool:
         if not isinstance(other, _Relation):
@@ -81,7 +80,7 @@ class _RelationThatRequestedUser(_Relation):
         """Whether any of the relations are marked as external."""
         return any(
             "true" in field.values()
-            for field in self._interface.fetch_my_relation_data(
+            for field in self._interface.fetch_relation_data(
                 relation_ids=[self._id], fields=["external-node-connectivity"]
             ).values()
         )
@@ -241,6 +240,11 @@ class RelationEndpoint:
         created by this charm. Therefore, this charm does not need to delete users when that
         relation is broken.
         """
+        logger.debug(
+            f"Reconciling users {event=}, {router_read_write_endpoint=}, {router_read_only_endpoint=}, "
+            f"{exposed_read_write_endpoint=}, {exposed_read_only_endpoint=}"
+        )
+
         requested_users = []
         for relation in self._interface.relations:
             try:
@@ -256,22 +260,16 @@ class RelationEndpoint:
             ):
                 pass
 
-        logger.debug(
-            f"Reconciling users {event=}, {router_read_write_endpoint=}, {router_read_only_endpoint=}, "
-            f"{exposed_read_write_endpoint=}, {exposed_read_only_endpoint=}"
-        )
-
         logger.debug(f"State of reconcile users {requested_users=}, {self._shared_users=}")
-        for request in requested_users:
-            if request not in self._shared_users:
-                request.create_database_and_user(
+        for relation in requested_users:
+            if relation not in self._shared_users:
+                relation.create_database_and_user(
                     router_read_write_endpoint=router_read_write_endpoint,
                     router_read_only_endpoint=router_read_only_endpoint,
                     exposed_read_write_endpoint=exposed_read_write_endpoint,
                     exposed_read_only_endpoint=exposed_read_only_endpoint,
                     shell=shell,
                 )
-            logger.debug(f"Reconciled users {event=}")
 
         for relation in self._shared_users:
             if relation not in requested_users:

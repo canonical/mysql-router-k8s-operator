@@ -225,8 +225,11 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
             logger.debug("MySQL Router is ready")
 
     @abc.abstractmethod
-    def reconcile_node_port(self, event) -> None:
-        """Reconcile node port."""
+    def _reconcile_node_port(self) -> None:
+        """Reconcile node port.
+
+        Only applies to Kubernetes charm
+        """
 
     # =======================
     #  Handlers
@@ -294,7 +297,7 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
                     and isinstance(workload_, workload.AuthenticatedWorkload)
                     and workload_.container_ready
                 ):
-                    self.reconcile_node_port(event)
+                    self._reconcile_node_port()
 
                     self._database_provides.reconcile_users(
                         event=event,
