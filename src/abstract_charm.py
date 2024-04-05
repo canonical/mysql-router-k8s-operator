@@ -225,23 +225,8 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
             logger.debug("MySQL Router is ready")
 
     @abc.abstractmethod
-    def expose(self) -> None:
-        """Expose MySQL Router."""
-        pass
-
-    @abc.abstractmethod
-    def unexpose(self) -> None:
-        """Unexpose MySQL Router."""
-        pass
-
-    def reconcile_node_port(self) -> None:
+    def reconcile_node_port(self, event) -> None:
         """Reconcile node port."""
-        if not self._unit_lifecycle.authorized_leader:
-            return
-        if self._database_provides.is_exposed:
-            self.expose()
-        else:
-            self.unexpose()
 
     # =======================
     #  Handlers
@@ -309,7 +294,7 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
                     and isinstance(workload_, workload.AuthenticatedWorkload)
                     and workload_.container_ready
                 ):
-                    self.reconcile_node_port()
+                    self.reconcile_node_port(event)
 
                     self._database_provides.reconcile_users(
                         event=event,
@@ -328,8 +313,6 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
                     certificate=self._tls_certificate,
                     certificate_authority=self._tls_certificate_authority,
                 )
-            else:
-                self.unexpose()
             # Empty waiting status means we're waiting for database requires relation before
             # starting workload
             if not workload_.status or workload_.status == ops.WaitingStatus():

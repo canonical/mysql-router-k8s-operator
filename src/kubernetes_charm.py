@@ -82,13 +82,19 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         except upgrade.PeerRelationNotReady:
             pass
 
-    def expose(self) -> None:
-        """Expose MySQL Router service."""
-        self._patch_service()
-
-    def unexpose(self) -> None:
-        """Unexpose MySQL Router service."""
-        self._patch_service(unexpose=True)
+    def reconcile_node_port(self, event) -> None:
+        """Reconcile node port."""
+        if (
+            isinstance(event, ops.charm.RelationEvent)
+            and self._database_provides.external_connectivity
+            and self.unit.is_leader()
+            and not self._upgrade.in_progress
+        ):
+            # This is going to be called in any of the following cases:
+            # - The relation is created: we need to verify if we should expose the service
+            # - The relation is updated: we need to verify if we should expose the service
+            # - The relation is broken: we need to verify if we should unexpose the service
+            self._patch_service()
 
     @property
     def model_service_domain(self) -> str:
@@ -123,7 +129,7 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
     def _exposed_read_only_endpoint(self) -> str:
         return f"{self.get_k8s_node_ip()}:{self.node_port('ro')}"
 
-    def _patch_service(self, unexpose: bool = False) -> None:
+    def _patch_service(self) -> None:
         """Patch Juju-created k8s service.
 
         The k8s service will be tied to pod-0 so that the service is auto cleaned by
@@ -164,9 +170,7 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
                 ],
                 # If all exposed services are removed, the NodePort will be removed
                 type=(
-                    "NodePort"
-                    if self._database_provides.is_exposed and not unexpose
-                    else "ClusterIP"
+                    "NodePort" if self._database_provides.external_connectivity else "ClusterIP"
                 ),
                 selector={"app.kubernetes.io/name": self.app.name},
             ),
@@ -193,20 +197,6 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
     # =======================
     #  Handlers
     # =======================
-
-    def reconcile(self, event=None) -> None:
-        if (
-            isinstance(event, ops.charm.RelationEvent)
-            and self._database_provides.is_exposed
-            and self.unit.is_leader()
-            and not self._upgrade.in_progress
-        ):
-            # This is going to be called in any of the following cases:
-            # - The relation is created: we need to verify if we should expose the service
-            # - The relation is updated: we need to verify if we should expose the service
-            # - The relation is broken: we need to verify if we should unexpose the service
-            self._patch_service()
-        super().reconcile(event)
 
     def get_all_k8s_node_hostnames_and_ips(self) -> typing.Tuple[typing.List[str]]:
         """Return all node hostnames and IPs registered in k8s."""
