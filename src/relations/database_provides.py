@@ -82,6 +82,7 @@ class _RelationThatRequestedUser(_Relation):
         return any(
             "true" in field.values()
             for field in self._interface.fetch_my_relation_data(
+                relation_ids=[self._id],
                 fields=["external-node-connectivity"]
             ).values()
         )
@@ -277,7 +278,8 @@ class RelationEndpoint:
             if relation not in requested_users:
                 relation.delete_user(shell=shell)
         logger.debug(
-            f"Reconciled users {event=}, {router_read_write_endpoint=}, {router_read_only_endpoint=}"
+            f"Reconciled users {event=}, {router_read_write_endpoint=}, {router_read_only_endpoint=}, "
+            f"{exposed_read_write_endpoint=}, {exposed_read_only_endpoint=}"
         )
 
     def delete_all_databags(self) -> None:

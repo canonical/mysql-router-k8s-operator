@@ -84,17 +84,7 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
 
     def reconcile_node_port(self, event) -> None:
         """Reconcile node port."""
-        if (
-            isinstance(event, ops.charm.RelationEvent)
-            and self._database_provides.external_connectivity
-            and self.unit.is_leader()
-            and not self._upgrade.in_progress
-        ):
-            # This is going to be called in any of the following cases:
-            # - The relation is created: we need to verify if we should expose the service
-            # - The relation is updated: we need to verify if we should expose the service
-            # - The relation is broken: we need to verify if we should unexpose the service
-            self._patch_service()
+        self._patch_service()
 
     @property
     def model_service_domain(self) -> str:
