@@ -82,8 +82,7 @@ class _RelationThatRequestedUser(_Relation):
         return any(
             "true" in field.values()
             for field in self._interface.fetch_my_relation_data(
-                relation_ids=[self._id],
-                fields=["external-node-connectivity"]
+                relation_ids=[self._id], fields=["external-node-connectivity"]
             ).values()
         )
 
