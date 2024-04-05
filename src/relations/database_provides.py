@@ -78,11 +78,10 @@ class _RelationThatRequestedUser(_Relation):
 
     @property
     def external_connectivity(self) -> bool:
-        """Whether the relation is exposed."""
-        return (
-            self._relation.data[self._relation.app].get("external-node-connectivity", "false")
-            == "true"
-        )
+        """Whether any of the relations are marked as exposed."""
+        return set(
+            self._interface.fetch_my_relation_data(fields=["external-node-connectivity"]).values()
+        ) == {"true"}
 
     def _set_databag(
         self,
