@@ -82,7 +82,7 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         except upgrade.PeerRelationNotReady:
             pass
 
-    def _reconcile_node_port(self) -> None:
+    def _reconcile_node_port(self, event=None) -> None:
         """Reconcile node port."""
         self._patch_service()
 
@@ -119,7 +119,7 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
     def _exposed_read_only_endpoint(self) -> str:
         return f"{self._node_ip}:{self._node_port('ro')}"
 
-    def _patch_service(self) -> None:
+    def _patch_service(self, event=None) -> None:
         """Patch Juju-created k8s service.
 
         The k8s service will be tied to pod-0 so that the service is auto cleaned by
@@ -155,7 +155,9 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
                     ),
                 ],
                 type=(
-                    "NodePort" if self._database_provides.external_connectivity else "ClusterIP"
+                    "NodePort"
+                    if self._database_provides.external_connectivity(event)
+                    else "ClusterIP"
                 ),
                 selector={"app.kubernetes.io/name": self.app.name},
             ),
