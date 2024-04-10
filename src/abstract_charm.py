@@ -225,7 +225,7 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
             logger.debug("MySQL Router is ready")
 
     @abc.abstractmethod
-    def _reconcile_node_port(self, event=None) -> None:
+    def _reconcile_node_port(self, event) -> None:
         """Reconcile node port.
 
         Only applies to Kubernetes charm

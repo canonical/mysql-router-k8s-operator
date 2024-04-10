@@ -82,9 +82,9 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         except upgrade.PeerRelationNotReady:
             pass
 
-    def _reconcile_node_port(self, event=None) -> None:
+    def _reconcile_node_port(self, event) -> None:
         """Reconcile node port."""
-        self._patch_service()
+        self._patch_service(event)
 
     @property
     def model_service_domain(self) -> str:
