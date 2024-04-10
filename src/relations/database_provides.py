@@ -70,27 +70,15 @@ class _RelationThatRequestedUser(_Relation):
         # Application charm databag
         databag = remote_databag.RemoteDatabag(interface=interface, relation=relation)
         self._database: str = databag["database"]
+        # Whether endpoints should be externally accessible
+        # (e.g. when related to `data-integrator` charm)
+        # Implements DA073 - Add Expose Flag to the Database Interface
+        # https://docs.google.com/document/d/1Y7OZWwMdvF8eEMuVKrqEfuFV3JOjpqLHL7_GPqJpRHU
+        self.external_connectivity = databag.get("external-node-connectivity") == "true"
         if databag.get("extra-user-roles"):
             raise _UnsupportedExtraUserRole(
                 app_name=relation.app.name, endpoint_name=relation.name
             )
-
-    @property
-    def external_connectivity(self) -> bool:
-        """Whether endpoints should be externally accessible
-
-        (e.g. when related to `data-integrator` charm)
-
-        Implements DA073 - Add Expose Flag to the Database Interface
-
-        https://docs.google.com/document/d/1Y7OZWwMdvF8eEMuVKrqEfuFV3JOjpqLHL7_GPqJpRHU
-        """
-        return any(
-            "true" in field.values()
-            for field in self._interface.fetch_relation_data(
-                relation_ids=[self._id], fields=["external-node-connectivity"]
-            ).values()
-        )
 
     def _set_databag(
         self,
