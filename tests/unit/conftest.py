@@ -56,13 +56,8 @@ def kubernetes_patch(monkeypatch):
     monkeypatch.setattr(
         "kubernetes_charm.KubernetesRouterCharm._patch_service", lambda *args, **kwargs: None
     )
-    monkeypatch.setattr(
-        "kubernetes_charm.KubernetesRouterCharm._node_ip", lambda *args, **kwargs: None
-    )
-    monkeypatch.setattr(
-        "kubernetes_charm.KubernetesRouterCharm._get_node_name",
-        lambda *args, **kwargs: None,
-    )
+    monkeypatch.setattr("kubernetes_charm.KubernetesRouterCharm._node_ip", None)
+    monkeypatch.setattr("kubernetes_charm.KubernetesRouterCharm._node_name", None)
     monkeypatch.setattr(
         "kubernetes_charm.KubernetesRouterCharm.get_all_k8s_node_hostnames_and_ips",
         lambda *args, **kwargs: None,

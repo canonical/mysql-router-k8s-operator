@@ -233,7 +233,6 @@ class RelationEndpoint:
             f"Reconciling users {event=}, {router_read_write_endpoint=}, {router_read_only_endpoint=}, "
             f"{exposed_read_write_endpoint=}, {exposed_read_only_endpoint=}"
         )
-
         requested_users = []
         for relation in self._interface.relations:
             try:
@@ -248,7 +247,6 @@ class RelationEndpoint:
                 _UnsupportedExtraUserRole,
             ):
                 pass
-
         logger.debug(f"State of reconcile users {requested_users=}, {self._shared_users=}")
         for relation in requested_users:
             if relation not in self._shared_users:
@@ -259,7 +257,6 @@ class RelationEndpoint:
                     exposed_read_only_endpoint=exposed_read_only_endpoint,
                     shell=shell,
                 )
-
         for relation in self._shared_users:
             if relation not in requested_users:
                 relation.delete_user(shell=shell)

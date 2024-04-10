@@ -249,7 +249,6 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
         if not self._upgrade.versions_set:
             logger.debug("Peer relation not ready")
             return
-
         workload_ = self.get_workload(event=event)
         if self._upgrade.unit_state == "restarting":  # Kubernetes only
             if not self._upgrade.is_compatible:
@@ -298,7 +297,6 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
                     and workload_.container_ready
                 ):
                     self._reconcile_node_port(event=event)
-
                     self._database_provides.reconcile_users(
                         event=event,
                         router_read_write_endpoint=self._read_write_endpoint,

@@ -172,7 +172,8 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         )
         logger.debug("Patched k8s service")
 
-    def _get_node_name(self) -> str:
+    @property
+    def _node_name(self) -> str:
         """Return the node name for this unit's pod ip."""
         pod = lightkube.Client().get(
             lightkube.resources.core_v1.Pod,
@@ -181,17 +182,13 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         )
         return pod.spec.nodeName
 
-    # =======================
-    #  Handlers
-    # =======================
-
     def get_all_k8s_node_hostnames_and_ips(
         self,
     ) -> typing.Tuple[typing.List[str], typing.List[str]]:
         """Return all node hostnames and IPs registered in k8s."""
         node = lightkube.Client().get(
             lightkube.resources.core_v1.Node,
-            name=self._get_node_name(),
+            name=self._node_name,
             namespace=self._namespace,
         )
         hostnames = []
@@ -208,7 +205,7 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         """Return node IP."""
         node = lightkube.Client().get(
             lightkube.resources.core_v1.Node,
-            name=self._get_node_name(),
+            name=self._node_name,
             namespace=self._namespace,
         )
         # [
@@ -222,7 +219,6 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
             for a in node.status.addresses:
                 if a.type == typ:
                     return a.address
-        return None
 
     def _node_port(self, port_type: str) -> int:
         """Return node port."""
@@ -233,12 +229,21 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
             return -1
         # svc.spec.ports
         # [ServicePort(port=3306, appProtocol=None, name=None, nodePort=31438, protocol='TCP', targetPort=3306)]
-        port = self._READ_ONLY_PORT if port_type == "ro" else self._READ_WRITE_PORT
+        if port_type == "rw":
+            port = self._READ_WRITE_PORT
+        elif port_type == "ro":
+            port = self._READ_ONLY_PORT
+        else:
+            raise ValueError(f"Invalid {port_type=}")
         logger.debug(f"Looking for NodePort for {port_type} in {service.spec.ports}")
         for svc_port in service.spec.ports:
             if svc_port.port == port:
                 return svc_port.nodePort
         raise Exception(f"NodePort not found for {port_type}")
+
+    # =======================
+    #  Handlers
+    # =======================
 
     def _on_install(self, _) -> None:
         """Open ports & patch k8s service."""
