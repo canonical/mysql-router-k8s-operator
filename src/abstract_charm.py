@@ -95,6 +95,16 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
         """MySQL Router read-only endpoint"""
 
     @property
+    @abc.abstractmethod
+    def _exposed_read_write_endpoint(self) -> str:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def _exposed_read_only_endpoint(self) -> str:
+        pass
+
+    @property
     def _tls_certificate_saved(self) -> bool:
         """Whether a TLS certificate is available to use"""
         # TODO VM TLS: Update property after implementing TLS on machine_charm
@@ -214,6 +224,13 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
         else:
             logger.debug("MySQL Router is ready")
 
+    @abc.abstractmethod
+    def _reconcile_node_port(self, event) -> None:
+        """Reconcile node port.
+
+        Only applies to Kubernetes charm
+        """
+
     # =======================
     #  Handlers
     # =======================
@@ -279,10 +296,13 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
                     and isinstance(workload_, workload.AuthenticatedWorkload)
                     and workload_.container_ready
                 ):
+                    self._reconcile_node_port(event=event)
                     self._database_provides.reconcile_users(
                         event=event,
                         router_read_write_endpoint=self._read_write_endpoint,
                         router_read_only_endpoint=self._read_only_endpoint,
+                        exposed_read_write_endpoint=self._exposed_read_write_endpoint,
+                        exposed_read_only_endpoint=self._exposed_read_only_endpoint,
                         shell=workload_.shell,
                     )
             if workload_.container_ready:

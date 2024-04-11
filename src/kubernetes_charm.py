@@ -37,6 +37,8 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
 
     def __init__(self, *args) -> None:
         super().__init__(*args)
+        self._namespace = self.model.name
+
         self.framework.observe(self.on.install, self._on_install)
         self.framework.observe(
             self.on[rock.CONTAINER_NAME].pebble_ready, self._on_workload_container_pebble_ready
@@ -80,6 +82,10 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         except upgrade.PeerRelationNotReady:
             pass
 
+    def _reconcile_node_port(self, event) -> None:
+        """Reconcile node port."""
+        self._patch_service(event)
+
     @property
     def model_service_domain(self) -> str:
         """K8s service domain for Juju model"""
@@ -105,7 +111,15 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
     def _read_only_endpoint(self) -> str:
         return f"{self._host}:{self._READ_ONLY_PORT}"
 
-    def _patch_service(self) -> None:
+    @property
+    def _exposed_read_write_endpoint(self) -> str:
+        return f"{self._node_ip}:{self._node_port('rw')}"
+
+    @property
+    def _exposed_read_only_endpoint(self) -> str:
+        return f"{self._node_ip}:{self._node_port('ro')}"
+
+    def _patch_service(self, event=None) -> None:
         """Patch Juju-created k8s service.
 
         The k8s service will be tied to pod-0 so that the service is auto cleaned by
@@ -132,14 +146,19 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
                     lightkube.models.core_v1.ServicePort(
                         name="mysql-rw",
                         port=self._READ_WRITE_PORT,
-                        targetPort=self._READ_WRITE_PORT,
+                        targetPort=self._READ_WRITE_PORT,  # Value ignored if NodePort
                     ),
                     lightkube.models.core_v1.ServicePort(
                         name="mysql-ro",
                         port=self._READ_ONLY_PORT,
-                        targetPort=self._READ_ONLY_PORT,
+                        targetPort=self._READ_ONLY_PORT,  # Value ignored if NodePort
                     ),
                 ],
+                type=(
+                    "NodePort"
+                    if self._database_provides.external_connectivity(event)
+                    else "ClusterIP"
+                ),
                 selector={"app.kubernetes.io/name": self.app.name},
             ),
         )
@@ -152,6 +171,75 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
             field_manager=self.app.name,
         )
         logger.debug("Patched k8s service")
+
+    @property
+    def _node_name(self) -> str:
+        """Return the node name for this unit's pod ip."""
+        pod = lightkube.Client().get(
+            lightkube.resources.core_v1.Pod,
+            name=self.unit.name.replace("/", "-"),
+            namespace=self._namespace,
+        )
+        return pod.spec.nodeName
+
+    def get_all_k8s_node_hostnames_and_ips(
+        self,
+    ) -> typing.Tuple[typing.List[str], typing.List[str]]:
+        """Return all node hostnames and IPs registered in k8s."""
+        node = lightkube.Client().get(
+            lightkube.resources.core_v1.Node,
+            name=self._node_name,
+            namespace=self._namespace,
+        )
+        hostnames = []
+        ips = []
+        for a in node.status.addresses:
+            if a.type in ["ExternalIP", "InternalIP"]:
+                ips.append(a.address)
+            elif a.type == "Hostname":
+                hostnames.append(a.address)
+        return hostnames, ips
+
+    @property
+    def _node_ip(self) -> typing.Optional[str]:
+        """Return node IP."""
+        node = lightkube.Client().get(
+            lightkube.resources.core_v1.Node,
+            name=self._node_name,
+            namespace=self._namespace,
+        )
+        # [
+        #    NodeAddress(address='192.168.0.228', type='InternalIP'),
+        #    NodeAddress(address='example.com', type='Hostname')
+        # ]
+        # Remember that OpenStack, for example, will return an internal hostname, which is not
+        # accessible from the outside. Give preference to ExternalIP, then InternalIP first
+        # Separated, as we want to give preference to ExternalIP, InternalIP and then Hostname
+        for typ in ["ExternalIP", "InternalIP", "Hostname"]:
+            for a in node.status.addresses:
+                if a.type == typ:
+                    return a.address
+
+    def _node_port(self, port_type: str) -> int:
+        """Return node port."""
+        service = lightkube.Client().get(
+            lightkube.resources.core_v1.Service, self.app.name, namespace=self._namespace
+        )
+        if not service or not service.spec.type == "NodePort":
+            return -1
+        # svc.spec.ports
+        # [ServicePort(port=3306, appProtocol=None, name=None, nodePort=31438, protocol='TCP', targetPort=3306)]
+        if port_type == "rw":
+            port = self._READ_WRITE_PORT
+        elif port_type == "ro":
+            port = self._READ_ONLY_PORT
+        else:
+            raise ValueError(f"Invalid {port_type=}")
+        logger.debug(f"Looking for NodePort for {port_type} in {service.spec.ports}")
+        for svc_port in service.spec.ports:
+            if svc_port.port == port:
+                return svc_port.nodePort
+        raise Exception(f"NodePort not found for {port_type}")
 
     # =======================
     #  Handlers

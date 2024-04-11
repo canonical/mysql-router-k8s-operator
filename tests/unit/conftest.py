@@ -53,6 +53,18 @@ def kubernetes_patch(monkeypatch):
     monkeypatch.setattr("rock._Path.mkdir", lambda *args, **kwargs: None)
     monkeypatch.setattr("rock._Path.rmtree", lambda *args, **kwargs: None)
     monkeypatch.setattr("lightkube.Client", lambda *args, **kwargs: None)
+    monkeypatch.setattr(
+        "kubernetes_charm.KubernetesRouterCharm._patch_service", lambda *args, **kwargs: None
+    )
+    monkeypatch.setattr("kubernetes_charm.KubernetesRouterCharm._node_ip", None)
+    monkeypatch.setattr("kubernetes_charm.KubernetesRouterCharm._node_name", None)
+    monkeypatch.setattr(
+        "kubernetes_charm.KubernetesRouterCharm.get_all_k8s_node_hostnames_and_ips",
+        lambda *args, **kwargs: None,
+    )
+    monkeypatch.setattr(
+        "kubernetes_charm.KubernetesRouterCharm._node_port", lambda *args, **kwargs: None
+    )
     monkeypatch.setattr("kubernetes_upgrade._Partition.get", lambda *args, **kwargs: 0)
     monkeypatch.setattr("kubernetes_upgrade._Partition.set", lambda *args, **kwargs: None)
 

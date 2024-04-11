@@ -65,11 +65,16 @@ class _RelationThatRequestedUser(_Relation):
     ) -> None:
         super().__init__(relation=relation)
         self._interface = interface
-        if isinstance(event, ops.RelationBrokenEvent) and event.relation.id == self._id:
+        if event and isinstance(event, ops.RelationBrokenEvent) and event.relation.id == self._id:
             raise _RelationBreaking
         # Application charm databag
         databag = remote_databag.RemoteDatabag(interface=interface, relation=relation)
         self._database: str = databag["database"]
+        # Whether endpoints should be externally accessible
+        # (e.g. when related to `data-integrator` charm)
+        # Implements DA073 - Add Expose Flag to the Database Interface
+        # https://docs.google.com/document/d/1Y7OZWwMdvF8eEMuVKrqEfuFV3JOjpqLHL7_GPqJpRHU
+        self.external_connectivity = databag.get("external-node-connectivity") == "true"
         if databag.get("extra-user-roles"):
             raise _UnsupportedExtraUserRole(
                 app_name=relation.app.name, endpoint_name=relation.name
@@ -100,6 +105,8 @@ class _RelationThatRequestedUser(_Relation):
         *,
         router_read_write_endpoint: str,
         router_read_only_endpoint: str,
+        exposed_read_write_endpoint: str,
+        exposed_read_only_endpoint: str,
         shell: mysql_shell.Shell,
     ) -> None:
         """Create database & user and update databag."""
@@ -115,11 +122,20 @@ class _RelationThatRequestedUser(_Relation):
         password = shell.create_application_database_and_user(
             username=username, database=self._database
         )
+
+        rw_endpoint = (
+            exposed_read_write_endpoint
+            if self.external_connectivity
+            else router_read_write_endpoint
+        )
+        ro_endpoint = (
+            exposed_read_only_endpoint if self.external_connectivity else router_read_only_endpoint
+        )
         self._set_databag(
             username=username,
             password=password,
-            router_read_write_endpoint=router_read_write_endpoint,
-            router_read_only_endpoint=router_read_only_endpoint,
+            router_read_write_endpoint=rw_endpoint,
+            router_read_only_endpoint=ro_endpoint,
         )
 
 
@@ -166,6 +182,24 @@ class RelationEndpoint:
         charm_.framework.observe(self._interface.on.database_requested, charm_.reconcile)
         charm_.framework.observe(charm_.on[self._NAME].relation_broken, charm_.reconcile)
 
+    def external_connectivity(self, event) -> bool:
+        """Whether any of the relations are marked as external."""
+        requested_users = []
+        for relation in self._interface.relations:
+            try:
+                requested_users.append(
+                    _RelationThatRequestedUser(
+                        relation=relation, interface=self._interface, event=event
+                    )
+                )
+            except (
+                _RelationBreaking,
+                remote_databag.IncompleteDatabag,
+                _UnsupportedExtraUserRole,
+            ):
+                pass
+        return any(relation.external_connectivity for relation in requested_users)
+
     @property
     # TODO python3.10 min version: Use `list` instead of `typing.List`
     def _shared_users(self) -> typing.List[_RelationWithSharedUser]:
@@ -185,6 +219,8 @@ class RelationEndpoint:
         event,
         router_read_write_endpoint: str,
         router_read_only_endpoint: str,
+        exposed_read_write_endpoint: str,
+        exposed_read_only_endpoint: str,
         shell: mysql_shell.Shell,
     ) -> None:
         """Create requested users and delete inactive users.
@@ -194,7 +230,8 @@ class RelationEndpoint:
         relation is broken.
         """
         logger.debug(
-            f"Reconciling users {event=}, {router_read_write_endpoint=}, {router_read_only_endpoint=}"
+            f"Reconciling users {event=}, {router_read_write_endpoint=}, {router_read_only_endpoint=}, "
+            f"{exposed_read_write_endpoint=}, {exposed_read_only_endpoint=}"
         )
         requested_users = []
         for relation in self._interface.relations:
@@ -216,13 +253,16 @@ class RelationEndpoint:
                 relation.create_database_and_user(
                     router_read_write_endpoint=router_read_write_endpoint,
                     router_read_only_endpoint=router_read_only_endpoint,
+                    exposed_read_write_endpoint=exposed_read_write_endpoint,
+                    exposed_read_only_endpoint=exposed_read_only_endpoint,
                     shell=shell,
                 )
         for relation in self._shared_users:
             if relation not in requested_users:
                 relation.delete_user(shell=shell)
         logger.debug(
-            f"Reconciled users {event=}, {router_read_write_endpoint=}, {router_read_only_endpoint=}"
+            f"Reconciled users {event=}, {router_read_write_endpoint=}, {router_read_only_endpoint=}, "
+            f"{exposed_read_write_endpoint=}, {exposed_read_only_endpoint=}"
         )
 
     def delete_all_databags(self) -> None:
