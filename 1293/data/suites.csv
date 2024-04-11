@@ -1,0 +1,4 @@
+"Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
+"passed","Thu Apr 11 01:31:06 UTC 2024","Thu Apr 11 01:34:58 UTC 2024","231878","tests.integration","test_charm","","","","test_database_relation","Test the database relation."
+"broken","Thu Apr 11 01:30:46 UTC 2024","Thu Apr 11 01:33:13 UTC 2024","146702","tests.integration","test_exporter","","","","test_exporter_endpoint","Test that exporter endpoint is functional."
+"passed","Thu Apr 11 01:30:35 UTC 2024","Thu Apr 11 01:32:06 UTC 2024","91705","tests.integration","test_log_rotation","","","","test_log_rotation","Test log rotation."
