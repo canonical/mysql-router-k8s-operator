@@ -1,0 +1,55 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:675 Connecting to existing model microk8s-localhost:test on unspecified cloud
+[32mINFO    [0m integration.test_node_port:test_node_port.py:50 Deploying mysql, mysqlrouter and application
+[32mINFO    [0m juju.model:model.py:2069 Deploying ch:amd64/jammy/self-signed-certificates-72
+[32mINFO    [0m juju.model:model.py:2069 Deploying ch:amd64/jammy/mysql-k8s-136
+[32mINFO    [0m juju.model:model.py:2069 Deploying ch:amd64/jammy/data-integrator-25
+[32mINFO    [0m juju.model:model.py:2069 Deploying ch:amd64/jammy/mysql-test-app-36
+[32mINFO    [0m juju.model:model.py:2069 Deploying local:jammy/mysql-router-k8s-0
+[32mINFO    [0m integration.test_node_port:test_node_port.py:93 Relating mysql, mysqlrouter and application
+[33mWARNING [0m juju.model:model.py:1558 relate is deprecated and will be removed. Use integrate instead.
+[33mWARNING [0m juju.model:model.py:1558 relate is deprecated and will be removed. Use integrate instead.
+[33mWARNING [0m juju.model:model.py:1558 relate is deprecated and will be removed. Use integrate instead.
+[33mWARNING [0m juju.model:model.py:1558 relate is deprecated and will be removed. Use integrate instead.
+[33mWARNING [0m juju.model:model.py:1558 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m juju.model:model.py:2759 Waiting for model:
+  mysql-k8s/0 [allocating] waiting: installing agent
+  mysql-k8s/1 [allocating] waiting: installing agent
+  mysql-k8s/2 [allocating] waiting: installing agent
+  mysql-router-k8s/0 [allocating] waiting: installing agent
+  mysql-test-app/0 [allocating] waiting: installing agent
+  data-integrator/0 [allocating] waiting: installing agent
+  self-signed-certificates/0 [allocating] waiting: installing agent
+[32mINFO    [0m juju.model:model.py:2759 Waiting for model:
+  mysql-k8s/0 [allocating] waiting: agent initialising
+  mysql-k8s/1 [allocating] waiting: agent initialising
+  mysql-k8s/2 [allocating] waiting: agent initialising
+  mysql-router-k8s/0 [executing] maintenance: installing charm software
+  mysql-test-app/0 [allocating] waiting: agent initialising
+  data-integrator/0 [executing] blocked: Please relate the data-integrator with the desired product
+  self-signed-certificates/0 [idle] active: 
+[32mINFO    [0m juju.model:model.py:2759 Waiting for model:
+  mysql-k8s/0 [executing] maintenance: Initialising mysqld
+  mysql-k8s/1 [executing] maintenance: Initialising mysqld
+  mysql-k8s/2 [executing] maintenance: Initialising mysqld
+  mysql-router-k8s/0 [executing] waiting: 
+  mysql-test-app/0 [idle] waiting: 
+  data-integrator/0 [idle] blocked: Please relate the data-integrator with the desired product
+  self-signed-certificates/0 [idle] active: 
+[32mINFO    [0m juju.model:model.py:2759 Waiting for model:
+  mysql-k8s/0 [idle] waiting: waiting to get cluster primary from peers
+  mysql-k8s/1 [idle] waiting: waiting to get cluster primary from peers
+  mysql-k8s/2 [idle] active: Primary
+  mysql-router-k8s/0 [executing] waiting: 
+  mysql-test-app/0 [idle] waiting: 
+  data-integrator/0 [idle] blocked: Please relate the data-integrator with the desired product
+[32mINFO    [0m juju.model:model.py:2759 Waiting for model:
+  mysql-k8s/0 [executing] active: 
+  mysql-k8s/1 [idle] maintenance: joining the cluster
+  mysql-k8s/2 [executing] active: 
+  data-integrator/0 [idle] active: 
+  self-signed-certificates/0 [executing] active: 
+[32mINFO    [0m juju.model:model.py:2759 Waiting for model:
+  mysql-k8s/0 [idle] active: 
+  mysql-k8s/1 [executing] active: 
+  mysql-k8s/2 [idle] active: Primary
+  self-signed-certificates/0 [idle] active:
