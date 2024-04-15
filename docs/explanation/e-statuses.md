@@ -15,6 +15,6 @@ The charm follows [standard Juju applications statuses](https://juju.is/docs/olm
 | **blocked** | ... app requested unsupported extra user role on database endpoint | Unsupported [role](https://charmhub.io/data-integrator/configure#extra-user-roles) requested. | Use supported extra-user-role. |
 | **blocked** | Upgrade incompatible. Rollback to previous revision with `juju refresh` | Incompatible charm channel/revision chosen. | [Rollback](/t/12239) the charm. |
 | **blocked** | Upgrading. Verify highest unit is healthy & run `resume-upgrade ` action. To rollback, `juju refresh` to last revision | Normal behavior, application is being upgraded and waiting for user confirmation to continue or rollback | [Continue upgrade](/t/12238) or [rollback](/t/12239). |
-| **error** | any | An unhanded internal error happened | Read the message hint. Execute `juju resolve <error_unit/0>` after addressing the root of the error state |
+| **error** | any | An unhanded internal error happened | Read the message hint and check the debug log to see the exception. Execute `juju resolve <error_unit/0>` after addressing the root of the error state |
 | **terminated** | any | The unit is gone and will be cleaned by Juju soon | No actions possible |
 | **unknown** | any | Juju doesn't know the charm app/unit status. Possible reason: K8s charm termination in progress. | Manual investigation required if status is permanent |

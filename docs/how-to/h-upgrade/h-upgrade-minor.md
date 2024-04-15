@@ -18,14 +18,14 @@ The concurrency with other operations is not supported, and it can lead the clus
 
 ## Minor upgrade steps
 
-1. **Collect** all necessary pre-upgrade information. It will be necessary for the rollback (if requested). Do NOT skip this step, it is better safe the sorry!
-2. (optional) **Scale-up**. The new `sacrificial` unit will be the first one to be updated, and it will simplify the rollback procedure a lot in case of the upgrade failure.
+1. **Collect** all necessary pre-upgrade information. It will be necessary for the rollback (if requested). Do NOT skip this step.
+2. (optional) **Scale up**: The new `sacrificial` unit will be the first one to be updated, and it will simplify the rollback procedure in case of the upgrade failure.
 3. **Prepare** "Charmed MySQL K8s" Juju application for the in-place upgrade. See the step description below for all technical details executed by charm here.
-4. **Upgrade** (phase 1). Once started, only one unit in a cluster will be upgraded. In case of failure, the rollback is simple: remove newly added pod (in step 2).
-5. **Resume** upgrade (phase 2). If the new pod is OK after the refresh, the upgrade can be resumed for all other units in the cluster. All units in a cluster will be executed sequentially: from biggest ordinal to the lowest one. Resume is available for Server charm only, the Router charm upgrades all units at once if no issues found for previous steps.
-6. (optional) Consider to [**Rollback**](/t/11749) in case of disaster. Please inform and include us in your case scenario troubleshooting to trace the source of the issue and prevent it in the future. [Contact us](https://chat.charmhub.io/charmhub/channels/data-platform)!
-7. (optional) **Scale-back**. Remove no longer necessary K8s pod created in step 2 (if any).
-8. Post-upgrade **Check**. Make sure all units are in the proper state and the cluster is healthy.
+4. **Upgrade**: Once started, only one unit in an app will be upgraded. In case of failure, roll back by removing the newly added unit.
+5. **Resume** upgrade: If the new unit is OK after the refresh, the upgrade can be resumed. All units in an app will be executed sequentially from highest to lowest unit number.
+6. (optional) Consider [**rolling back**](/t/11749) in case of disaster. Please [inform and include us](https://chat.charmhub.io/charmhub/channels/data-platform) in your case scenario troubleshooting to trace the source of the issue and prevent it in the future.
+7. (optional) **Scale back**: Remove no longer necessary K8s units created in step 2 (if any).
+8. **Post-upgrade check**: Make sure all units are in the proper state and the cluster is healthy.
 
 ## Step 1: Collect
 
@@ -116,13 +116,13 @@ TODO
 
 ## Step 5: Resume
 
-After the unit is upgraded, the charm will set the unit upgrade state as completed. If deemed necessary the user can further assert the success of the upgrade. Being the unit healthy within the cluster, the next step is to resume the upgrade process, by running:
+After the unit is upgraded, the charm will set the unit upgrade state as completed. If deemed necessary, the user can further assert the success of the upgrade. If the unit is healthy within the cluster, the next step is to resume the upgrade process by running:
 
 ```shell
 juju run-action mysql-k8s/leader resume-upgrade --wait
 ```
 
-The `resume-upgrade` will rollout the Server upgrade for the following unit, always from highest from lowest, and for each successful upgraded unit, the process will rollout the next automatically.
+The `resume-upgrade` will roll out the Server upgrade for the following unit, always from highest from lowest. For each successfully upgraded unit beyond the first, the process will roll out the next one automatically.
 
 ```shell
 Model    Controller  Cloud/Region        Version  SLA          Timestamp
