@@ -3,7 +3,7 @@
 > :information_source: **Example**: MySQL Router 8.0.33 -> MySQL Router 8.0.34<br/>
 (including simple charm revision bump: from revision 99 to revision 102)
 
-We strongly recommend to **NOT** perform any other extraordinary operations on Charmed MySQL K8s cluster and/or MySQL Router K8s, while upgrading. As an examples, these may be (but not limited to) the following:
+We strongly recommend to **NOT** perform any other extraordinary operations on Charmed MySQL K8s cluster and/or MySQL Router K8s, while upgrading. Some examples would be:
 
 1. Adding or removing units
 2. Creating or destroying new relations
@@ -14,7 +14,7 @@ The concurrency with other operations is not supported, and it can lead the clus
 
 > **:warning: NOTE:** Make sure to have a [Charmed MySQL K8s backups](/t/9653) of your data when running any type of upgrades.
 
-> **:warning: TIP:** The "MySQL Router K8s" upgrade should follow first, before "Charmed MySQL K8s" upgrade!!!
+> **:warning: TIP:** The MySQL Router K8s upgrade should take place **before** the Charmed MySQL K8s upgrade!!
 
 ## Minor upgrade steps
 
@@ -28,9 +28,9 @@ The concurrency with other operations is not supported, and it can lead the clus
 8. **Post-upgrade check**: Make sure all units are in the proper state and the cluster is healthy.
 
 ## Step 1: Collect
-
-> **:information_source: NOTE:** The step is only valid when deploying from charmhub. If the [local charm](https://juju.is/docs/sdk/deploy-a-charm) deployed (revision is small, e.g. 0-10), make sure the proper/current local revision of the `.charm` file is available BEFORE going further. You might need it for rollback.
-
+[note]
+This step is only valid when deploying from charmhub. If the deployment is of a local charm (revision is small, e.g. 0-10), make sure you save a copy of the current  `.charm` file BEFORE going further. You might need it for rollback.
+[/note]
 The first step is to record the revision of the running application, as a safety measure for a rollback action. To accomplish this, simply run the `juju status` command and look for the deployed Charmed MySQL and MySQL Router revisions in the command output, e.g.:
 
 ```shell
@@ -52,7 +52,7 @@ mysql-router-k8s/2*  active    idle   10.1.12.5
 mysql-test-app/0*    active    idle   10.1.12.57   
 ```
 
-For this example, the current revision is `XX` for MySQL and `TT` for Router. Store it safely to use in case of rollback!
+For this example, the current revision is `99` for MySQL K8s and `69` for Router. Store it safely to use in case of rollback!
 
 ## Step 2: Scale-up (optional)
 
@@ -147,9 +147,7 @@ mysql-test-app/0*    active       idle   10.1.12.57
 
 ## Step 6: Rollback (optional)
 
-The step must be skipped if the upgrade went well! 
-
-Although the underlying MySQL Cluster and Router continue to work, it’s important to rollback the charm to previous revision so an update can be later attempted after a further inspection of the failure. Please switch to the dedicated [minor rollback](/t/12239) tutorial if necessary.
+If the upgrade was incompatible, it’s important to roll back the charm to a previous revision so that an update can be later attempted after a further inspection of the failure. See the [minor rollback](/t/12239) guide.
 
 ## Step 7: Scale-back
 

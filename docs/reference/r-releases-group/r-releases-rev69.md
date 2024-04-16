@@ -23,16 +23,15 @@ Canonical Data issues are now public on both [Jira](https://warthogs.atlassian.n
 * The Prometheus mysql-router-exporter is "4.0.5-0ubuntu0.22.04.1~ppa1"
 * K8s charms [based on our](https://github.com/orgs/canonical/packages?tab=packages&q=charmed) ROCK OCI (Ubuntu LTS “22.04” - ubuntu:22.04-based)
 * Principal charms supports the latest LTS series “22.04” only.
-* Subordinate charms support LTS “22.04” and “20.04” only.
 
 ## Technical notes:
 
 * Upgrade (`juju refresh`) is possible from this revision 69+.
-* Use this operator together with a modern operator "[Charmed MySQL K8s](https://charmhub.io/mysql-k8s)".
+* Use this operator together with [Charmed MySQL K8s](https://charmhub.io/mysql-k8s)
 
 ## How to reach us:
 
-If you would like to chat with us about your use-cases or ideas, you can reach us at [Canonical Mattermost public channel](https://chat.charmhub.io/charmhub/channels/data-platform) or [Discourse](https://discourse.charmhub.io/). Check all other contact details [here](/t/12177).
+If you would like to chat with us about your use-cases or ideas, you can reach us at [Matrix public channel](https://matrix.to/#/#charmhub-data-platform:ubuntu.com) or [Discourse](https://discourse.charmhub.io/). Check all other contact details [here](/t/12177).
 
 Consider [opening a GitHub issue](https://github.com/canonical/mysql-router-k8s-operator/issues) if you want to open a bug report.<br/>[Contribute](https://github.com/canonical/mysql-router-k8s-operator/blob/main/CONTRIBUTING.md) to the project!
 

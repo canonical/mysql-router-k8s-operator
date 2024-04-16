@@ -22,22 +22,23 @@ To execute a rollback we take the same procedure as the upgrade, the difference 
 
 ## Step 1: Rollback
 
-When using charm from charmhub:
+When using the charm from charmhub:
 
-```
+```shell
 juju refresh mysql-router-k8s --revision=88 --trust
 ```
 
-Case deploying from local charm file, one need to have the previous revision charm file and the `mysql-image` resource, then run:
+When deploying from a local charm file, you need to have the previous revision's `.charm` file and the `mysql-image` resource. Then, run:
 
+```shell
+juju refresh mysql-router-k8s --trust --path=<path_to_charm_file> \
+       --resource mysql-router-image=<image>
 ```
-juju refresh mysql-router-k8s --trust --path=./mysql-router-k8s_ubuntu-22.04-amd64.charm \
-       --resource mysql-router-image=ghcr.io/canonical/charmed-mysql@sha256:753477ce39712221f008955b746fcf01a215785a215fe3de56f525380d14ad97
-```
+The resource reference can be found under the `upstream-source` key in the charm's `metadata.yaml` file. You can access this file by:
+* Simply unpacking the `.charm` file
+* Finding the corresponding [release](https://github.com/canonical/mysql-router-k8s-operator/releases) in the charm's GitHub repository and navigating to `metadata.yaml`.
 
-Where `mysql-router-k8s_ubuntu-22.04-amd64.charm` is the previous revision charm file. The reference for the resource for a given revision can be found at the `metadata.yaml` file in the [charm repository](https://github.com/canonical/mysql-router-k8s-operator/blob/420b840d962e71bd2f54e33edecf8d510b1ba2aa/metadata.yaml#L34).
-
-The biggest ordinal unit will be rolled out and should rejoin the cluster after settling down. After the refresh command, the juju controller revision for the application will be back in sync with the running MySQL Router K8s revision.
+After the refresh command, the `juju` controller revision for the application will be back in sync with the running MySQL Router K8s revision.
 
 ## Step 2: Check
 
