@@ -1,0 +1,52 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:675 Connecting to existing model microk8s-localhost:test on unspecified cloud
+[32mINFO    [0m integration.test_exporter:test_exporter.py:40 Deploying all the applications
+[32mINFO    [0m juju.model:model.py:2069 Deploying ch:amd64/jammy/mysql-test-app-36
+[32mINFO    [0m juju.model:model.py:2069 Deploying ch:amd64/jammy/grafana-agent-k8s-64
+[32mINFO    [0m juju.model:model.py:2069 Deploying ch:amd64/jammy/mysql-k8s-137
+[32mINFO    [0m juju.model:model.py:2069 Deploying local:jammy/mysql-router-k8s-0
+[32mINFO    [0m integration.test_exporter:test_exporter.py:79 Waiting for mysqlrouter to be in BlockedStatus
+[32mINFO    [0m integration.test_exporter:test_exporter.py:85 Relating mysql, mysqlrouter and application
+[33mWARNING [0m juju.model:model.py:1558 relate is deprecated and will be removed. Use integrate instead.
+[33mWARNING [0m juju.model:model.py:1558 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m juju.model:model.py:2759 Waiting for model:
+  mysql-router-k8s/0 [executing] maintenance: Waiting for container
+[32mINFO    [0m juju.model:model.py:2759 Waiting for model:
+  mysql-router-k8s/0 [idle] waiting: 
+[32mINFO    [0m juju.model:model.py:2759 Waiting for model:
+  mysql-router-k8s/0 [executing] waiting: 
+[32mINFO    [0m juju.model:model.py:2759 Waiting for model:
+  mysql-k8s/0 [idle] active: Primary
+  mysql-router-k8s/0 [idle] active: 
+  mysql-test-app/0 [idle] active: 
+[33mWARNING [0m urllib3.connectionpool:connectionpool.py:823 Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7f1e7ff84640>: Failed to establish a new connection: [Errno 111] Connection refused')': /metrics
+[33mWARNING [0m urllib3.connectionpool:connectionpool.py:823 Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7f1e7ff85b10>: Failed to establish a new connection: [Errno 111] Connection refused')': /metrics
+[33mWARNING [0m urllib3.connectionpool:connectionpool.py:823 Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7f1e7fb61450>: Failed to establish a new connection: [Errno 111] Connection refused')': /metrics
+[32mINFO    [0m integration.test_exporter:test_exporter.py:116 Relating mysqlrouter with grafana agent
+[33mWARNING [0m juju.model:model.py:1558 relate is deprecated and will be removed. Use integrate instead.
+[33mWARNING [0m juju.model:model.py:1558 relate is deprecated and will be removed. Use integrate instead.
+[33mWARNING [0m juju.model:model.py:1558 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m integration.test_exporter:test_exporter.py:136 Removing relation between mysqlrouter and grafana agent
+[33mWARNING [0m urllib3.connectionpool:connectionpool.py:823 Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7f1e7fb63760>: Failed to establish a new connection: [Errno 111] Connection refused')': /metrics
+[33mWARNING [0m urllib3.connectionpool:connectionpool.py:823 Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7f1e7fb61a50>: Failed to establish a new connection: [Errno 111] Connection refused')': /metrics
+[33mWARNING [0m urllib3.connectionpool:connectionpool.py:823 Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7f1e7fb61330>: Failed to establish a new connection: [Errno 111] Connection refused')': /metrics
+[32mINFO    [0m pytest_operator.plugin:plugin.py:790 Model status:
+
+Model  Controller          Cloud/Region        Version  SLA          Timestamp
+test   microk8s-localhost  microk8s/localhost  3.1.6    unsupported  01:34:17Z
+
+App                Version                  Status   Scale  Charm              Channel        Rev  Address         Exposed  Message
+grafana-agent-k8s  0.35.2                   waiting      1  grafana-agent-k8s  latest/stable   64  10.152.183.154  no       installing agent
+mysql-k8s          8.0.36-0ubuntu0.22.04.1  active       1  mysql-k8s          8.0/edge       137  10.152.183.127  no       
+mysql-router-k8s   8.0.36-0ubuntu0.22.04.1  active       1  mysql-router-k8s                    0  10.152.183.124  no       
+mysql-test-app     0.0.2                    active       1  mysql-test-app     latest/edge     36  10.152.183.87   no       
+
+Unit                  Workload  Agent  Address       Ports  Message
+grafana-agent-k8s/0*  blocked   idle   10.1.117.204         grafana-cloud-config: off, grafana-dashboards-provider: off
+mysql-k8s/0*          active    idle   10.1.117.205         Primary
+mysql-router-k8s/0*   active    idle   10.1.117.201         
+mysql-test-app/0*     active    idle   10.1.117.200         
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:796 Juju error logs:
+
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:862 Forgetting main...
