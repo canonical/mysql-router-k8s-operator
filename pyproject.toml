@@ -1,0 +1,115 @@
+# Copyright 2022 Canonical Ltd.
+# See LICENSE file for licensing details.
+
+[tool.poetry]
+# Charm is not packed as a standard Python package; this information is not used
+name = "charm"
+version = "0.1.0"
+description = ""
+authors = []
+
+[tool.poetry.dependencies]
+python = "^3.10"
+ops = "^2.6.0"
+lightkube = "^0.14.0"
+tenacity = "^8.2.3"
+jinja2 = "^3.1.2"
+poetry-core = "^1.7.0"
+requests = "^2.31.0"
+
+[tool.poetry.group.charm-libs.dependencies]
+# data_platform_libs/v0/data_interfaces.py
+ops = ">=2.0.0"
+# tls_certificates_interface/v1/tls_certificates.py
+cryptography = "*"
+jsonschema = "*"
+# grafana_agent/v0/cos_agent.py
+pydantic = "<2"
+cosl = "*"
+
+[tool.poetry.group.format]
+optional = true
+
+[tool.poetry.group.format.dependencies]
+black = "^23.7.0"
+isort = "^5.12.0"
+
+[tool.poetry.group.lint]
+optional = true
+
+[tool.poetry.group.lint.dependencies]
+black = "^23.7.0"
+isort = "^5.12.0"
+flake8 = "^6.0.0"
+flake8-docstrings = "^1.7.0"
+flake8-copyright = "^0.2.4"
+flake8-builtins = "^2.1.0"
+pyproject-flake8 = "^6.0.0.post1"
+pep8-naming = "^0.13.3"
+codespell = "^2.2.5"
+
+[tool.poetry.group.unit.dependencies]
+pytest = "^7.4.0"
+pytest-xdist = "^3.3.1"
+pytest-cov = "^4.1.0"
+ops-scenario = "^5.6.2"
+ops = ">=2.0.0"
+pytest-mock = "^3.11.1"
+
+[tool.poetry.group.integration.dependencies]
+pytest = "^7.4.0"
+pytest-operator = "^0.28.0"
+pytest-operator-cache = {git = "https://github.com/canonical/data-platform-workflows", tag = "v13.1.0", subdirectory = "python/pytest_plugins/pytest_operator_cache"}
+pytest-operator-groups = {git = "https://github.com/canonical/data-platform-workflows", tag = "v13.1.0", subdirectory = "python/pytest_plugins/pytest_operator_groups"}
+juju = "^3.2.2"
+mysql-connector-python = "~8.0.33"
+pyyaml = "^6.0.1"
+tenacity = "^8.2.2"
+ops = "^2.6.0"
+allure-pytest = "^2.13.2"
+
+
+[tool.coverage.run]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+log_cli_level = "INFO"
+markers = ["unstable"]
+
+# Formatting tools configuration
+[tool.black]
+line-length = 99
+target-version = ["py38"]
+
+[tool.isort]
+profile = "black"
+known_third_party = "mysql.connector"
+
+# Linting tools configuration
+[tool.flake8]
+max-line-length = 99
+max-doc-length = 99
+max-complexity = 10
+exclude = [".git", "__pycache__", ".tox", "build", "dist", "*.egg_info", "venv"]
+select = ["E", "W", "F", "C", "N", "R", "D", "H"]
+# Ignore W503, E501 because using black creates errors with this
+# Ignore D107 Missing docstring in __init__
+# Ignore D105 Missing docstring in magic method
+# Ignore D415 Docstring first line punctuation (doesn't make sense for properties)
+# Ignore D403 First word of the first line should be properly capitalized (false positive on "MySQL")
+# Ignore N818 Exception should be named with an Error suffix
+# Ignore D102 Missing docstring in public method (pydocstyle doesn't look for docstrings in super class
+# Ignore W505 So that strings in comments aren't split across lines
+# https://github.com/PyCQA/pydocstyle/issues/309) TODO: add pylint check? https://github.com/PyCQA/pydocstyle/issues/309#issuecomment-1284142716
+ignore = ["W503", "E501", "D107", "D105", "D415", "D403", "N818", "D102", "W505"]
+# D100, D101, D102, D103: Ignore missing docstrings in tests
+per-file-ignores = ["tests/*:D100,D101,D102,D103,D104"]
+docstring-convention = "google"
+# Check for properly formatted copyright header in each file
+copyright-check = "True"
+copyright-author = "Canonical Ltd."
+copyright-regexp = "Copyright\\s\\d{4}([-,]\\d{4})*\\s+%(author)s"
