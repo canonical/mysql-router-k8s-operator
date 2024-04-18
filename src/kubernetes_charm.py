@@ -20,7 +20,6 @@ import abstract_charm
 import kubernetes_logrotate
 import kubernetes_upgrade
 import logrotate
-import relations.tls
 import rock
 import upgrade
 
@@ -32,9 +31,6 @@ logging.getLogger("httpcore").setLevel(logging.WARNING)
 class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
     """MySQL Router Kubernetes charm"""
 
-    _READ_WRITE_PORT = 6446
-    _READ_ONLY_PORT = 6447
-
     def __init__(self, *args) -> None:
         super().__init__(*args)
         self._namespace = self.model.name
@@ -44,8 +40,6 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
             self.on[rock.CONTAINER_NAME].pebble_ready, self._on_workload_container_pebble_ready
         )
         self.framework.observe(self.on.stop, self._on_stop)
-        # TODO VM TLS: Move to super class
-        self.tls = relations.tls.RelationEndpoint(self)
 
     @property
     def _subordinate_relation_endpoint_names(self) -> typing.Optional[typing.Iterable[str]]:
@@ -82,9 +76,18 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         except upgrade.PeerRelationNotReady:
             pass
 
+    @property
+    def _substrate(self) -> str:
+        return "k8s"
+
+    def is_exposed(self, relation=None) -> typing.Optional[bool]:
+        """No-op since this charm is exposed with node-port"""
+
     def _reconcile_node_port(self, event) -> None:
-        """Reconcile node port."""
         self._patch_service(event)
+
+    def _reconcile_ports(self) -> None:
+        """Needed for VM, so no-op"""
 
     @property
     def model_service_domain(self) -> str:
