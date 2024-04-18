@@ -1,0 +1,58 @@
+# Copyright 2023 Canonical Ltd.
+# See LICENSE file for licensing details.
+name: mysql-router-k8s
+display-name: MySQL Router K8s
+summary: Charmed MySQL Router K8s operator
+description: |
+  Enables effective access to a MySQL cluster with Group Replication.
+
+  This charm supports MySQL Router 8.0 in Kubernetes environments.
+docs: https://discourse.charmhub.io/t/charmed-mysql-router-k8s-documentation/12130
+source: https://github.com/canonical/mysql-router-k8s-operator
+issues: https://github.com/canonical/mysql-router-k8s-operator/issues
+website:
+  - https://ubuntu.com/data/mysql
+  - https://charmhub.io/mysql-router-k8s
+  - https://github.com/canonical/mysql-router-k8s-operator
+  - https://chat.charmhub.io/charmhub/channels/data-platform
+maintainers:
+  - Canonical Data Platform <data-platform@lists.launchpad.net>
+
+containers:
+  mysql-router:
+    resource: mysql-router-image
+provides:
+  database:
+    interface: mysql_client
+  metrics-endpoint:
+    interface: prometheus_scrape
+  grafana-dashboard:
+    interface: grafana_dashboard
+requires:
+  backend-database:
+    interface: mysql_client
+    limit: 1
+  certificates:
+    interface: tls-certificates
+    limit: 1
+  logging:
+    interface: loki_push_api
+    limit: 1
+    optional: true
+peers:
+  cos:
+    interface: cos
+  upgrade-version-a:
+    # Relation versioning scheme:
+    # DA056 - Upgrading in-place upgrade protocol
+    # https://docs.google.com/document/d/1H7qy5SAwLiCOKO9xMQJbbQP5_-jGV6Lhi-mJOk4gZ08/edit
+    interface: upgrade
+  mysql-router-peers:
+    interface: mysql_router_peers
+resources:
+  mysql-router-image:
+    type: oci-image
+    description: OCI image for mysql-router
+    upstream-source: ghcr.io/canonical/charmed-mysql@sha256:5082c99baa7a77c82d73247674e270838dc0a8165c02f7619cf5642d1427cba7
+assumes:
+  - k8s-api
