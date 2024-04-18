@@ -164,7 +164,7 @@ class Rock(container.Container):
                 "MYSQLROUTER_EXPORTER_USER": config.username,
                 "MYSQLROUTER_EXPORTER_PASS": config.password,
                 "MYSQLROUTER_EXPORTER_URL": config.url,
-                "MYSQLROUTER_SERVICE_NAME": self._unit_name.replace("/", "-"),
+                "MYSQLROUTER_EXPORTER_SERVICE_NAME": self._unit_name.replace("/", "-"),
             }
             if tls:
                 environment.update(
