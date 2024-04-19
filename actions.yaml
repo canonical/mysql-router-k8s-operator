@@ -6,6 +6,7 @@ resume-upgrade:
   params:
     force:
       type: boolean
+      default: false
       description: Force upgrade of next unit if an upgraded unit has non-active status.
   required: []
 set-tls-private-key:
