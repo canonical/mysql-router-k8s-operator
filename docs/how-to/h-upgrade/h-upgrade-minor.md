@@ -21,7 +21,7 @@ The concurrency with other operations is not supported, and it can lead the clus
 1. **Collect** all necessary pre-upgrade information. It will be necessary for the rollback (if requested). Do NOT skip this step.
 2. (optional) **Scale up**: The new `sacrificial` unit will be the first one to be updated, and it will simplify the rollback procedure in case of the upgrade failure.
 3. **Prepare** "Charmed MySQL K8s" Juju application for the in-place upgrade. See the step description below for all technical details executed by charm here.
-4. **Upgrade**: Once started, only one unit in an app will be upgraded. In case of failure, roll back by removing the newly added unit.
+4. **Upgrade**: Once started, only one unit of the app will be upgraded. In case of failure, roll back with `juju refresh`.
 5. **Resume** upgrade: If the new unit is OK after the refresh, the upgrade can be resumed. All units in an app will be executed sequentially from highest to lowest unit number.
 6. (optional) Consider [**rolling back**](/t/11749) in case of disaster. Please [inform and include us](https://chat.charmhub.io/charmhub/channels/data-platform) in your case scenario troubleshooting to trace the source of the issue and prevent it in the future.
 7. (optional) **Scale back**: Remove no longer necessary K8s units created in step 2 (if any).
@@ -106,11 +106,9 @@ juju refresh mysql-k8s --revision=89
 
 > **:information_source: IMPORTANT:** The Server upgrade will execute only on the highest ordinal unit, for the running example `mysql-k8s/2`, the `juju status` will look like*:
 
-```shell
-TODO
-```
-
+<!-- TODO: Confirm accuracy of this note
 > **:information_source: Note:** It is expected to have some status changes during the process: waiting, maintenance, active. Do NOT trigger `rollback` procedure during the running `upgrade` procedure. Make sure `upgrade` has failed/stopped and cannot be fixed/continued before triggering `rollback`!
+-->
 
 > **:information_source: Note:** The unit should recover shortly after, but the time can vary depending on the amount of data written to the cluster while the unit was not part of the cluster. Please be patient on the huge installations.
 
@@ -160,4 +158,6 @@ juju scale-application mysql-router-k8s <unit_count>
 
 ## Step 8: Check
 
-The future [improvement is planned](https://warthogs.atlassian.net/browse/DPE-2620) to check the state on pod/cluster on a low level. At the moment check `juju status` to make sure the cluster [state](/t/12231) is OK.
+Future [improvements are planned](https://warthogs.atlassian.net/browse/DPE-2620) to check the state on pod/cluster on a low level.
+
+For now, use `juju status` to see the cluster's [state](/t/12231).

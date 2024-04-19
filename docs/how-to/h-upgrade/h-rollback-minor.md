@@ -6,10 +6,7 @@
 > **:warning: WARNING**: do NOT trigger `rollback` during the **running** `upgrade` action! It may cause unpredictable MySQL Cluster and/or MySQL Router state!
 
 ## Minor rollback steps
-
-The rollback is NOT necessary if `sacrificial unit` is created before the upgrade, just remove it using scale-down the application. Otherwise perform the rollback:
-
-1. **Rollback**. Perform the charm rollback using `juju refresh`. The unit with the maximal ordinal will be rolled-back first and rollback continues for entire application.
+1. **Rollback**. Perform the charm rollback using `juju refresh`. The unit with the maximal ordinal will be rolled back first, and the rollback will continue for the entire application.
 2. **Check**. Make sure the charm and cluster are in healthy state again.
 
 ## Manual Rollback
@@ -42,4 +39,6 @@ After the refresh command, the `juju` controller revision for the application wi
 
 ## Step 2: Check
 
-The future [improvement is planned](https://warthogs.atlassian.net/browse/DPE-2620) to check the state on pod/cluster on a low level. At the moment check `juju status` to make sure the cluster [state](/t/11866) is OK.
+Future [improvement are planned](https://warthogs.atlassian.net/browse/DPE-2620) to check the state on pod/cluster on a low level.
+
+For now, use `juju status` to check the cluster [state](/t/11866).
