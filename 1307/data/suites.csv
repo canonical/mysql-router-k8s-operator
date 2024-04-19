@@ -1,0 +1,6 @@
+"Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
+"passed","Fri Apr 19 01:33:52 UTC 2024","Fri Apr 19 01:33:55 UTC 2024","3109","tests.integration","test_node_port","","","","test_data_integrator","Test the nodeport."
+"passed","Fri Apr 19 01:33:50 UTC 2024","Fri Apr 19 01:33:52 UTC 2024","1317","tests.integration","test_node_port","","","","test_tls","Test the database relation."
+"passed","Fri Apr 19 01:33:52 UTC 2024","Fri Apr 19 01:33:52 UTC 2024","373","tests.integration","test_node_port","","","","test_node_port_and_clusterip_setup","Test the nodeport."
+"passed","Fri Apr 19 01:30:46 UTC 2024","Fri Apr 19 01:33:50 UTC 2024","183790","tests.integration","test_node_port","","","","test_build_and_deploy","Test the deployment of the charm."
+"passed","Fri Apr 19 01:30:31 UTC 2024","Fri Apr 19 01:32:03 UTC 2024","92089","tests.integration","test_log_rotation","","","","test_log_rotation","Test log rotation."
