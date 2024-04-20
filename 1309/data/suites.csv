@@ -1,0 +1,8 @@
+"Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
+"passed","Sat Apr 20 01:32:57 UTC 2024","Sat Apr 20 01:33:00 UTC 2024","3110","tests.integration","test_node_port","","","","test_data_integrator","Test the nodeport."
+"passed","Sat Apr 20 01:29:53 UTC 2024","Sat Apr 20 01:31:28 UTC 2024","94610","tests.integration","test_log_rotation","","","","test_log_rotation","Test log rotation."
+"passed","Sat Apr 20 01:29:44 UTC 2024","Sat Apr 20 01:32:47 UTC 2024","183047","tests.integration","test_exporter","","","","test_exporter_endpoint","Test that exporter endpoint is functional."
+"passed","Sat Apr 20 01:29:55 UTC 2024","Sat Apr 20 01:33:56 UTC 2024","241355","tests.integration","test_charm","","","","test_database_relation","Test the database relation."
+"passed","Sat Apr 20 01:32:56 UTC 2024","Sat Apr 20 01:32:57 UTC 2024","437","tests.integration","test_node_port","","","","test_node_port_and_clusterip_setup","Test the nodeport."
+"passed","Sat Apr 20 01:30:05 UTC 2024","Sat Apr 20 01:32:55 UTC 2024","169452","tests.integration","test_node_port","","","","test_build_and_deploy","Test the deployment of the charm."
+"passed","Sat Apr 20 01:32:55 UTC 2024","Sat Apr 20 01:32:56 UTC 2024","1416","tests.integration","test_node_port","","","","test_tls","Test the database relation."
