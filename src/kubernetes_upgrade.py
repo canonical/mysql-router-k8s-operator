@@ -93,10 +93,10 @@ class Upgrade(upgrade.Upgrade):
         revision_hash = revision_hash.removeprefix(f"{self._app_name}-")
         if isinstance(workload_status, ops.WaitingStatus):
             return ops.WaitingStatus(
-                f'Router {self._current_versions["workload"]}. Charmed operator {self._current_versions["charm"]}. Kubernetes rev {revision_hash}'
+                f'Router {self._current_versions["workload"]}; Charmed operator {self._current_versions["charm"]}; Kubernetes rev {revision_hash}'
             )
         return ops.ActiveStatus(
-            f'Router {self._current_versions["workload"]} running. Charmed operator {self._current_versions["charm"]}. Kubernetes rev {revision_hash}'
+            f'Router {self._current_versions["workload"]} running; Charmed operator {self._current_versions["charm"]}; Kubernetes rev {revision_hash}'
         )
 
     @property
