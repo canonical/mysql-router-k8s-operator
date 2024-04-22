@@ -88,7 +88,7 @@ class Upgrade(upgrade.Upgrade):
         # revision hash is different, the unit (pod) will restart during rollback.
 
         # Example: mysql-router-k8s-6c67d5f56c
-        revision_hash = self._unit_workload_versions[self._unit.name]
+        revision_hash = self._unit_workload_container_versions[self._unit.name]
         # Example: 6c67d5f56c
         revision_hash = revision_hash.removeprefix(f"{self._app_name}-")
         message = f'{self._current_versions["charm"]} {revision_hash}'
@@ -118,14 +118,15 @@ class Upgrade(upgrade.Upgrade):
         partition.set(app_name=self._app_name, value=value)
 
     @functools.cached_property  # Cache lightkube API call for duration of charm execution
-    def _unit_workload_versions(self) -> dict[str, str]:
+    def _unit_workload_container_versions(self) -> dict[str, str]:
         """{Unit name: Kubernetes controller revision hash}
 
-        Even if the workload version is the same, the workload will restart if the controller
-        revision hash changes. (Juju bug: https://bugs.launchpad.net/juju/+bug/2036246).
+        Even if the workload container version is the same, the workload will restart if the
+        controller revision hash changes. (Juju bug: https://bugs.launchpad.net/juju/+bug/2036246).
 
-        Therefore, we must use the revision hash instead of the workload version. (To satisfy the
-        requirement that if and only if this version changes, the workload will restart.)
+        Therefore, we must use the revision hash instead of the workload container version. (To
+        satisfy the requirement that if and only if this version changes, the workload will
+        restart.)
         """
         pods = lightkube.Client().list(
             res=lightkube.resources.core_v1.Pod, labels={"app.kubernetes.io/name": self._app_name}
@@ -141,7 +142,7 @@ class Upgrade(upgrade.Upgrade):
         }
 
     @functools.cached_property  # Cache lightkube API call for duration of charm execution
-    def _app_workload_version(self) -> str:
+    def _app_workload_contianer_version(self) -> str:
         """App's Kubernetes controller revision hash"""
         stateful_set = lightkube.Client().get(
             res=lightkube.resources.apps_v1.StatefulSet, name=self._app_name
@@ -173,7 +174,9 @@ class Upgrade(upgrade.Upgrade):
                 # Note: upgrade_order_index != unit number
                 if (
                     not force and self._peer_relation.data[unit].get("state") != "healthy"
-                ) or self._unit_workload_versions[unit.name] != self._app_workload_version:
+                ) or self._unit_workload_container_versions[
+                    unit.name
+                ] != self._app_workload_contianer_version:
                     if not action_event and upgrade_order_index == 1:
                         # User confirmation needed to resume upgrade (i.e. upgrade second unit)
                         return upgrade.unit_number(units[0])
