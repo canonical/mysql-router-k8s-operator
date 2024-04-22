@@ -142,7 +142,7 @@ class Upgrade(upgrade.Upgrade):
         }
 
     @functools.cached_property  # Cache lightkube API call for duration of charm execution
-    def _app_workload_contianer_version(self) -> str:
+    def _app_workload_container_version(self) -> str:
         """App's Kubernetes controller revision hash"""
         stateful_set = lightkube.Client().get(
             res=lightkube.resources.apps_v1.StatefulSet, name=self._app_name
