@@ -91,10 +91,13 @@ class Upgrade(upgrade.Upgrade):
         revision_hash = self._unit_workload_container_versions[self._unit.name]
         # Example: 6c67d5f56c
         revision_hash = revision_hash.removeprefix(f"{self._app_name}-")
-        message = f'{self._current_versions["charm"]} {revision_hash}'
         if isinstance(workload_status, ops.WaitingStatus):
-            return ops.WaitingStatus(message)
-        return ops.ActiveStatus(message)
+            return ops.WaitingStatus(
+                f'Router {self._current_versions["workload"]}. Charmed operator {self._current_versions["charm"]}. Kubernetes rev {revision_hash}'
+            )
+        return ops.ActiveStatus(
+            f'Router {self._current_versions["workload"]} running. Charmed operator {self._current_versions["charm"]}. Kubernetes rev {revision_hash}'
+        )
 
     @property
     def upgrade_resumed(self) -> bool:
