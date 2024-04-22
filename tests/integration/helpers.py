@@ -5,7 +5,7 @@ import itertools
 import json
 import subprocess
 import tempfile
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import mysql.connector
 import yaml
@@ -411,3 +411,23 @@ async def get_tls_ca(
     if len(relation_data) == 0:
         return ""
     return json.loads(relation_data[0]["application-data"]["certificates"])[0].get("ca")
+
+
+async def get_tls_certificate_issuer(
+    ops_test: OpsTest,
+    unit_name: str,
+    socket: Optional[str] = None,
+    host: Optional[str] = None,
+    port: Optional[int] = None,
+) -> str:
+    connect_args = f"-unix {socket}" if socket else f"-connect {host}:{port}"
+    get_tls_certificate_issuer_commands = [
+        "ssh",
+        "--container",
+        CONTAINER_NAME,
+        unit_name,
+        f"openssl s_client -showcerts -starttls mysql {connect_args} < /dev/null | openssl x509 -text | grep Issuer",
+    ]
+    return_code, issuer, _ = await ops_test.juju(*get_tls_certificate_issuer_commands)
+    assert return_code == 0, f"failed to get TLS certificate issuer on {unit_name=}"
+    return issuer

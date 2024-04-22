@@ -15,6 +15,7 @@ import lightkube.models.core_v1
 import lightkube.models.meta_v1
 import lightkube.resources.core_v1
 import ops
+import tenacity
 
 import abstract_charm
 import kubernetes_logrotate
@@ -46,22 +47,6 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         return
 
     @property
-    def _tls_certificate_saved(self) -> bool:
-        return self.tls.certificate_saved
-
-    @property
-    def _tls_key(self) -> typing.Optional[str]:
-        return self.tls.key
-
-    @property
-    def _tls_certificate(self) -> typing.Optional[str]:
-        return self.tls.certificate
-
-    @property
-    def _tls_certificate_authority(self) -> typing.Optional[str]:
-        return self.tls.certificate_authority
-
-    @property
     def _container(self) -> rock.Rock:
         return rock.Rock(unit=self.unit)
 
@@ -77,10 +62,7 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
             pass
 
     @property
-    def _substrate(self) -> str:
-        return "k8s"
-
-    def is_exposed(self, relation=None) -> typing.Optional[bool]:
+    def is_exposed(self) -> typing.Optional[bool]:
         """No-op since this charm is exposed with node-port"""
 
     def _reconcile_node_port(self, event) -> None:
@@ -88,6 +70,30 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
 
     def _reconcile_ports(self) -> None:
         """Needed for VM, so no-op"""
+
+    def wait_until_mysql_router_ready(self) -> None:
+        logger.debug("Waiting until MySQL Router is ready")
+        self.unit.status = ops.MaintenanceStatus("MySQL Router starting")
+        try:
+            for attempt in tenacity.Retrying(
+                reraise=True,
+                stop=tenacity.stop_after_delay(30),
+                wait=tenacity.wait_fixed(5),
+            ):
+                with attempt:
+                    for port in (
+                        self._READ_WRITE_PORT,
+                        self._READ_ONLY_PORT,
+                        self._READ_WRITE_X_PORT,
+                        self._READ_ONLY_X_PORT,
+                    ):
+                        with socket.socket() as s:
+                            assert s.connect_ex(("localhost", port)) == 0
+        except AssertionError:
+            logger.exception("Unable to connect to MySQL Router")
+            raise
+        else:
+            logger.debug("MySQL Router is ready")
 
     @property
     def model_service_domain(self) -> str:
