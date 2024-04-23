@@ -81,7 +81,10 @@ class Upgrade(upgrade.Upgrade):
     def _get_unit_healthy_status(
         self, *, workload_status: typing.Optional[ops.StatusBase]
     ) -> typing.Optional[ops.StatusBase]:
-        if self._unit_workload_container_versions[self._unit.name] == self._app_workload_container_version:
+        if (
+            self._unit_workload_container_versions[self._unit.name]
+            == self._app_workload_container_version
+        ):
             if isinstance(workload_status, ops.WaitingStatus):
                 return ops.WaitingStatus(
                     f'Router {self._current_versions["workload"]}; Charmed operator {self._current_versions["charm"]}'
