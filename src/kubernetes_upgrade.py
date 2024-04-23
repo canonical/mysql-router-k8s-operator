@@ -81,22 +81,26 @@ class Upgrade(upgrade.Upgrade):
     def _get_unit_healthy_status(
         self, *, workload_status: typing.Optional[ops.StatusBase]
     ) -> typing.Optional[ops.StatusBase]:
-        # During a rollback, non-upgraded units will restart
-        # (Juju bug: https://bugs.launchpad.net/juju/+bug/2036246)
-        # To explain this behavior to the user, we include the controller revision hash in the
-        # status message. For non-upgraded units: the charm version will be the same, but since the
-        # revision hash is different, the unit (pod) will restart during rollback.
-
-        # Example: mysql-router-k8s-6c67d5f56c
-        revision_hash = self._unit_workload_container_versions[self._unit.name]
-        # Example: 6c67d5f56c
-        revision_hash = revision_hash.removeprefix(f"{self._app_name}-")
+        if self._unit_workload_container_versions[self._unit.name] == self._app_workload_container_version:
+            if isinstance(workload_status, ops.WaitingStatus):
+                return ops.WaitingStatus(
+                    f'Router {self._current_versions["workload"]}; Charmed operator {self._current_versions["charm"]}'
+                )
+            return ops.ActiveStatus(
+                f'Router {self._current_versions["workload"]} running; Charmed operator {self._current_versions["charm"]}'
+            )
         if isinstance(workload_status, ops.WaitingStatus):
             return ops.WaitingStatus(
-                f'Router {self._current_versions["workload"]}; Charmed operator {self._current_versions["charm"]}; Kubernetes rev {revision_hash}'
+                f'Router {self._current_versions["workload"]}; Charmed operator {self._current_versions["charm"]}'
             )
+        # During a rollback, non-upgraded units will restart
+        # (Juju bug: https://bugs.launchpad.net/juju/+bug/2036246)
+        # To explain this behavior to the user, we include "(restart pending)" in the status
+        # message. For non-upgraded units: the charm and workload version will be the same, but
+        # since the Kubernetes controller revision hash is different, the unit (pod) will restart
+        # during rollback.
         return ops.ActiveStatus(
-            f'Router {self._current_versions["workload"]} running; Charmed operator {self._current_versions["charm"]}; Kubernetes rev {revision_hash}'
+            f'Router {self._current_versions["workload"]} running (restart pending); Charmed operator {self._current_versions["charm"]}'
         )
 
     @property
@@ -179,7 +183,7 @@ class Upgrade(upgrade.Upgrade):
                     not force and self._peer_relation.data[unit].get("state") != "healthy"
                 ) or self._unit_workload_container_versions[
                     unit.name
-                ] != self._app_workload_contianer_version:
+                ] != self._app_workload_container_version:
                     if not action_event and upgrade_order_index == 1:
                         # User confirmation needed to resume upgrade (i.e. upgrade second unit)
                         return upgrade.unit_number(units[0])
