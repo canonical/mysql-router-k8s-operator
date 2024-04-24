@@ -159,7 +159,7 @@ class Upgrade(upgrade.Upgrade):
         )
         return stateful_set.status.updateRevision
 
-    def reconcile_partition(self, *, action_event: ops.ActionEvent = None) -> None:
+    def reconcile_partition(self, *, action_event: ops.ActionEvent = None) -> None:  # noqa: C901
         """If ready, lower partition to upgrade next unit.
 
         If upgrade is not in progress, set partition to 0. (If a unit receives a stop event, it may
