@@ -278,7 +278,7 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         if not self._upgrade:
             logger.debug("Peer relation missing during stop event")
             return
-        self._upgrade.unit_state = "restarting"
+        self._upgrade.unit_state = upgrade.UnitState.RESTARTING
 
 
 if __name__ == "__main__":
