@@ -109,10 +109,12 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
     def _exposed_read_only_endpoint(self) -> str:
         """The exposed read-only endpoint"""
 
-    @property
     @abc.abstractmethod
-    def is_exposed(self) -> typing.Optional[bool]:
-        """Whether router is exposed externally"""
+    def is_externally_accessible(self, *, event) -> typing.Optional[bool]:
+        """Whether endpoints should be externally accessible.
+
+        Only defined in vm charm to return True/False. In k8s charm, returns None.
+        """
 
     @property
     def _tls_certificate_saved(self) -> bool:
@@ -209,21 +211,21 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
             logger.debug(f"Set unit status to {self.unit.status}")
 
     @abc.abstractmethod
-    def wait_until_mysql_router_ready(self) -> None:
+    def wait_until_mysql_router_ready(self, *, event) -> None:
         """Wait until a connection to MySQL Router is possible.
 
         Retry every 5 seconds for up to 30 seconds.
         """
 
     @abc.abstractmethod
-    def _reconcile_node_port(self, event) -> None:
+    def _reconcile_node_port(self, *, event) -> None:
         """Reconcile node port.
 
         Only applies to Kubernetes charm
         """
 
     @abc.abstractmethod
-    def _reconcile_ports(self) -> None:
+    def _reconcile_ports(self, *, event) -> None:
         """Reconcile exposed ports.
 
         Only applies to Machine charm
@@ -248,6 +250,10 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
             logger.debug("Peer relation not ready")
             return
         workload_ = self.get_workload(event=event)
+        if self._unit_lifecycle.authorized_leader and not self._upgrade.in_progress:
+            # Run before checking `self._upgrade.is_compatible` in case incompatible upgrade was
+            # forced & completed on all units.
+            self._upgrade.set_versions_in_app_databag()
         if self._upgrade.unit_state == "restarting":  # Kubernetes only
             if not self._upgrade.is_compatible:
                 logger.info(
@@ -265,7 +271,10 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
             if self._upgrade.unit_state == "outdated":
                 if self._upgrade.authorized:
                     self._upgrade.upgrade_unit(
-                        workload_=workload_, tls=self._tls_certificate_saved
+                        event=event,
+                        workload_=workload_,
+                        tls=self._tls_certificate_saved,
+                        exporter_config=self._cos_exporter_config(event),
                     )
                 else:
                     self.set_status(event=event)
@@ -305,6 +314,7 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
                     )
             if workload_.container_ready:
                 workload_.reconcile(
+                    event=event,
                     tls=self._tls_certificate_saved,
                     unit_name=self.unit.name,
                     exporter_config=self._cos_exporter_config(event),
@@ -315,7 +325,7 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
                 if not self._upgrade.in_progress and isinstance(
                     workload_, workload.AuthenticatedWorkload
                 ):
-                    self._reconcile_ports()
+                    self._reconcile_ports(event=event)
 
             # Empty waiting status means we're waiting for database requires relation before
             # starting workload
@@ -323,8 +333,6 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
                 self._upgrade.unit_state = "healthy"
             if self._unit_lifecycle.authorized_leader:
                 self._upgrade.reconcile_partition()
-                if not self._upgrade.in_progress:
-                    self._upgrade.set_versions_in_app_databag()
             self.set_status(event=event)
         except server_exceptions.Error as e:
             # If not for `unit=False`, another `server_exceptions.Error` could be thrown here

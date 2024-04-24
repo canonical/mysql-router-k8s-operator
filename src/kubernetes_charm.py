@@ -61,17 +61,16 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         except upgrade.PeerRelationNotReady:
             pass
 
-    @property
-    def is_exposed(self) -> typing.Optional[bool]:
+    def is_externally_accessible(self, *, event) -> typing.Optional[bool]:
         """No-op since this charm is exposed with node-port"""
 
-    def _reconcile_node_port(self, event) -> None:
+    def _reconcile_node_port(self, *, event) -> None:
         self._patch_service(event)
 
-    def _reconcile_ports(self) -> None:
+    def _reconcile_ports(self, *, event) -> None:
         """Needed for VM, so no-op"""
 
-    def wait_until_mysql_router_ready(self) -> None:
+    def wait_until_mysql_router_ready(self, *, event=None) -> None:
         logger.debug("Waiting until MySQL Router is ready")
         self.unit.status = ops.MaintenanceStatus("MySQL Router starting")
         try:

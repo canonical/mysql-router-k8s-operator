@@ -21,6 +21,7 @@ MYSQL_APP_NAME = "mysql-k8s"
 MYSQL_ROUTER_APP_NAME = "mysqlrouter-k8s"
 TEST_APP_NAME = "mysql-test-app"
 SLOW_TIMEOUT = 15 * 60
+RETRY_TIMEOUT = 2 * 60
 
 if juju_.is_3_or_higher:
     TLS_APP_NAME = "self-signed-certificates"
@@ -100,7 +101,7 @@ async def test_connected_encryption(ops_test: OpsTest) -> None:
 
     for attempt in tenacity.Retrying(
         reraise=True,
-        stop=tenacity.stop_after_delay(120),
+        stop=tenacity.stop_after_delay(RETRY_TIMEOUT),
         wait=tenacity.wait_fixed(10),
     ):
         with attempt:
@@ -120,7 +121,7 @@ async def test_connected_encryption(ops_test: OpsTest) -> None:
     logger.info("Getting certificate issuer after relating with tls operator")
     for attempt in tenacity.Retrying(
         reraise=True,
-        stop=tenacity.stop_after_delay(120),
+        stop=tenacity.stop_after_delay(RETRY_TIMEOUT),
         wait=tenacity.wait_fixed(10),
     ):
         with attempt:
@@ -141,7 +142,7 @@ async def test_connected_encryption(ops_test: OpsTest) -> None:
 
     for attempt in tenacity.Retrying(
         reraise=True,
-        stop=tenacity.stop_after_delay(120),
+        stop=tenacity.stop_after_delay(RETRY_TIMEOUT),
         wait=tenacity.wait_fixed(10),
     ):
         with attempt:
