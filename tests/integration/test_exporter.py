@@ -181,7 +181,8 @@ async def test_exporter_endpoint_with_tls(ops_test: OpsTest) -> None:
     issuer = await get_tls_certificate_issuer(
         ops_test,
         mysql_router_unit.name,
-        socket="/var/snap/charmed-mysql/common/run/mysqlrouter/mysql.sock",
+        host="127.0.0.1",
+        port=6446,
     )
     assert (
         "Issuer: CN = MySQL_Router_Auto_Generated_CA_Certificate" in issuer
@@ -243,7 +244,8 @@ async def test_exporter_endpoint_with_tls(ops_test: OpsTest) -> None:
     issuer = await get_tls_certificate_issuer(
         ops_test,
         mysql_router_unit.name,
-        socket="/var/snap/charmed-mysql/common/run/mysqlrouter/mysql.sock",
+        host="127.0.0.1",
+        port=6446,
     )
     assert "CN = Test CA" in issuer, f"Expected mysqlrouter certificate from {TLS_APP_NAME}"
 
@@ -281,7 +283,8 @@ async def test_exporter_endpoint_with_tls(ops_test: OpsTest) -> None:
             issuer = await get_tls_certificate_issuer(
                 ops_test,
                 mysql_router_unit.name,
-                socket="/var/snap/charmed-mysql/common/run/mysqlrouter/mysql.sock",
+                host="127.0.0.1",
+                port=6446,
             )
             assert (
                 "Issuer: CN = MySQL_Router_Auto_Generated_CA_Certificate" in issuer
