@@ -7,7 +7,14 @@ resume-upgrade:
     force:
       type: boolean
       default: false
-      description: Force upgrade of next unit if an upgraded unit has non-active status.
+      description: |
+        Potential of *data loss* and *downtime*
+        
+        Force upgrade of next unit.
+        
+        Use to
+        - force incompatible upgrade and/or
+        - continue upgrade if 1+ upgraded units have non-active status
   required: []
 set-tls-private-key:
   description:
