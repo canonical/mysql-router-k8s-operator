@@ -10,3 +10,5 @@ is_3_1_or_higher = (
     and int(_libjuju_version.split(".")[0]) >= 3
     and int(_libjuju_version.split(".")[1]) >= 1
 )
+
+is_3_or_higher = int(_libjuju_version.split(".")[0]) >= 3

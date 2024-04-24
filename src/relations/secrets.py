@@ -27,29 +27,27 @@ class RelationSecrets:
     def __init__(
         self,
         charm: "abstract_charm.MySQLRouterCharm",
-        peer_relation_name: str,
+        relation_name: str,
         app_secret_fields: typing.List[str] = [],
         unit_secret_fields: typing.List[str] = [],
     ) -> None:
         self._charm = charm
-        self._peer_relation_name = peer_relation_name
+        self._relation_name = relation_name
 
         self._peer_relation_app = data_interfaces.DataPeer(
             charm,
-            relation_name=peer_relation_name,
+            relation_name=relation_name,
             additional_secret_fields=app_secret_fields,
-            secret_field_name=self._SECRET_INTERNAL_LABEL,
             deleted_label=self._SECRET_DELETED_LABEL,
         )
         self._peer_relation_unit = data_interfaces.DataPeerUnit(
             charm,
-            relation_name=peer_relation_name,
+            relation_name=relation_name,
             additional_secret_fields=unit_secret_fields,
-            secret_field_name=self._SECRET_INTERNAL_LABEL,
             deleted_label=self._SECRET_DELETED_LABEL,
         )
 
-    def peer_relation_data(self, scope: Scopes) -> data_interfaces.DataPeer:
+    def _peer_relation_data(self, scope: Scopes) -> data_interfaces.DataPeer:
         """Returns the peer relation data per scope."""
         if scope == APP_SCOPE:
             return self._peer_relation_app
@@ -61,8 +59,8 @@ class RelationSecrets:
         if scope not in typing.get_args(Scopes):
             raise ValueError("Unknown secret scope")
 
-        peers = self._charm.model.get_relation(self._peer_relation_name)
-        return self.peer_relation_data(scope).fetch_my_relation_field(peers.id, key)
+        peers = self._charm.model.get_relation(self._relation_name)
+        return self._peer_relation_data(scope).fetch_my_relation_field(peers.id, key)
 
     def set_value(
         self, scope: Scopes, key: str, value: typing.Optional[str]
@@ -74,13 +72,13 @@ class RelationSecrets:
         if not value:
             return self._remove_value(scope, key)
 
-        peers = self._charm.model.get_relation(self._peer_relation_name)
-        self.peer_relation_data(scope).update_relation_data(peers.id, {key: value})
+        peers = self._charm.model.get_relation(self._relation_name)
+        self._peer_relation_data(scope).update_relation_data(peers.id, {key: value})
 
     def _remove_value(self, scope: Scopes, key: str) -> None:
         """Removing a secret."""
         if scope not in typing.get_args(Scopes):
             raise ValueError("Unknown secret scope")
 
-        peers = self._charm.model.get_relation(self._peer_relation_name)
-        self.peer_relation_data(scope).delete_relation_data(peers.id, [key])
+        peers = self._charm.model.get_relation(self._relation_name)
+        self._peer_relation_data(scope).delete_relation_data(peers.id, [key])

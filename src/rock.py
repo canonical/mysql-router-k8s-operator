@@ -83,6 +83,7 @@ class Rock(container.Container):
             mysql_router_command="mysqlrouter",
             mysql_shell_command="mysqlsh",
             mysql_router_password_command="mysqlrouter_passwd",
+            unit_name=unit.name,
         )
         self._container = unit.get_container(CONTAINER_NAME)
 
@@ -163,6 +164,7 @@ class Rock(container.Container):
                 "MYSQLROUTER_EXPORTER_USER": config.username,
                 "MYSQLROUTER_EXPORTER_PASS": config.password,
                 "MYSQLROUTER_EXPORTER_URL": config.url,
+                "MYSQLROUTER_EXPORTER_SERVICE_NAME": self._unit_name.replace("/", "-"),
             }
             if tls:
                 environment.update(

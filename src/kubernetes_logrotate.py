@@ -41,5 +41,5 @@ class LogRotate(logrotate.LogRotate):
 
         logger.debug("Removing logrotate config and executor files")
         super().disable()
-        self._logrotate_executor.unlink()
+        self._logrotate_executor.unlink(missing_ok=True)
         logger.debug("Removed logrotate config and executor files")

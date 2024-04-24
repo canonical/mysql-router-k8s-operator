@@ -15,12 +15,12 @@ import lightkube.models.core_v1
 import lightkube.models.meta_v1
 import lightkube.resources.core_v1
 import ops
+import tenacity
 
 import abstract_charm
 import kubernetes_logrotate
 import kubernetes_upgrade
 import logrotate
-import relations.tls
 import rock
 import upgrade
 
@@ -32,9 +32,6 @@ logging.getLogger("httpcore").setLevel(logging.WARNING)
 class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
     """MySQL Router Kubernetes charm"""
 
-    _READ_WRITE_PORT = 6446
-    _READ_ONLY_PORT = 6447
-
     def __init__(self, *args) -> None:
         super().__init__(*args)
         self._namespace = self.model.name
@@ -44,28 +41,10 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
             self.on[rock.CONTAINER_NAME].pebble_ready, self._on_workload_container_pebble_ready
         )
         self.framework.observe(self.on.stop, self._on_stop)
-        # TODO VM TLS: Move to super class
-        self.tls = relations.tls.RelationEndpoint(self)
 
     @property
     def _subordinate_relation_endpoint_names(self) -> typing.Optional[typing.Iterable[str]]:
         return
-
-    @property
-    def _tls_certificate_saved(self) -> bool:
-        return self.tls.certificate_saved
-
-    @property
-    def _tls_key(self) -> typing.Optional[str]:
-        return self.tls.key
-
-    @property
-    def _tls_certificate(self) -> typing.Optional[str]:
-        return self.tls.certificate
-
-    @property
-    def _tls_certificate_authority(self) -> typing.Optional[str]:
-        return self.tls.certificate_authority
 
     @property
     def _container(self) -> rock.Rock:
@@ -82,9 +61,38 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         except upgrade.PeerRelationNotReady:
             pass
 
-    def _reconcile_node_port(self, event) -> None:
-        """Reconcile node port."""
+    def is_externally_accessible(self, *, event) -> typing.Optional[bool]:
+        """No-op since this charm is exposed with node-port"""
+
+    def _reconcile_node_port(self, *, event) -> None:
         self._patch_service(event)
+
+    def _reconcile_ports(self, *, event) -> None:
+        """Needed for VM, so no-op"""
+
+    def wait_until_mysql_router_ready(self, *, event=None) -> None:
+        logger.debug("Waiting until MySQL Router is ready")
+        self.unit.status = ops.MaintenanceStatus("MySQL Router starting")
+        try:
+            for attempt in tenacity.Retrying(
+                reraise=True,
+                stop=tenacity.stop_after_delay(30),
+                wait=tenacity.wait_fixed(5),
+            ):
+                with attempt:
+                    for port in (
+                        self._READ_WRITE_PORT,
+                        self._READ_ONLY_PORT,
+                        self._READ_WRITE_X_PORT,
+                        self._READ_ONLY_X_PORT,
+                    ):
+                        with socket.socket() as s:
+                            assert s.connect_ex(("localhost", port)) == 0
+        except AssertionError:
+            logger.exception("Unable to connect to MySQL Router")
+            raise
+        else:
+            logger.debug("MySQL Router is ready")
 
     @property
     def model_service_domain(self) -> str:
