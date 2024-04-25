@@ -159,7 +159,7 @@ class Upgrade(upgrade.Upgrade):
         )
         return stateful_set.status.updateRevision
 
-    def reconcile_partition(self, *, action_event: ops.ActionEvent = None) -> None:
+    def reconcile_partition(self, *, action_event: ops.ActionEvent = None) -> None:  # noqa: C901
         """If ready, lower partition to upgrade next unit.
 
         If upgrade is not in progress, set partition to 0. (If a unit receives a stop event, it may
@@ -182,8 +182,11 @@ class Upgrade(upgrade.Upgrade):
             logger.debug(f"{self._peer_relation.data=}")
             for upgrade_order_index, unit in enumerate(units):
                 # Note: upgrade_order_index != unit number
+                state = self._peer_relation.data[unit].get("state")
+                if state:
+                    state = upgrade.UnitState(state)
                 if (
-                    not force and self._peer_relation.data[unit].get("state") != "healthy"
+                    not force and state is not upgrade.UnitState.HEALTHY
                 ) or self._unit_workload_container_versions[
                     unit.name
                 ] != self._app_workload_container_version:
@@ -227,7 +230,7 @@ class Upgrade(upgrade.Upgrade):
                 # not which units upgrade. Kubernetes may not upgrade a unit even if the partition
                 # allows it (e.g. if the charm container of a higher unit is not ready). This is
                 # also applicable `if not force`, but is unlikely to happen since all units are
-                # "healthy" `if not force`.
+                # healthy `if not force`.
                 message = f"Attempting to upgrade unit {self._partition}"
             else:
                 message = f"Upgrade resumed. Unit {self._partition} is upgrading next"
