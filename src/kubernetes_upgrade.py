@@ -241,7 +241,7 @@ class Upgrade(upgrade.Upgrade):
     def authorized(self) -> bool:
         raise Exception("Not supported on Kubernetes")
 
-    def upgrade_unit(self, *, workload_: workload.Workload, tls: bool) -> None:
+    def upgrade_unit(self, *, event, workload_: workload.Workload, tls: bool) -> None:
         raise Exception("Not supported on Kubernetes")
 
 
