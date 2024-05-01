@@ -23,8 +23,7 @@ ops = "<2.10.0"
 # tls_certificates_interface/v1/tls_certificates.py
 cryptography = "*"
 jsonschema = "*"
-# grafana_agent/v0/cos_agent.py
-pydantic = "<2"
+# loki-k8s/v0/loki_push_api.py and prometheus_k8s/v0/prometheus_scrape.py
 cosl = "*"
 
 [tool.poetry.group.format]
