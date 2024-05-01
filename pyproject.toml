@@ -19,7 +19,7 @@ requests = "^2.31.0"
 
 [tool.poetry.group.charm-libs.dependencies]
 # data_platform_libs/v0/data_interfaces.py
-ops = "<2.10.0"
+ops = "^2.6.0,<2.10.0"
 # tls_certificates_interface/v1/tls_certificates.py
 cryptography = "*"
 jsonschema = "*"
