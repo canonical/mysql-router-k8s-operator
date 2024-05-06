@@ -11,6 +11,8 @@ import yaml
 from pytest_operator.plugin import OpsTest
 
 from .helpers import (
+    APPLICATION_DEFAULT_APP_NAME,
+    MYSQL_DEFAULT_APP_NAME,
     delete_file_or_directory_in_unit,
     ls_la_in_unit,
     read_contents_from_file_in_unit,
@@ -24,9 +26,9 @@ logger = logging.getLogger(__name__)
 
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 
-MYSQL_APP_NAME = "mysql-k8s"
+MYSQL_APP_NAME = MYSQL_DEFAULT_APP_NAME
 MYSQL_ROUTER_APP_NAME = "mysql-router-k8s"
-APPLICATION_APP_NAME = "mysql-test-app"
+APPLICATION_APP_NAME = APPLICATION_DEFAULT_APP_NAME
 SLOW_TIMEOUT = 15 * 60
 MODEL_CONFIG = {"logging-config": "<root>=INFO;unit=DEBUG"}
 

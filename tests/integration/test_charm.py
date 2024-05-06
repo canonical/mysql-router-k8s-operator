@@ -12,7 +12,9 @@ import yaml
 from pytest_operator.plugin import OpsTest
 
 from .helpers import (
-    execute_queries_on_unit,
+    APPLICATION_DEFAULT_APP_NAME,
+    MYSQL_DEFAULT_APP_NAME,
+    execute_queries_against_unit,
     get_inserted_data_by_application,
     get_server_config_credentials,
     get_unit_address,
@@ -23,9 +25,9 @@ logger = logging.getLogger(__name__)
 
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 
-MYSQL_APP_NAME = "mysql-k8s"
+MYSQL_APP_NAME = MYSQL_DEFAULT_APP_NAME
 MYSQL_ROUTER_APP_NAME = "mysql-router-k8s"
-APPLICATION_APP_NAME = "mysql-test-app"
+APPLICATION_APP_NAME = APPLICATION_DEFAULT_APP_NAME
 SLOW_TIMEOUT = 15 * 60
 MODEL_CONFIG = {"logging-config": "<root>=INFO;unit=DEBUG"}
 
@@ -111,7 +113,7 @@ async def test_database_relation(ops_test: OpsTest):
     select_inserted_data_sql = [
         f"SELECT data FROM continuous_writes_database.random_data WHERE data = '{inserted_data}'",
     ]
-    selected_data = await execute_queries_on_unit(
+    selected_data = await execute_queries_against_unit(
         mysql_unit_address,
         server_config_credentials["username"],
         server_config_credentials["password"],
