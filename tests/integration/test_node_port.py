@@ -15,6 +15,7 @@ from . import markers
 from .helpers import (
     APPLICATION_DEFAULT_APP_NAME,
     MYSQL_DEFAULT_APP_NAME,
+    MYSQL_ROUTER_DEFAULT_APP_NAME,
     execute_queries_against_unit,
     get_inserted_data_by_application,
     get_server_config_credentials,
@@ -28,7 +29,7 @@ logger = logging.getLogger(__name__)
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 
 MYSQL_APP_NAME = MYSQL_DEFAULT_APP_NAME
-MYSQL_ROUTER_APP_NAME = "mysql-router-k8s"
+MYSQL_ROUTER_APP_NAME = MYSQL_ROUTER_DEFAULT_APP_NAME
 SELF_SIGNED_CERTIFICATE_NAME = "self-signed-certificates"
 APPLICATION_APP_NAME = APPLICATION_DEFAULT_APP_NAME
 DATA_INTEGRATOR = "data-integrator"

@@ -16,6 +16,7 @@ from . import juju_
 from .helpers import (
     APPLICATION_DEFAULT_APP_NAME,
     MYSQL_DEFAULT_APP_NAME,
+    MYSQL_ROUTER_DEFAULT_APP_NAME,
     get_tls_certificate_issuer,
     get_unit_address,
 )
@@ -25,7 +26,7 @@ logger = logging.getLogger(__name__)
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 
 MYSQL_APP_NAME = MYSQL_DEFAULT_APP_NAME
-MYSQL_ROUTER_APP_NAME = "mysql-router-k8s"
+MYSQL_ROUTER_APP_NAME = MYSQL_ROUTER_DEFAULT_APP_NAME
 APPLICATION_APP_NAME = APPLICATION_DEFAULT_APP_NAME
 GRAFANA_AGENT_APP_NAME = "grafana-agent-k8s"
 SLOW_TIMEOUT = 25 * 60

@@ -30,6 +30,7 @@ CONTINUOUS_WRITES_DATABASE_NAME = "continuous_writes_database"
 CONTINUOUS_WRITES_TABLE_NAME = "data"
 
 MYSQL_DEFAULT_APP_NAME = "mysql-k8s"
+MYSQL_ROUTER_DEFAULT_APP_NAME = "mysql-router-k8s"
 APPLICATION_DEFAULT_APP_NAME = "mysql-test-app"
 
 SERVER_CONFIG_USERNAME = "serverconfig"
@@ -598,7 +599,7 @@ async def ensure_all_units_continuous_writes_incrementing(
                     last_max_written_value = max_written_value
 
 
-async def get_workload_version(ops_test: OpsTest, unit_name: str) -> None:
+async def get_workload_version(ops_test: OpsTest, unit_name: str) -> str:
     """Get the workload version of the deployed router charm."""
     return_code, output, _ = await ops_test.juju(
         "ssh",

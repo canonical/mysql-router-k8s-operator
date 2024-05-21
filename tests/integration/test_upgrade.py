@@ -19,6 +19,7 @@ from pytest_operator.plugin import OpsTest
 from .helpers import (
     APPLICATION_DEFAULT_APP_NAME,
     MYSQL_DEFAULT_APP_NAME,
+    MYSQL_ROUTER_DEFAULT_APP_NAME,
     ensure_all_units_continuous_writes_incrementing,
     get_juju_status,
     get_leader_unit,
@@ -33,7 +34,7 @@ UPGRADE_TIMEOUT = 15 * 60
 SMALL_TIMEOUT = 5 * 60
 
 MYSQL_APP_NAME = MYSQL_DEFAULT_APP_NAME
-MYSQL_ROUTER_APP_NAME = "mysql-router-k8s"
+MYSQL_ROUTER_APP_NAME = MYSQL_ROUTER_DEFAULT_APP_NAME
 APPLICATION_APP_NAME = APPLICATION_DEFAULT_APP_NAME
 
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
@@ -137,23 +138,20 @@ async def test_upgrade_from_edge(ops_test: OpsTest) -> None:
     await run_action(mysql_router_leader_unit, "resume-upgrade")
 
     logger.info("Waiting for upgrade to complete on all units")
-    await ops_test.model.block_until(
-        lambda: mysql_router_application.status == "active", timeout=UPGRADE_TIMEOUT
+    await ops_test.model.wait_for_idle(
+        [MYSQL_ROUTER_APP_NAME],
+        status="active",
+        idle_period=30,
+        timeout=UPGRADE_TIMEOUT,
     )
 
     workload_version_file = pathlib.Path("workload_version")
     repo_workload_version = workload_version_file.read_text().strip()
 
-    for attempt in tenacity.Retrying(
-        reraise=True,
-        stop=tenacity.stop_after_delay(UPGRADE_TIMEOUT),
-        wait=tenacity.wait_fixed(10),
-    ):
-        with attempt:
-            for unit in mysql_router_application.units:
-                workload_version = await get_workload_version(ops_test, unit.name)
-                assert workload_version == f"{repo_workload_version}+testupgrade"
-                assert old_workload_version != workload_version
+    for unit in mysql_router_application.units:
+        workload_version = await get_workload_version(ops_test, unit.name)
+        assert workload_version == f"{repo_workload_version}+testupgrade"
+        assert old_workload_version != workload_version
 
     await ensure_all_units_continuous_writes_incrementing(ops_test)
 
@@ -207,21 +205,18 @@ async def test_fail_and_rollback(ops_test: OpsTest, continuous_writes) -> None:
 
     logger.info("Wait for the charm to be rolled back")
     await ops_test.model.wait_for_idle(
-        apps=[MYSQL_ROUTER_APP_NAME], status="active", timeout=TIMEOUT
+        apps=[MYSQL_ROUTER_APP_NAME],
+        status="active",
+        timeout=TIMEOUT,
+        idle_period=30,
     )
 
     workload_version_file = pathlib.Path("workload_version")
     repo_workload_version = workload_version_file.read_text().strip()
 
-    for attempt in tenacity.Retrying(
-        reraise=True,
-        stop=tenacity.stop_after_delay(UPGRADE_TIMEOUT),
-        wait=tenacity.wait_fixed(10),
-    ):
-        with attempt:
-            for unit in mysql_router_application.units:
-                charm_workload_version = await get_workload_version(ops_test, unit.name)
-                assert charm_workload_version == f"{repo_workload_version}+testupgrade"
+    for unit in mysql_router_application.units:
+        charm_workload_version = await get_workload_version(ops_test, unit.name)
+        assert charm_workload_version == f"{repo_workload_version}+testupgrade"
 
     await ops_test.model.wait_for_idle(
         apps=[MYSQL_ROUTER_APP_NAME], status="active", timeout=TIMEOUT
