@@ -1,0 +1,61 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:790 Model status:
+
+Model  Controller          Cloud/Region        Version  SLA          Timestamp
+test   microk8s-localhost  microk8s/localhost  3.1.6    unsupported  01:41:19Z
+
+App                Version                  Status   Scale  Charm              Channel        Rev  Address         Exposed  Message
+grafana-agent-k8s  0.35.2                   waiting      1  grafana-agent-k8s  latest/stable   64  10.152.183.17   no       installing agent
+mysql-k8s          8.0.36-0ubuntu0.22.04.1  active       1  mysql-k8s          8.0/edge       138  10.152.183.166  no       
+mysql-router-k8s   8.0.36-0ubuntu0.22.04.1  active       1  mysql-router-k8s                    0  10.152.183.220  no       
+mysql-test-app     0.0.2                    active       1  mysql-test-app     latest/edge     37  10.152.183.195  no       Last written value=1394
+
+Unit                  Workload  Agent  Address      Ports  Message
+grafana-agent-k8s/0*  blocked   idle   10.1.89.205         grafana-dashboards-provider: off, grafana-cloud-config: off
+mysql-k8s/0*          active    idle   10.1.89.203         Primary
+mysql-router-k8s/0*   active    idle   10.1.89.201         
+mysql-test-app/0*     active    idle   10.1.89.202         Last written value=1394
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:796 Juju error logs:
+
+unit-mysql-router-k8s-0: 01:38:22 ERROR unit.mysql-router-k8s/0.juju-log metrics-endpoint:12: Uncaught exception while in charm code:
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-mysql-router-k8s-0/charm/./src/kubernetes_charm.py", line 293, in <module>
+    ops.main.main(KubernetesRouterCharm)
+  File "/var/lib/juju/agents/unit-mysql-router-k8s-0/charm/venv/ops/main.py", line 441, in main
+    _emit_charm_event(charm, dispatcher.event_name)
+  File "/var/lib/juju/agents/unit-mysql-router-k8s-0/charm/venv/ops/main.py", line 149, in _emit_charm_event
+    event_to_emit.emit(*args, **kwargs)
+  File "/var/lib/juju/agents/unit-mysql-router-k8s-0/charm/venv/ops/framework.py", line 344, in emit
+    framework._emit(event)
+  File "/var/lib/juju/agents/unit-mysql-router-k8s-0/charm/venv/ops/framework.py", line 841, in _emit
+    self._reemit(event_path)
+  File "/var/lib/juju/agents/unit-mysql-router-k8s-0/charm/venv/ops/framework.py", line 930, in _reemit
+    custom_handler(event)
+  File "/var/lib/juju/agents/unit-mysql-router-k8s-0/charm/src/abstract_charm.py", line 323, in reconcile
+    workload_.reconcile(
+  File "/var/lib/juju/agents/unit-mysql-router-k8s-0/charm/src/workload.py", line 405, in reconcile
+    self._enable_exporter(tls=tls, exporter_config=exporter_config)
+  File "/var/lib/juju/agents/unit-mysql-router-k8s-0/charm/src/workload.py", line 349, in _enable_exporter
+    self._container.update_mysql_router_exporter_service(
+  File "/var/lib/juju/agents/unit-mysql-router-k8s-0/charm/src/rock.py", line 200, in update_mysql_router_exporter_service
+    self._container.restart(self._EXPORTER_SERVICE_NAME)
+  File "/var/lib/juju/agents/unit-mysql-router-k8s-0/charm/venv/ops/model.py", line 1999, in restart
+    self._pebble.restart_services(service_names)
+  File "/var/lib/juju/agents/unit-mysql-router-k8s-0/charm/venv/ops/pebble.py", line 1746, in restart_services
+    return self._services_action('restart', services, timeout, delay)
+  File "/var/lib/juju/agents/unit-mysql-router-k8s-0/charm/venv/ops/pebble.py", line 1767, in _services_action
+    raise ChangeError(change.err, change)
+ops.pebble.ChangeError: cannot perform the following tasks:
+- Start service "mysql_router_exporter" (cannot start service: exited quickly with code 1)
+----- Logs from task 0 -----
+2024-05-21T01:38:22Z INFO Service "mysql_router_exporter" has never been started.
+----- Logs from task 1 -----
+2024-05-21T01:38:22Z INFO Most recent service output:
+    2024/05/21 01:38:22 Start exporter on 0.0.0.0:49152/metrics
+    2024/05/21 01:38:22 Server started
+    2024/05/21 01:38:22 listen: listen tcp 0.0.0.0:49152: bind: address already in use
+2024-05-21T01:38:22Z ERROR cannot start service: exited quickly with code 1
+-----
+unit-mysql-router-k8s-0: 01:38:23 ERROR juju.worker.uniter.operation hook "metrics-endpoint-relation-created" (via hook dispatching script: dispatch) failed: exit status 1
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:862 Forgetting main...
