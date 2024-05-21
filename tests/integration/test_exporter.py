@@ -13,15 +13,21 @@ import yaml
 from pytest_operator.plugin import OpsTest
 
 from . import juju_
-from .helpers import get_tls_certificate_issuer, get_unit_address
+from .helpers import (
+    APPLICATION_DEFAULT_APP_NAME,
+    MYSQL_DEFAULT_APP_NAME,
+    MYSQL_ROUTER_DEFAULT_APP_NAME,
+    get_tls_certificate_issuer,
+    get_unit_address,
+)
 
 logger = logging.getLogger(__name__)
 
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 
-MYSQL_APP_NAME = "mysql-k8s"
-MYSQL_ROUTER_APP_NAME = "mysql-router-k8s"
-APPLICATION_APP_NAME = "mysql-test-app"
+MYSQL_APP_NAME = MYSQL_DEFAULT_APP_NAME
+MYSQL_ROUTER_APP_NAME = MYSQL_ROUTER_DEFAULT_APP_NAME
+APPLICATION_APP_NAME = APPLICATION_DEFAULT_APP_NAME
 GRAFANA_AGENT_APP_NAME = "grafana-agent-k8s"
 SLOW_TIMEOUT = 25 * 60
 RETRY_TIMEOUT = 3 * 60
