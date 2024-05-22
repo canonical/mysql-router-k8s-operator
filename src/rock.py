@@ -1,7 +1,7 @@
 # Copyright 2023 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-"""Workload ROCK or OCI container"""
+"""Workload rock or OCI container"""
 
 import logging
 import typing
@@ -20,7 +20,7 @@ _UNIX_USERNAME = "mysql"
 
 
 class _Path(container.Path):
-    """ROCK filesystem path"""
+    """Rock filesystem path"""
 
     def __new__(cls, *args, container_: ops.Container):
         path = super().__new__(cls, *args)
@@ -72,7 +72,7 @@ class _Path(container.Path):
 
 
 class Rock(container.Container):
-    """Workload ROCK or OCI container"""
+    """Workload rock or OCI container"""
 
     _SERVICE_NAME = "mysql_router"
     _EXPORTER_SERVICE_NAME = "mysql_router_exporter"
