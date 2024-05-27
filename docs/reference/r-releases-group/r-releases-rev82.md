@@ -26,7 +26,7 @@ Canonical Data issues are now public on both [Jira](https://warthogs.atlassian.n
 * Charmed MySQL Router K8s ships MySQL Router “8.0.34-0ubuntu0.22.04.1”
 * CLI mysql-shell version is "8.0.34-0ubuntu0.22.04.1~ppa1"
 * The Prometheus mysql-router-exporter is "4.0.5-0ubuntu0.22.04.1~ppa1"
-* K8s charms [based on our](https://github.com/orgs/canonical/packages?tab=packages&q=charmed) ROCK OCI (Ubuntu LTS “22.04” - ubuntu:22.04-based) based on SNAP revision 69
+* K8s charms [based on our](https://github.com/orgs/canonical/packages?tab=packages&q=charmed) rock (Ubuntu LTS “22.04” - ubuntu:22.04-based) based on SNAP revision 69
 * Principal charms supports the latest LTS series “22.04” only
 * Subordinate charms support LTS “22.04” and “20.04” only
 
