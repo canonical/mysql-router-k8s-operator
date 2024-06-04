@@ -39,6 +39,10 @@ requires:
     interface: loki_push_api
     limit: 1
     optional: true
+  tracing:
+    interface: tracing
+    optional: true
+    limit: 1
 peers:
   cos:
     interface: cos
