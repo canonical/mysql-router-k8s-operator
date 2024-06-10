@@ -1,0 +1,3 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:675 Connecting to existing model microk8s-localhost:test on unspecified cloud
+[32mINFO    [0m integration.test_tls:test_tls.py:47 Deploy and relate all applications
+[32mINFO    [0m juju.model:model.py:2069 Deploying ch:amd64/jammy/mysql-k8s-145
