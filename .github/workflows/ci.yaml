@@ -14,92 +14,82 @@ on:
   workflow_call:
 
 jobs:
-  upterm:
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
-    - uses: actions/checkout@v2
-    - name: Setup upterm session
-      uses: lhotari/action-upterm@v1
-      with:
-        limit-access-to-actor: true
-        limit-access-to-users: shayancanonical
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install tox & poetry
+        run: |
+          pipx install tox
+          pipx install poetry
+      - name: Run linters
+        run: tox run -e lint
 
-  # lint:
-  #   name: Lint
-  #   runs-on: ubuntu-latest
-  #   timeout-minutes: 5
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v4
-  #     - name: Install tox & poetry
-  #       run: |
-  #         pipx install tox
-  #         pipx install poetry
-  #     - name: Run linters
-  #       run: tox run -e lint
+  unit-test:
+    name: Unit test charm
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install tox & poetry
+        run: |
+          pipx install tox
+          pipx install poetry
+      - name: Run tests
+        run: tox run -e unit
 
-  # unit-test:
-  #   name: Unit test charm
-  #   runs-on: ubuntu-latest
-  #   timeout-minutes: 20
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v4
-  #     - name: Install tox & poetry
-  #       run: |
-  #         pipx install tox
-  #         pipx install poetry
-  #     - name: Run tests
-  #       run: tox run -e unit
+  lib-check:
+    name: Check libraries
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: |
+          # Workaround for https://github.com/canonical/charmcraft/issues/1389#issuecomment-1880921728
+          touch requirements.txt
+      - name: Check libs
+        uses: canonical/charming-actions/check-libraries@2.4.0
+        with:
+          credentials: "${{ secrets.CHARMHUB_TOKEN }}"
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+          use-labels: false
+          fail-build: ${{ github.event_name == 'pull_request' }}
 
-  # lib-check:
-  #   name: Check libraries
-  #   runs-on: ubuntu-latest
-  #   timeout-minutes: 5
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v4
-  #       with:
-  #         fetch-depth: 0
-  #     - run: |
-  #         # Workaround for https://github.com/canonical/charmcraft/issues/1389#issuecomment-1880921728
-  #         touch requirements.txt
-  #     - name: Check libs
-  #       uses: canonical/charming-actions/check-libraries@2.4.0
-  #       with:
-  #         credentials: "${{ secrets.CHARMHUB_TOKEN }}"
-  #         github-token: "${{ secrets.GITHUB_TOKEN }}"
-  #         use-labels: false
-  #         fail-build: ${{ github.event_name == 'pull_request' }}
+  build:
+    name: Build charm
+    uses: canonical/data-platform-workflows/.github/workflows/build_charm.yaml@v13.3.4
+    with:
+      cache: true
 
-  # build:
-  #   name: Build charm
-  #   uses: canonical/data-platform-workflows/.github/workflows/build_charm.yaml@v13.3.4
-  #   with:
-  #     cache: true
-
-  # integration-test:
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       juju:
-  #         - agent: 2.9.45  # renovate: juju-agent-pin-minor
-  #           libjuju: ^2
-  #           allure: false
-  #         - agent: 3.4.3  # renovate: juju-agent-pin-minor
-  #           allure: true
-  #   name: Integration test charm | ${{ matrix.juju.agent }}
-  #   needs:
-  #     - lint
-  #     - unit-test
-  #     - build
-  #   uses: canonical/data-platform-workflows/.github/workflows/integration_test_charm.yaml@v13.3.4
-  #   with:
-  #     artifact-prefix: ${{ needs.build.outputs.artifact-prefix }}
-  #     cloud: microk8s
-  #     microk8s-snap-channel: 1.28-strict/stable
-  #     juju-agent-version: ${{ matrix.juju.agent }}
-  #     libjuju-version-constraint: ${{ matrix.juju.libjuju }}
-  #     _beta_allure_report: ${{ matrix.juju.allure }}
-  #   permissions:
-  #     contents: write  # Needed for Allure Report beta
+  integration-test:
+    strategy:
+      fail-fast: false
+      matrix:
+        juju:
+          - agent: 2.9.45  # renovate: juju-agent-pin-minor
+            libjuju: ^2
+            allure: false
+          - agent: 3.4.3  # renovate: juju-agent-pin-minor
+            allure: true
+    name: Integration test charm | ${{ matrix.juju.agent }}
+    needs:
+      - lint
+      - unit-test
+      - build
+    uses: canonical/data-platform-workflows/.github/workflows/integration_test_charm.yaml@v13.3.4
+    with:
+      artifact-prefix: ${{ needs.build.outputs.artifact-prefix }}
+      cloud: microk8s
+      microk8s-snap-channel: 1.28-strict/stable
+      juju-agent-version: ${{ matrix.juju.agent }}
+      libjuju-version-constraint: ${{ matrix.juju.libjuju }}
+      _beta_allure_report: ${{ matrix.juju.allure }}
+    permissions:
+      contents: write  # Needed for Allure Report beta
