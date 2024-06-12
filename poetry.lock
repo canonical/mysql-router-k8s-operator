@@ -613,20 +613,6 @@ files = [
 test = ["pytest (>=6)"]
 
 [[package]]
-name = "execnet"
-version = "2.0.2"
-description = "execnet: rapid multi-Python deployment"
-optional = false
-python-versions = ">=3.7"
-files = [
-    {file = "execnet-2.0.2-py3-none-any.whl", hash = "sha256:88256416ae766bc9e8895c76a87928c0012183da3cc4fc18016e6f050e025f41"},
-    {file = "execnet-2.0.2.tar.gz", hash = "sha256:cc59bc4423742fd71ad227122eb0dd44db51efb3dc4095b45ac9a08c770096af"},
-]
-
-[package.extras]
-testing = ["hatch", "pre-commit", "pytest", "tox"]
-
-[[package]]
 name = "executing"
 version = "1.2.0"
 description = "Get the currently executing AST node of a frame, and other information"
@@ -1592,6 +1578,17 @@ files = [
 tests = ["pytest"]
 
 [[package]]
+name = "py"
+version = "1.11.0"
+description = "library with cross-python path, ini-parsing, io, code, log facilities"
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
+files = [
+    {file = "py-1.11.0-py2.py3-none-any.whl", hash = "sha256:607c53218732647dff4acdfcd50cb62615cedf612e72d1724fb1a0cc6405b378"},
+    {file = "py-1.11.0.tar.gz", hash = "sha256:51c75c4126074b472f746a24399ad32f6053d1b34b68d2fa41e558e6f4a98719"},
+]
+
+[[package]]
 name = "pyasn1"
 version = "0.5.0"
 description = "Pure-Python implementation of ASN.1 types and DER/BER/CER codecs (X.208)"
@@ -1861,6 +1858,21 @@ pytest = ">=4.6"
 testing = ["fields", "hunter", "process-tests", "pytest-xdist", "six", "virtualenv"]
 
 [[package]]
+name = "pytest-forked"
+version = "1.6.0"
+description = "run tests in isolated forked subprocesses"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "pytest-forked-1.6.0.tar.gz", hash = "sha256:4dafd46a9a600f65d822b8f605133ecf5b3e1941ebb3588e943b4e3eb71a5a3f"},
+    {file = "pytest_forked-1.6.0-py3-none-any.whl", hash = "sha256:810958f66a91afb1a1e2ae83089d8dc1cd2437ac96b12963042fbb9fb4d16af0"},
+]
+
+[package.dependencies]
+py = "*"
+pytest = ">=3.10"
+
+[[package]]
 name = "pytest-mock"
 version = "3.12.0"
 description = "Thin-wrapper around the mock package for easier use with pytest"
@@ -1933,26 +1945,6 @@ url = "https://github.com/canonical/data-platform-workflows"
 reference = "v13.3.4"
 resolved_reference = "bf186d4cc2e7122427d121587ff0c7d7ef8874a4"
 subdirectory = "python/pytest_plugins/pytest_operator_groups"
-
-[[package]]
-name = "pytest-xdist"
-version = "3.3.1"
-description = "pytest xdist plugin for distributed testing, most importantly across multiple CPUs"
-optional = false
-python-versions = ">=3.7"
-files = [
-    {file = "pytest-xdist-3.3.1.tar.gz", hash = "sha256:d5ee0520eb1b7bcca50a60a518ab7a7707992812c578198f8b44fdfac78e8c93"},
-    {file = "pytest_xdist-3.3.1-py3-none-any.whl", hash = "sha256:ff9daa7793569e6a68544850fd3927cd257cc03a7ef76c95e86915355e82b5f2"},
-]
-
-[package.dependencies]
-execnet = ">=1.1"
-pytest = ">=6.2.0"
-
-[package.extras]
-psutil = ["psutil (>=3.0)"]
-setproctitle = ["setproctitle"]
-testing = ["filelock"]
 
 [[package]]
 name = "python-dateutil"
@@ -2596,4 +2588,4 @@ test = ["big-O", "importlib-resources", "jaraco.functools", "jaraco.itertools", 
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "d0ea0e11c91e69163ac7bfb1ff45e1aa4c10bd703a1832d49f81297ebbfacf56"
+content-hash = "8db31f951f344f77679d6e7dd3ec78c5d1e239e29c2c55ac98de4bea1a150e03"

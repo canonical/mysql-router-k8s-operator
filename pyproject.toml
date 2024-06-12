@@ -53,7 +53,7 @@ codespell = "^2.2.5"
 
 [tool.poetry.group.unit.dependencies]
 pytest = "^7.4.0"
-pytest-xdist = "^3.3.1"
+pytest-forked = "^1.6.0"
 pytest-cov = "^4.1.0"
 ops-scenario = "^5.6.2"
 ops = "<2.10.0"

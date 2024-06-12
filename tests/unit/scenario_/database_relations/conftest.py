@@ -2,7 +2,6 @@
 
 # See LICENSE file for licensing details.
 
-import gc
 import pytest
 import scenario
 
@@ -45,10 +44,3 @@ def complete_requires() -> scenario.Relation:
             "username": "relation-68",
         },
     )
-
-
-@pytest.fixture(autouse=True)
-def collect_garbage():
-    gc.collect()
-    yield
-    gc.collect()
