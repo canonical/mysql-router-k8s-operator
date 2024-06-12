@@ -16,19 +16,38 @@ import lightkube.models.meta_v1
 import lightkube.resources.core_v1
 import ops
 import tenacity
+from charms.tempo_k8s.v1.charm_tracing import trace_charm
 
 import abstract_charm
 import kubernetes_logrotate
 import kubernetes_upgrade
 import logrotate
+import relations.cos
+import relations.database_provides
+import relations.database_requires
 import rock
 import upgrade
+import workload
 
 logger = logging.getLogger(__name__)
 logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("httpcore").setLevel(logging.WARNING)
 
 
+@trace_charm(
+    tracing_endpoint="tracing_endpoint",
+    extra_types=(
+        kubernetes_upgrade.Upgrade,
+        logrotate.LogRotate,
+        relations.cos.COSRelation,
+        relations.database_provides.RelationEndpoint,
+        relations.database_requires.RelationEndpoint,
+        relations.tls.RelationEndpoint,
+        rock.Rock,
+        workload.AuthenticatedWorkload,
+        workload.Workload,
+    ),
+)
 class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
     """MySQL Router Kubernetes charm"""
 
