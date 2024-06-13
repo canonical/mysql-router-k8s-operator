@@ -7,8 +7,8 @@ import logging
 from pathlib import Path
 
 import pytest
+import requests
 import tenacity
-import urllib3
 import yaml
 from pytest_operator.plugin import OpsTest
 
@@ -44,8 +44,6 @@ else:
 @pytest.mark.abort_on_fail
 async def test_exporter_endpoint(ops_test: OpsTest) -> None:
     """Test that exporter endpoint is functional."""
-    http = urllib3.PoolManager()
-
     # Build and deploy applications
     mysqlrouter_charm = await ops_test.build_charm(".")
     mysqlrouter_resources = {
@@ -120,16 +118,13 @@ async def test_exporter_endpoint(ops_test: OpsTest) -> None:
     unit_address = await get_unit_address(ops_test, unit.name)
 
     try:
-        http.request("GET", f"http://{unit_address}:49152/metrics")
-    except urllib3.exceptions.MaxRetryError as e:
+        requests.get(f"http://{unit_address}:49152/metrics", stream=False)
+    except requests.exceptions.ConnectionError as e:
         assert (
-            "[Errno 111] Connection refused" in e.reason.args[0]
+            "[Errno 111] Connection refused" in str(e)
         ), "❌ expected connection refused error"
     else:
         assert False, "❌ can connect to metrics endpoint without relation with cos"
-
-    # clear connection pool before relating metrics-endpoint which starts mysql_router_exporter
-    http.clear()
 
     logger.info("Relating mysqlrouter with grafana agent")
     await ops_test.model.relate(
@@ -149,12 +144,12 @@ async def test_exporter_endpoint(ops_test: OpsTest) -> None:
         wait=tenacity.wait_fixed(10),
     ):
         with attempt:
-            jmx_resp = http.request("GET", f"http://{unit_address}:49152/metrics")
+            response = requests.get(f"http://{unit_address}:49152/metrics", stream=False)
             assert (
-                jmx_resp.status == 200
+                response.status_code == 200
             ), "❌ cannot connect to metrics endpoint with relation with cos"
             assert "mysqlrouter_route_health" in str(
-                jmx_resp.data
+                response.text
             ), "❌ did not find expected metric in response"
 
     logger.info("Removing relation between mysqlrouter and grafana agent")
@@ -169,23 +164,19 @@ async def test_exporter_endpoint(ops_test: OpsTest) -> None:
     ):
         with attempt:
             try:
-                http.request("GET", f"http://{unit_address}:49152/metrics")
-            except urllib3.exceptions.MaxRetryError as e:
+                requests.get(f"http://{unit_address}:49152/metrics", stream=False)
+            except requests.exceptions.ConnectionError as e:
                 assert (
-                    "[Errno 111] Connection refused" in e.reason.args[0]
+                    "[Errno 111] Connection refused" in str(e)
                 ), "❌ expected connection refused error"
             else:
                 assert False, "❌ can connect to metrics endpoint without relation with cos"
-
-    http.clear()
 
 
 @pytest.mark.group(1)
 @pytest.mark.abort_on_fail
 async def test_exporter_endpoint_with_tls(ops_test: OpsTest) -> None:
     """Test that the exporter endpoint works when related with TLS"""
-    http = urllib3.PoolManager()
-
     mysql_router_app = ops_test.model.applications[MYSQL_ROUTER_APP_NAME]
     mysql_router_unit = mysql_router_app.units[0]
 
@@ -225,16 +216,13 @@ async def test_exporter_endpoint_with_tls(ops_test: OpsTest) -> None:
     ):
         with attempt:
             try:
-                http.request("GET", f"http://{unit_address}:49152/metrics")
-            except urllib3.exceptions.MaxRetryError as e:
+                requests.get(f"http://{unit_address}:49152/metrics", stream=False)
+            except requests.exceptions.ConnectionError as e:
                 assert (
-                    "[Errno 111] Connection refused" in e.reason.args[0]
+                    "[Errno 111] Connection refused" in str(e)
                 ), "❌ expected connection refused error"
             else:
                 assert False, "❌ can connect to metrics endpoint without relation with cos"
-
-    # clear connection pool before relating metrics-endpoint which starts mysql_router_exporter
-    http.clear()
 
     logger.info("Relating mysqlrouter with grafana agent")
     await ops_test.model.relate(
@@ -247,12 +235,12 @@ async def test_exporter_endpoint_with_tls(ops_test: OpsTest) -> None:
         wait=tenacity.wait_fixed(10),
     ):
         with attempt:
-            jmx_resp = http.request("GET", f"http://{unit_address}:49152/metrics")
+            response = requests.get(f"http://{unit_address}:49152/metrics", stream=False)
             assert (
-                jmx_resp.status == 200
+                response.status_code == 200
             ), "❌ cannot connect to metrics endpoint with relation with cos"
             assert "mysqlrouter_route_health" in str(
-                jmx_resp.data
+                response.text
             ), "❌ did not find expected metric in response"
 
     issuer = await get_tls_certificate_issuer(
@@ -275,10 +263,10 @@ async def test_exporter_endpoint_with_tls(ops_test: OpsTest) -> None:
     ):
         with attempt:
             try:
-                http.request("GET", f"http://{unit_address}:49152/metrics")
-            except urllib3.exceptions.MaxRetryError as e:
+                requests.get(f"http://{unit_address}:49152/metrics", stream=False)
+            except requests.exceptions.ConnectionError as e:
                 assert (
-                    "[Errno 111] Connection refused" in e.reason.args[0]
+                    "[Errno 111] Connection refused" in str(e)
                 ), "❌ expected connection refused error"
             else:
                 assert False, "❌ can connect to metrics endpoint without relation with cos"
@@ -303,5 +291,3 @@ async def test_exporter_endpoint_with_tls(ops_test: OpsTest) -> None:
             assert (
                 "Issuer: CN = MySQL_Router_Auto_Generated_CA_Certificate" in issuer
             ), "Expected mysqlrouter autogenerated certificate"
-
-    http.clear()
