@@ -4,6 +4,7 @@
 
 import asyncio
 import logging
+import time
 from pathlib import Path
 
 import pytest
@@ -125,6 +126,8 @@ async def test_exporter_endpoint(ops_test: OpsTest) -> None:
     else:
         assert False, "❌ can connect to metrics endpoint without relation with cos"
 
+    time.sleep(61)
+
     logger.info("Relating mysqlrouter with grafana agent")
     await ops_test.model.relate(
         f"{GRAFANA_AGENT_APP_NAME}:grafana-dashboards-consumer",
@@ -226,6 +229,8 @@ async def test_exporter_endpoint_with_tls(ops_test: OpsTest) -> None:
                 ), "❌ expected connection refused error"
             else:
                 assert False, "❌ can connect to metrics endpoint without relation with cos"
+
+    time.sleep(61)
 
     logger.info("Relating mysqlrouter with grafana agent")
     await ops_test.model.relate(
