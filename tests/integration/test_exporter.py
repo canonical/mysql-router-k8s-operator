@@ -86,7 +86,7 @@ async def test_exporter_endpoint(ops_test: OpsTest) -> None:
         ),
     )
 
-    [mysql_app, mysqlrouter_app, application_app, grafana_agent_app] = applications
+    [_, mysqlrouter_app, __, ___] = applications
 
     async with ops_test.fast_forward("60s"):
         logger.info("Waiting for mysqlrouter to be in BlockedStatus")
@@ -118,7 +118,8 @@ async def test_exporter_endpoint(ops_test: OpsTest) -> None:
     unit_address = await get_unit_address(ops_test, unit.name)
 
     try:
-        requests.get(f"http://{unit_address}:49152/metrics", stream=False)
+        with requests.Session() as session:
+            response = session.get(f"http://{unit_address}:49152/metrics", stream=False)
     except requests.exceptions.ConnectionError as e:
         assert "[Errno 111] Connection refused" in str(e), "❌ expected connection refused error"
     else:
@@ -142,13 +143,15 @@ async def test_exporter_endpoint(ops_test: OpsTest) -> None:
         wait=tenacity.wait_fixed(10),
     ):
         with attempt:
-            response = requests.get(f"http://{unit_address}:49152/metrics", stream=False)
-            assert (
-                response.status_code == 200
-            ), "❌ cannot connect to metrics endpoint with relation with cos"
-            assert "mysqlrouter_route_health" in str(
-                response.text
-            ), "❌ did not find expected metric in response"
+            with requests.Session() as session:
+                response = session.get(f"http://{unit_address}:49152/metrics", stream=False)
+                assert (
+                    response.status_code == 200
+                ), "❌ cannot connect to metrics endpoint with relation with cos"
+                assert "mysqlrouter_route_health" in str(
+                    response.text
+                ), "❌ did not find expected metric in response"
+                response.close()
 
     logger.info("Removing relation between mysqlrouter and grafana agent")
     await mysqlrouter_app.remove_relation(
@@ -162,7 +165,8 @@ async def test_exporter_endpoint(ops_test: OpsTest) -> None:
     ):
         with attempt:
             try:
-                requests.get(f"http://{unit_address}:49152/metrics", stream=False)
+                with requests.Session() as session:
+                    response = requests.get(f"http://{unit_address}:49152/metrics", stream=False)
             except requests.exceptions.ConnectionError as e:
                 assert "[Errno 111] Connection refused" in str(
                     e
@@ -214,7 +218,8 @@ async def test_exporter_endpoint_with_tls(ops_test: OpsTest) -> None:
     ):
         with attempt:
             try:
-                requests.get(f"http://{unit_address}:49152/metrics", stream=False)
+                with requests.Session() as session:
+                    response = session.get(f"http://{unit_address}:49152/metrics", stream=False)
             except requests.exceptions.ConnectionError as e:
                 assert "[Errno 111] Connection refused" in str(
                     e
@@ -233,13 +238,15 @@ async def test_exporter_endpoint_with_tls(ops_test: OpsTest) -> None:
         wait=tenacity.wait_fixed(10),
     ):
         with attempt:
-            response = requests.get(f"http://{unit_address}:49152/metrics", stream=False)
-            assert (
-                response.status_code == 200
-            ), "❌ cannot connect to metrics endpoint with relation with cos"
-            assert "mysqlrouter_route_health" in str(
-                response.text
-            ), "❌ did not find expected metric in response"
+            with requests.Session() as session:
+                response = session.get(f"http://{unit_address}:49152/metrics", stream=False)
+                assert (
+                    response.status_code == 200
+                ), "❌ cannot connect to metrics endpoint with relation with cos"
+                assert "mysqlrouter_route_health" in str(
+                    response.text
+                ), "❌ did not find expected metric in response"
+                response.close()
 
     issuer = await get_tls_certificate_issuer(
         ops_test,
@@ -261,7 +268,8 @@ async def test_exporter_endpoint_with_tls(ops_test: OpsTest) -> None:
     ):
         with attempt:
             try:
-                requests.get(f"http://{unit_address}:49152/metrics", stream=False)
+                with requests.Session() as session:
+                    response = session.get(f"http://{unit_address}:49152/metrics", stream=False)
             except requests.exceptions.ConnectionError as e:
                 assert "[Errno 111] Connection refused" in str(
                     e
