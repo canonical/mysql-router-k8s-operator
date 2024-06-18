@@ -11,6 +11,7 @@ The minimum supported Juju versions are:
 
 * Kubernetes 1.27+
 * Canonical MicroK8s 1.27+ (snap channel 1.27-strict/stable and newer)
+
 ## Minimum requirements
 
 Make sure your machine meets the following requirements:
