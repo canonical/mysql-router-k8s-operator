@@ -28,4 +28,4 @@ The charm is based on [ROCK OCI](https://github.com/canonical/charmed-mysql-rock
 ## Charmed MySQL K8s requirements
 * Please also keep in mind ["Charmed MySQL K8s" requirements](https://charmhub.io/mysql-k8s/docs/r-requirements#mysql-gr-limits).
 
-test
+test2
