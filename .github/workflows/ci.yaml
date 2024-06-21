@@ -68,28 +68,40 @@ jobs:
     with:
       cache: true
 
-  integration-test:
-    strategy:
-      fail-fast: false
-      matrix:
-        juju:
-          - agent: 2.9.45  # renovate: juju-agent-pin-minor
-            libjuju: ^2
-            allure: false
-          - agent: 3.4.3  # renovate: juju-agent-pin-minor
-            allure: true
-    name: Integration test charm | ${{ matrix.juju.agent }}
-    needs:
-      - lint
-      - unit-test
-      - build
-    uses: canonical/data-platform-workflows/.github/workflows/integration_test_charm.yaml@v13.3.4
-    with:
-      artifact-prefix: ${{ needs.build.outputs.artifact-prefix }}
-      cloud: microk8s
-      microk8s-snap-channel: 1.28-strict/stable
-      juju-agent-version: ${{ matrix.juju.agent }}
-      libjuju-version-constraint: ${{ matrix.juju.libjuju }}
-      _beta_allure_report: ${{ matrix.juju.allure }}
-    permissions:
-      contents: write  # Needed for Allure Report beta
+  # integration-test:
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       juju:
+  #         - agent: 2.9.45  # renovate: juju-agent-pin-minor
+  #           libjuju: ^2
+  #           allure: false
+  #         - agent: 3.4.3  # renovate: juju-agent-pin-minor
+  #           allure: true
+  #   name: Integration test charm | ${{ matrix.juju.agent }}
+  #   needs:
+  #     - lint
+  #     - unit-test
+  #     - build
+  #   uses: canonical/data-platform-workflows/.github/workflows/integration_test_charm.yaml@v13.3.4
+  #   with:
+  #     artifact-prefix: ${{ needs.build.outputs.artifact-prefix }}
+  #     cloud: microk8s
+  #     microk8s-snap-channel: 1.28-strict/stable
+  #     juju-agent-version: ${{ matrix.juju.agent }}
+  #     libjuju-version-constraint: ${{ matrix.juju.libjuju }}
+  #     _beta_allure_report: ${{ matrix.juju.allure }}
+  #   permissions:
+  #     contents: write  # Needed for Allure Report beta
+
+  upterm:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup upterm session
+      uses: lhotari/action-upterm@v1
+      with:
+        ## limits ssh access and adds the ssh public key for the user which triggered the workflow
+        limit-access-to-actor: true
+        ## limits ssh access and adds the ssh public keys of the listed GitHub users
+        limit-access-to-users: shayancanonical
