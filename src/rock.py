@@ -7,7 +7,6 @@ import logging
 import typing
 
 import ops
-import tenacity
 
 import container
 
@@ -198,14 +197,7 @@ class Rock(container.Container):
         # `self._container.replan()` does not stop services that have been disabled
         # Explicitly use `stop()` instead
         if enabled:
-            for attempt in tenacity.Retrying(
-                retry=tenacity.retry_if_exception_type(ops.pebble.ChangeError),
-                reraise=True,
-                stop=tenacity.stop_after_attempt(3),
-                wait=tenacity.wait_fixed(65),
-            ):
-                with attempt:
-                    self._container.replan()
+            self._container.replan()
         else:
             self._container.stop(self._EXPORTER_SERVICE_NAME)
 
