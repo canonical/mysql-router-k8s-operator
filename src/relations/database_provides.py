@@ -192,7 +192,7 @@ class RelationEndpoint:
         May break during deferred ops events or collect status ops events
         (https://github.com/canonical/operator/pull/1091#issuecomment-2191460188)
         """
-        if isinstance(event, ops.RelationBrokenEvent):
+        if isinstance(event, ops.RelationBrokenEvent) and event.relation.name == self._NAME:
             return [*self._interface.relations, event.relation]
         return self._interface.relations
 
