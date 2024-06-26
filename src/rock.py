@@ -197,7 +197,7 @@ class Rock(container.Container):
         # `self._container.replan()` does not stop services that have been disabled
         # Explicitly use `stop()` instead
         if enabled:
-            self._container.replan()
+            self._container.restart(self._EXPORTER_SERVICE_NAME)
         else:
             self._container.stop(self._EXPORTER_SERVICE_NAME)
 
