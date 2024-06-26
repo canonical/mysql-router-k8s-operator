@@ -1360,19 +1360,18 @@ docs = ["canonical-sphinx-extensions", "furo", "linkify-it-py", "myst-parser", "
 
 [[package]]
 name = "ops-scenario"
-version = "5.6.2"
+version = "6.1.1"
 description = "Python library providing a state-transition testing API for Operator Framework charms."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "ops-scenario-5.6.2.tar.gz", hash = "sha256:0a48e97b406ea9271ea9d683e3ef355f887fa0ab651fd7352e4de214eeaa96c1"},
-    {file = "ops_scenario-5.6.2-py3-none-any.whl", hash = "sha256:b75c9e2199b17da355eda4c4eab1f4450067f0f3feb1f4215858e4c90fa6f656"},
+    {file = "ops_scenario-6.1.1-py3-none-any.whl", hash = "sha256:358b321c8091b1c1e2ec7df1014c6052416b9bf4d6259ea8f35bc90caa727340"},
+    {file = "ops_scenario-6.1.1.tar.gz", hash = "sha256:55d218cd4ea08afcdb2fc9e41a3364a3c1541e3a7c93ab14b2b7fc96e51a91de"},
 ]
 
 [package.dependencies]
-ops = ">=2.6"
+ops = ">=2.10"
 PyYAML = ">=6.0.1"
-typer = "0.7.0"
 
 [[package]]
 name = "packaging"
@@ -2341,26 +2340,6 @@ docs = ["myst-parser", "pydata-sphinx-theme", "sphinx"]
 test = ["argcomplete (>=2.0)", "pre-commit", "pytest", "pytest-mock"]
 
 [[package]]
-name = "typer"
-version = "0.7.0"
-description = "Typer, build great CLIs. Easy to code. Based on Python type hints."
-optional = false
-python-versions = ">=3.6"
-files = [
-    {file = "typer-0.7.0-py3-none-any.whl", hash = "sha256:b5e704f4e48ec263de1c0b3a2387cd405a13767d2f907f44c1a08cbad96f606d"},
-    {file = "typer-0.7.0.tar.gz", hash = "sha256:ff797846578a9f2a201b53442aedeb543319466870fbe1c701eab66dd7681165"},
-]
-
-[package.dependencies]
-click = ">=7.1.1,<9.0.0"
-
-[package.extras]
-all = ["colorama (>=0.4.3,<0.5.0)", "rich (>=10.11.0,<13.0.0)", "shellingham (>=1.3.0,<2.0.0)"]
-dev = ["autoflake (>=1.3.1,<2.0.0)", "flake8 (>=3.8.3,<4.0.0)", "pre-commit (>=2.17.0,<3.0.0)"]
-doc = ["cairosvg (>=2.5.2,<3.0.0)", "mdx-include (>=1.4.1,<2.0.0)", "mkdocs (>=1.1.2,<2.0.0)", "mkdocs-material (>=8.1.4,<9.0.0)", "pillow (>=9.3.0,<10.0.0)"]
-test = ["black (>=22.3.0,<23.0.0)", "coverage (>=6.2,<7.0)", "isort (>=5.0.6,<6.0.0)", "mypy (==0.910)", "pytest (>=4.4.0,<8.0.0)", "pytest-cov (>=2.10.0,<5.0.0)", "pytest-sugar (>=0.9.4,<0.10.0)", "pytest-xdist (>=1.32.0,<4.0.0)", "rich (>=10.11.0,<13.0.0)", "shellingham (>=1.3.0,<2.0.0)"]
-
-[[package]]
 name = "typing-extensions"
 version = "4.7.1"
 description = "Backported and Experimental Type Hints for Python 3.7+"
@@ -2605,4 +2584,4 @@ test = ["big-O", "importlib-resources", "jaraco.functools", "jaraco.itertools", 
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "6755bba3f464841de4d30c5e61a122f3aa4b42632da50d03921b37c948493096"
+content-hash = "5dda777a8ccd3144b63bdf904c5ba423eae34515a58830f55b58a0a983d6d16a"
