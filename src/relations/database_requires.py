@@ -69,7 +69,15 @@ class CompleteConnectionInformation(ConnectionInformation):
     """
 
     def __init__(self, *, interface: data_interfaces.DatabaseRequires, event) -> None:
-        relations = interface.relations
+        # Needed because of breaking change in ops 2.10
+        # https://github.com/canonical/operator/pull/1091#issuecomment-1888644075
+        # May break during deferred ops events or collect status ops events
+        # (https://github.com/canonical/operator/pull/1091#issuecomment-2191460188)
+        if isinstance(event, ops.RelationBrokenEvent):
+            relations = [*interface.relations, event.relation]
+        else:
+            relations = interface.relations
+
         endpoint_name = interface.relation_name
         if not relations:
             raise _MissingRelation(endpoint_name=endpoint_name)
