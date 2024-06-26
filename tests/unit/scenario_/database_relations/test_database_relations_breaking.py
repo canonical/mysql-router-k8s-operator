@@ -40,7 +40,7 @@ def test_breaking_requires_and_complete_provides(
             secret = scenario.Secret(
                 id="foo",
                 contents={0: {"username": "foouser", "password": "foobar"}},
-                owner="application",
+                owner="app",
             )
             relation = relation.replace(
                 local_app_data={
@@ -91,7 +91,7 @@ def test_complete_requires_and_breaking_provides(
             secret = scenario.Secret(
                 id=f"foo-{relation.relation_id}",
                 contents={0: {"username": "foouser", "password": "foobar"}},
-                owner="application",
+                owner="app",
             )
             relation = relation.replace(
                 local_app_data={
