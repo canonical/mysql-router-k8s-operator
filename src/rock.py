@@ -195,7 +195,7 @@ class Rock(container.Container):
         )
         self._container.add_layer(self._EXPORTER_SERVICE_NAME, layer, combine=True)
         # `self._container.replan()` does not stop services that have been disabled
-        # Explicitly use `stop()` instead
+        # Use `restart()` and `stop()` instead
         if enabled:
             self._container.restart(self._EXPORTER_SERVICE_NAME)
         else:
