@@ -81,10 +81,11 @@ def test_breaking_requires_and_complete_provides(
 
 @pytest.mark.parametrize("complete_provides_s", combinations.complete_provides(1, 3))
 def test_complete_requires_and_breaking_provides(
-    complete_requires, complete_provides_s, juju_has_secrets
+    complete_requires, complete_provides_s, juju_has_secrets, mocker
 ):
     complete_provides_s_ = []
     secrets = []
+    mocker.patch("mysql_shell.Shell.does_user_exists", return_value=True)
     for relation in complete_provides_s:
         relation: scenario.Relation
         if juju_has_secrets and "requested-secrets" in relation.remote_app_data:
