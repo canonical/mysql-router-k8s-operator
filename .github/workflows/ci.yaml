@@ -55,7 +55,7 @@ jobs:
           # Workaround for https://github.com/canonical/charmcraft/issues/1389#issuecomment-1880921728
           touch requirements.txt
       - name: Check libs
-        uses: canonical/charming-actions/check-libraries@2.4.0
+        uses: canonical/charming-actions/check-libraries@2.6.0
         with:
           credentials: "${{ secrets.CHARMHUB_TOKEN }}"
           github-token: "${{ secrets.GITHUB_TOKEN }}"
@@ -64,7 +64,7 @@ jobs:
 
   build:
     name: Build charm
-    uses: canonical/data-platform-workflows/.github/workflows/build_charm.yaml@v13.3.4
+    uses: canonical/data-platform-workflows/.github/workflows/build_charm.yaml@v16.2.1
     with:
       cache: true
 
@@ -73,7 +73,7 @@ jobs:
       fail-fast: false
       matrix:
         juju:
-          - agent: 2.9.45  # renovate: juju-agent-pin-minor
+          - agent: 2.9.49  # renovate: juju-agent-pin-minor
             libjuju: ^2
             allure: false
           - agent: 3.4.3  # renovate: juju-agent-pin-minor
@@ -83,7 +83,7 @@ jobs:
       - lint
       - unit-test
       - build
-    uses: canonical/data-platform-workflows/.github/workflows/integration_test_charm.yaml@v13.3.4
+    uses: canonical/data-platform-workflows/.github/workflows/integration_test_charm.yaml@v16.2.1
     with:
       artifact-prefix: ${{ needs.build.outputs.artifact-prefix }}
       cloud: microk8s
