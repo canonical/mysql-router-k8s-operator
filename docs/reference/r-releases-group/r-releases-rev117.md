@@ -16,7 +16,7 @@ If you are jumping over several stable revisions, make sure to check [previous r
 * New workload version [MySQL Router 8.0.36](https://dev.mysql.com/doc/relnotes/mysql/8.0/en/news-8-0-36.html) [[PR#209](https://github.com/canonical/mysql-router-k8s-operator/pull/209)]
 * [K8s NodePort](https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport) support [[PR#211](https://github.com/canonical/mysql-router-k8s-operator/pull/211)]
 * [Observability with COS](/t/14101) [[PR#210](https://github.com/canonical/mysql-router-k8s-operator/pull/210)]
-* Introduce COS Tracing support [[PR#250](https://github.com/canonical/mysql-router-k8s-operator/pull/250)][[DPE-4615](https://warthogs.atlassian.net/browse/DPE-4615)]
+* Introduced [COS Tracing support](/t/14553) [[PR#250](https://github.com/canonical/mysql-router-k8s-operator/pull/250)][[DPE-4615](https://warthogs.atlassian.net/browse/DPE-4615)]
 * Router version displayed in upgrade status [[PR#230](https://github.com/canonical/mysql-router-k8s-operator/pull/230)]
 * All the functionality from [previous revisions](/t/12201)
 
