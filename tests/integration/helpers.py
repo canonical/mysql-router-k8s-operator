@@ -211,7 +211,7 @@ async def write_content_to_file_in_unit(
 
         subprocess.run(
             [
-                "kubectl",
+                "microk8s.kubectl",
                 "cp",
                 "-n",
                 ops_test.model.info.name,
@@ -243,7 +243,7 @@ async def read_contents_from_file_in_unit(
     with tempfile.NamedTemporaryFile(mode="r+") as temp_file:
         subprocess.run(
             [
-                "kubectl",
+                "microk8s.kubectl",
                 "cp",
                 "-n",
                 ops_test.model.info.name,
@@ -351,7 +351,7 @@ async def rotate_mysqlrouter_logs(ops_test: OpsTest, unit_name: str) -> None:
 
     subprocess.run(
         [
-            "kubectl",
+            "microk8s.kubectl",
             "exec",
             "-n",
             ops_test.model.info.name,
