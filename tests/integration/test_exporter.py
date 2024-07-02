@@ -32,6 +32,7 @@ RETRY_TIMEOUT = 3 * 60
 
 
 @pytest.mark.group(1)
+@pytest.mark.unstable
 @pytest.mark.abort_on_fail
 async def test_exporter_endpoint(ops_test: OpsTest) -> None:
     """Test that exporter endpoint is functional."""
