@@ -209,7 +209,6 @@ async def write_content_to_file_in_unit(
     with tempfile.NamedTemporaryFile(mode="w", dir=pathlib.Path.home()) as temp_file:
         temp_file.write(content)
         temp_file.flush()
-        logger.warning(f"{temp_file=}, {temp_file.name=} {str(temp_file)=}")
 
         try:
             subprocess.run(
