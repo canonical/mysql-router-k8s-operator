@@ -247,7 +247,7 @@ class RelationEndpoint:
             f"{exposed_read_write_endpoint=}, {exposed_read_only_endpoint=}"
         )
         requested_users = []
-        for relation in self._interface.relations:
+        for relation in self._relations(event):
             try:
                 requested_users.append(
                     _RelationThatRequestedUser(
@@ -301,7 +301,7 @@ class RelationEndpoint:
         )
         # TODO python3.10 min version: Use `list` instead of `typing.List`
         exceptions: typing.List[status_exception.StatusException] = []
-        for relation in self._interface.relations:
+        for relation in self._relations(event):
             try:
                 requested_users.append(
                     _RelationThatRequestedUser(
