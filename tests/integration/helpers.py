@@ -241,7 +241,7 @@ async def read_contents_from_file_in_unit(
     """
     pod_name = unit.name.replace("/", "-")
 
-    with tempfile.NamedTemporaryFile(mode="r+") as temp_file:
+    with tempfile.NamedTemporaryFile(mode="r+", dir=pathlib.Path.home()) as temp_file:
         subprocess.run(
             [
                 "microk8s.kubectl",
