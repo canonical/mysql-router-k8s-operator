@@ -210,23 +210,19 @@ async def write_content_to_file_in_unit(
         temp_file.write(content)
         temp_file.flush()
 
-        try:
-            subprocess.run(
-                [
-                    "microk8s.kubectl",
-                    "cp",
-                    "-n",
-                    ops_test.model.info.name,
-                    "-c",
-                    container_name,
-                    temp_file.name,
-                    f"{pod_name}:{path}",
-                ],
-                check=True,
-                capture_output=True,
-            )
-        except subprocess.CalledProcessError as e:
-            logger.exception(f"{e.stdout=}\n\n{e.stderr=}\n\n")
+        subprocess.run(
+            [
+                "microk8s.kubectl",
+                "cp",
+                "-n",
+                ops_test.model.info.name,
+                "-c",
+                container_name,
+                temp_file.name,
+                f"{pod_name}:{path}",
+            ],
+            check=True,
+        )
 
 
 async def read_contents_from_file_in_unit(
