@@ -4,6 +4,7 @@
 import itertools
 import json
 import logging
+import pathlib
 import subprocess
 import tempfile
 from typing import Dict, List, Optional
@@ -205,7 +206,7 @@ async def write_content_to_file_in_unit(
     """
     pod_name = unit.name.replace("/", "-")
 
-    with tempfile.NamedTemporaryFile(mode="w") as temp_file:
+    with tempfile.NamedTemporaryFile(mode="w", dir=pathlib.Path.home()) as temp_file:
         temp_file.write(content)
         temp_file.flush()
         logger.warning(f"{temp_file=}, {temp_file.name=} {str(temp_file)=}")
