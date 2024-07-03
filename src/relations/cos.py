@@ -34,7 +34,7 @@ class ExporterConfig:
 class COSRelation:
     """Relation with the cos bundle."""
 
-    _EXPORTER_PORT = "49152"
+    _EXPORTER_PORT = "49151"
     HTTP_SERVER_PORT = "8443"
     _METRICS_RELATION_NAME = "metrics-endpoint"
     _LOGGING_RELATION_NAME = "logging"

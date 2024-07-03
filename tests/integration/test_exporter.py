@@ -28,8 +28,7 @@ MYSQL_ROUTER_APP_NAME = MYSQL_ROUTER_DEFAULT_APP_NAME
 APPLICATION_APP_NAME = APPLICATION_DEFAULT_APP_NAME
 GRAFANA_AGENT_APP_NAME = "grafana-agent-k8s"
 SLOW_TIMEOUT = 25 * 60
-# TODO: reduce to < 5 * 60, after https://github.com/rluisr/mysqlrouter_exporter/issues/67 is resolved
-RETRY_TIMEOUT = 7 * 60
+RETRY_TIMEOUT = 3 * 60
 
 
 @pytest.mark.group(1)
