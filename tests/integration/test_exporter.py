@@ -12,6 +12,7 @@ import tenacity
 import yaml
 from pytest_operator.plugin import OpsTest
 
+from . import markers
 from .helpers import (
     APPLICATION_DEFAULT_APP_NAME,
     MYSQL_DEFAULT_APP_NAME,
@@ -32,6 +33,10 @@ RETRY_TIMEOUT = 3 * 60
 
 
 @pytest.mark.group(1)
+# TODO: remove amd64_only after these issues fixed:
+# https://github.com/canonical/mysql-router-k8s-operator/issues/282
+# https://github.com/canonical/grafana-agent-k8s-operator/issues/309
+@markers.amd64_only
 @pytest.mark.abort_on_fail
 async def test_exporter_endpoint(ops_test: OpsTest) -> None:
     """Test that exporter endpoint is functional."""
