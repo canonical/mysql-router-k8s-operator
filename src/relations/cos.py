@@ -39,7 +39,7 @@ class COSRelation:
     _METRICS_RELATION_NAME = "metrics-endpoint"
     _LOGGING_RELATION_NAME = "logging"
     _PEER_RELATION_NAME = "cos"
-    _ROUTER_LOG_FILE = "/var/log/mysqlrouter/mysqlrouter.log"
+    _ROUTER_LOG_FILES_TARGET = "/var/log/mysqlrouter/**/*log*"
 
     MONITORING_USERNAME = "monitoring"
     _MONITORING_PASSWORD_KEY = "monitoring-password"
@@ -56,7 +56,7 @@ class COSRelation:
             relation_name=self._LOGGING_RELATION_NAME,
             logs_scheme={
                 CONTAINER_NAME: {
-                    "log-files": [self._ROUTER_LOG_FILE],
+                    "log-files": [self._ROUTER_LOG_FILES_TARGET],
                 },
             },
         )
