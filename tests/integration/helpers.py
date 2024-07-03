@@ -4,6 +4,7 @@
 import itertools
 import json
 import logging
+import pathlib
 import subprocess
 import tempfile
 from typing import Dict, List, Optional
@@ -205,13 +206,13 @@ async def write_content_to_file_in_unit(
     """
     pod_name = unit.name.replace("/", "-")
 
-    with tempfile.NamedTemporaryFile(mode="w") as temp_file:
+    with tempfile.NamedTemporaryFile(mode="w", dir=pathlib.Path.home()) as temp_file:
         temp_file.write(content)
         temp_file.flush()
 
         subprocess.run(
             [
-                "kubectl",
+                "microk8s.kubectl",
                 "cp",
                 "-n",
                 ops_test.model.info.name,
@@ -240,10 +241,10 @@ async def read_contents_from_file_in_unit(
     """
     pod_name = unit.name.replace("/", "-")
 
-    with tempfile.NamedTemporaryFile(mode="r+") as temp_file:
+    with tempfile.NamedTemporaryFile(mode="r+", dir=pathlib.Path.home()) as temp_file:
         subprocess.run(
             [
-                "kubectl",
+                "microk8s.kubectl",
                 "cp",
                 "-n",
                 ops_test.model.info.name,
@@ -351,7 +352,7 @@ async def rotate_mysqlrouter_logs(ops_test: OpsTest, unit_name: str) -> None:
 
     subprocess.run(
         [
-            "kubectl",
+            "microk8s.kubectl",
             "exec",
             "-n",
             ops_test.model.info.name,
