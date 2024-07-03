@@ -11,7 +11,7 @@ import pytest
 import yaml
 from pytest_operator.plugin import OpsTest
 
-from . import markers
+from . import architecture, markers
 from .helpers import (
     APPLICATION_DEFAULT_APP_NAME,
     MYSQL_DEFAULT_APP_NAME,
@@ -35,6 +35,11 @@ APPLICATION_APP_NAME = APPLICATION_DEFAULT_APP_NAME
 DATA_INTEGRATOR = "data-integrator"
 SLOW_TIMEOUT = 15 * 60
 MODEL_CONFIG = {"logging-config": "<root>=INFO;unit=DEBUG"}
+if architecture.architecture == "arm64":
+    tls_channel = "latest/edge"
+else:
+    tls_channel = "latest/stable"
+TLS_CONFIG = {"ca-common-name": "Test CA"}
 
 
 @pytest.mark.group(1)
@@ -86,7 +91,9 @@ async def test_build_and_deploy(ops_test: OpsTest):
         ),
         ops_test.model.deploy(
             SELF_SIGNED_CERTIFICATE_NAME,
+            channel=tls_channel,
             application_name=SELF_SIGNED_CERTIFICATE_NAME,
+            config=TLS_CONFIG,
             series="jammy",
             num_units=1,
         ),
