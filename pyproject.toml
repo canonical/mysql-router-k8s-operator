@@ -44,7 +44,7 @@ optional = true
 [tool.poetry.group.lint.dependencies]
 black = "^24.4.2"
 isort = "^5.13.2"
-flake8 = "^7.1.0"
+flake8 = "^7.0.0"
 flake8-docstrings = "^1.7.0"
 flake8-copyright = "^0.2.4"
 flake8-builtins = "^2.5.0"
@@ -57,7 +57,7 @@ pytest = "^8.2.2"
 pytest-xdist = "^3.6.1"
 pytest-forked = "^1.6.0"  # Workaround to deal with memory leaks in scenario tests
 pytest-cov = "^5.0.0"
-ops-scenario = "^6.1.1"
+ops-scenario = "^6.0.5, <6.1"  # 6.1 requires ops >= 2.10
 ops = "^2.9.0"
 
 [tool.poetry.group.integration.dependencies]
