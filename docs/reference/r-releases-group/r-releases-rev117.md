@@ -1,5 +1,5 @@
->Reference > Release Notes > [All revisions](/t/12201) > Revision 112  
-# Revision 112 (`8.0/candidate` only)
+>Reference > Release Notes > [All revisions](/t/12201) > Revision 117  
+# Revision 117 (`8.0/candidate` only)
 
 <sub>TODO: DD, MM, YYYY</sub>
 
@@ -16,11 +16,14 @@ If you are jumping over several stable revisions, make sure to check [previous r
 * New workload version [MySQL Router 8.0.36](https://dev.mysql.com/doc/relnotes/mysql/8.0/en/news-8-0-36.html) [[PR#209](https://github.com/canonical/mysql-router-k8s-operator/pull/209)]
 * [K8s NodePort](https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport) support [[PR#211](https://github.com/canonical/mysql-router-k8s-operator/pull/211)]
 * [Observability with COS](/t/14101) [[PR#210](https://github.com/canonical/mysql-router-k8s-operator/pull/210)]
+* Introduced [COS Tracing support](/t/14553) [[PR#250](https://github.com/canonical/mysql-router-k8s-operator/pull/250)][[DPE-4615](https://warthogs.atlassian.net/browse/DPE-4615)]
 * Router version displayed in upgrade status [[PR#230](https://github.com/canonical/mysql-router-k8s-operator/pull/230)]
 * All the functionality from [previous revisions](/t/12201)
 
 ## Bugfixes
 
+* Fix TLS configuration immediately deleted after enabling [[PR#249](https://github.com/canonical/mysql-router-k8s-operator/pull/249)]
+* Clear connection pool before relating with COS to avoid TIME_WAIT connections + stabilize exporter tests [[PR#245](https://github.com/canonical/mysql-router-k8s-operator/pull/245)][[DPE-3899](https://warthogs.atlassian.net/browse/DPE-3899), [DPE-4173](https://warthogs.atlassian.net/browse/DPE-4173)]
 * Updated charmed-mysql ROCK image to latest version [[PR#237](https://github.com/canonical/mysql-router-k8s-operator/pull/237)]
 * Removed redundant upgrade check [[PR#234](https://github.com/canonical/mysql-router-k8s-operator/pull/234)]
 * Ported over changes from VM operator related to external connectivity [[PR#225](https://github.com/canonical/mysql-router-k8s-operator/pull/225)]
