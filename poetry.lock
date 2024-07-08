@@ -1376,13 +1376,13 @@ websocket-client = "==1.*"
 
 [[package]]
 name = "ops-scenario"
-version = "6.0.5"
+version = "6.0.4"
 description = "Python library providing a state-transition testing API for Operator Framework charms."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "ops_scenario-6.0.5-py3-none-any.whl", hash = "sha256:c17801198fd886b3cd5d67a5aa11449ce9721d27b84792f75ab887b056d08e36"},
-    {file = "ops_scenario-6.0.5.tar.gz", hash = "sha256:d679e415fa39397a7a3e3d4f41dca352b6d33c88d07f9a3d08c8da650dfd1021"},
+    {file = "ops_scenario-6.0.4-py3-none-any.whl", hash = "sha256:7be960fa467043ab72366e7b2e98e532b0aefa6a3238636c338f1308815591e6"},
+    {file = "ops_scenario-6.0.4.tar.gz", hash = "sha256:42af0232203a3f714b6e6e41254b40beed1d6d76a5bf86dfe9fdb6a296ff922c"},
 ]
 
 [package.dependencies]
@@ -2647,4 +2647,4 @@ test = ["big-O", "importlib-resources", "jaraco.functools", "jaraco.itertools", 
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "43832db82cd58db284e03ecce74db494482bb3793646baf513f22723b00d667f"
+content-hash = "c910943014c0f4ec27044ce290bb5c011d7571095b80717e72d05b9c26410cbd"
