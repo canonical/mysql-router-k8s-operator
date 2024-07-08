@@ -23,7 +23,7 @@ ops = ">=2.0.0"
 # tls_certificates_interface/v1/tls_certificates.py
 cryptography = "*"
 jsonschema = "*"
-# loki-k8s/v0/loki_push_api.py and prometheus_k8s/v0/prometheus_scrape.py
+# loki-k8s/v1/loki_push_api.py and prometheus_k8s/v0/prometheus_scrape.py
 cosl = "*"
 # tempo_k8s/v1/charm_tracing.py
 opentelemetry-exporter-otlp-proto-http = "1.21.0"
