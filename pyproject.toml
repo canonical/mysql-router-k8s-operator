@@ -10,7 +10,7 @@ authors = []
 
 [tool.poetry.dependencies]
 python = "^3.10"
-ops = "^2.14.1, <2.14.2"
+ops = "^2.9.0, <2.10"
 lightkube = "^0.15.3"
 tenacity = "^8.5.0"
 jinja2 = "^3.1.4"
@@ -20,15 +20,15 @@ requests = "^2.32.3"
 [tool.poetry.group.charm-libs.dependencies]
 # data_platform_libs/v0/data_interfaces.py
 ops = ">=2.0.0"
-# tls_certificates_interface/v1/tls_certificates.py
-cryptography = "*"
-jsonschema = "*"
 # loki-k8s/v0/loki_push_api.py and prometheus_k8s/v0/prometheus_scrape.py
 cosl = "*"
 # tempo_k8s/v1/charm_tracing.py
 opentelemetry-exporter-otlp-proto-http = "1.21.0"
 # tempo_k8s/v2/tracing.py
 pydantic = "*"
+# tls_certificates_interface/v1/tls_certificates.py
+cryptography = "*"
+jsonschema = "*"
 
 [tool.poetry.group.format]
 optional = true
@@ -54,11 +54,10 @@ codespell = "^2.3.0"
 [tool.poetry.group.unit.dependencies]
 pytest = "^7.4.4"
 pytest-xdist = "^3.6.1"
-pytest-forked = "^1.6.0"
+pytest-forked = "^1.6.0"  # Workaround to deal with memory leaks in scenario tests
 pytest-cov = "^4.1.0"
 ops-scenario = "^5.8.1"
-ops = "<2.14.2"
-pytest-mock = "^3.14.0"
+ops = "^2.9.0"
 
 [tool.poetry.group.integration.dependencies]
 pytest = "^7.4.4"
@@ -69,7 +68,6 @@ juju = "^3.2.2"
 mysql-connector-python = "~8.0.33"
 pyyaml = "^6.0.1"
 tenacity = "^8.5.0"
-ops = "<2.14.2"
 allure-pytest = "^2.13.5"
 allure-pytest-collection-report = {git = "https://github.com/canonical/data-platform-workflows", tag = "v16.2.1", subdirectory = "python/pytest_plugins/allure_pytest_collection_report"}
 
