@@ -10,67 +10,66 @@ authors = []
 
 [tool.poetry.dependencies]
 python = "^3.10"
-ops = "^2.6.0,<2.10.0"
-lightkube = "^0.14.0"
-tenacity = "^8.2.3"
-jinja2 = "^3.1.2"
-poetry-core = "^1.7.0"
-requests = "^2.31.0"
+# breaking change in ops 2.10.0: https://github.com/canonical/operator/pull/1091#issuecomment-1888644075
+ops = "^2.9.0, <2.10"
+lightkube = "^0.15.3"
+tenacity = "^8.5.0"
+jinja2 = "^3.1.4"
+poetry-core = "^1.9.0"
+requests = "^2.32.3"
 
 [tool.poetry.group.charm-libs.dependencies]
 # data_platform_libs/v0/data_interfaces.py
 ops = ">=2.0.0"
-# tls_certificates_interface/v1/tls_certificates.py
-cryptography = "*"
-jsonschema = "*"
 # loki-k8s/v0/loki_push_api.py and prometheus_k8s/v0/prometheus_scrape.py
 cosl = "*"
 # tempo_k8s/v1/charm_tracing.py
 opentelemetry-exporter-otlp-proto-http = "1.21.0"
 # tempo_k8s/v2/tracing.py
 pydantic = "*"
+# tls_certificates_interface/v1/tls_certificates.py
+cryptography = "*"
+jsonschema = "*"
 
 [tool.poetry.group.format]
 optional = true
 
 [tool.poetry.group.format.dependencies]
-black = "^23.7.0"
-isort = "^5.12.0"
+black = "^23.12.1"
+isort = "^5.13.2"
 
 [tool.poetry.group.lint]
 optional = true
 
 [tool.poetry.group.lint.dependencies]
-black = "^23.7.0"
-isort = "^5.12.0"
-flake8 = "^6.0.0"
+black = "^23.12.1"
+isort = "^5.13.2"
+flake8 = "^6.1.0"
 flake8-docstrings = "^1.7.0"
 flake8-copyright = "^0.2.4"
-flake8-builtins = "^2.1.0"
-pyproject-flake8 = "^6.0.0.post1"
-pep8-naming = "^0.13.3"
-codespell = "^2.2.5"
+flake8-builtins = "^2.5.0"
+pyproject-flake8 = "^6.1.0"
+pep8-naming = "^0.14.1"
+codespell = "^2.3.0"
 
 [tool.poetry.group.unit.dependencies]
-pytest = "^7.4.0"
-pytest-xdist = "^3.3.1"
-pytest-forked = "^1.6.0"
+pytest = "^7.4.4"
+pytest-xdist = "^3.6.1"
+pytest-forked = "^1.6.0"  # Workaround to deal with memory leaks in scenario tests
 pytest-cov = "^4.1.0"
-ops-scenario = "^5.6.2"
-ops = "<2.10.0"
-pytest-mock = "^3.11.1"
+ops-scenario = "^5.8.1"
+ops = "^2.9.0"
 
 [tool.poetry.group.integration.dependencies]
-pytest = "^7.4.0"
-pytest-operator = "^0.28.0"
+pytest = "^7.4.4"
+pytest-operator = "^0.35.0"
 pytest-operator-cache = {git = "https://github.com/canonical/data-platform-workflows", tag = "v16.2.1", subdirectory = "python/pytest_plugins/pytest_operator_cache"}
 pytest-operator-groups = {git = "https://github.com/canonical/data-platform-workflows", tag = "v16.2.1", subdirectory = "python/pytest_plugins/pytest_operator_groups"}
 juju = "^3.2.2"
 mysql-connector-python = "~8.0.33"
 pyyaml = "^6.0.1"
-tenacity = "^8.2.2"
-ops = "<2.10.0"
-allure-pytest = "^2.13.2"
+tenacity = "^8.5.0"
+allure-pytest = "^2.13.5"
 allure-pytest-collection-report = {git = "https://github.com/canonical/data-platform-workflows", tag = "v16.2.1", subdirectory = "python/pytest_plugins/allure_pytest_collection_report"}
 
 
