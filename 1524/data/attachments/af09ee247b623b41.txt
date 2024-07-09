@@ -1,0 +1,504 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:734 Connecting to existing model microk8s-localhost:test on unspecified cloud
+[32mINFO    [0m integration.test_log_rotation:test_log_rotation.py:49 Deploying mysql, mysqlrouter and application
+[32mINFO    [0m juju.model:model.py:2097 Deploying ch:amd64/jammy/mysql-test-app-46
+[32mINFO    [0m juju.model:model.py:2097 Deploying ch:amd64/jammy/mysql-k8s-160
+[32mINFO    [0m juju.model:model.py:2097 Deploying local:jammy/mysql-router-k8s-0
+[32mINFO    [0m integration.test_log_rotation:test_log_rotation.py:80 Waiting for mysqlrouter to be in BlockedStatus
+[32mINFO    [0m integration.test_log_rotation:test_log_rotation.py:86 Relating mysql, mysqlrouter and application
+[33mWARNING [0m juju.model:model.py:1563 relate is deprecated and will be removed. Use integrate instead.
+[33mWARNING [0m juju.model:model.py:1563 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m pytest_operator.plugin:plugin.py:862 Model status:
+
+Model  Controller          Cloud/Region        Version  SLA          Timestamp
+test   microk8s-localhost  microk8s/localhost  3.4.3    unsupported  01:56:07Z
+
+App               Version                  Status   Scale  Charm             Channel      Rev  Address         Exposed  Message
+mysql-k8s         8.0.37-0ubuntu0.22.04.3  waiting      3  mysql-k8s         8.0/edge     160  10.152.183.188  no       installing agent
+mysql-router-k8s  8.0.37-0ubuntu0.22.04.3  waiting      1  mysql-router-k8s                 0  10.152.183.251  no       installing agent
+mysql-test-app    0.0.2                    waiting      1  mysql-test-app    latest/edge   46  10.152.183.183  no       installing agent
+
+Unit                 Workload  Agent      Address      Ports  Message
+mysql-k8s/0*         active    executing  10.1.48.205         Primary
+mysql-k8s/1          waiting   idle       10.1.48.206         waiting to get cluster primary from peers
+mysql-k8s/2          waiting   executing  10.1.48.207         waiting to join the cluster
+mysql-router-k8s/0*  waiting   idle       10.1.48.201         
+mysql-test-app/0*    waiting   idle       10.1.48.200         
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:868 Juju error logs:
+
+unit-mysql-k8s-1: 01:43:55 ERROR unit.mysql-k8s/1.juju-log database-peers:2: Failed to add instance_address='mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local' to self.cluster_name='cluster-b19c375de61bf7284fd8976d96be970a' on self.instance_address='mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local'
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-mysql-k8s-1/charm/src/mysql_k8s_helpers.py", line 611, in _run_mysqlsh_script
+    stdout, _ = process.wait_output()
+  File "/var/lib/juju/agents/unit-mysql-k8s-1/charm/venv/ops/pebble.py", line 1635, in wait_output
+    raise ExecError[AnyStr](self._command, exit_code, out_value, err_value)
+ops.pebble.ExecError: non-zero exit code 1 executing ['/usr/bin/mysqlsh', '--no-wizard', '--python', '--verbose=1', '-f', '/tmp/script.py', ';', 'rm', '/tmp/script.py'], stdout='', stderr='Cannot set LC_ALL to locale en_US.UTF-8: No such file or directory\nverbose: 2024-07-09T01:42:04Z: Loading startup files...\nverbose: 2024-07-09T01:42:04Z: Loading plugins...\nverbose: 2024-07-09T01:42:04Z: Connecting to MySQL at: clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local\nverbose: 2024-07-09T01:42:04Z: Shell.connect: tid=284: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local\nverbose: 2024-07-09T01:42:04Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000\nverbose: 2024-07-09T01:42:04Z: Dba.get_cluster: tid=285: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306\nverbose: 2024-07-09T01:42:04Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000\nverbose: 2024-07-09T01:42:04Z: Dba.get_cluster: tid=286: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306\nverbose: 2024-07-09T01:42:04Z: Group ' [truncated]
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-mysql-k8s-1/charm/lib/charms/mysql/v0/mysql.py", line 1659, in add_instance_to_cluster
+    self._run_mysqlsh_script("\n".join(connect_commands + add_instance_command))
+  File "/var/lib/juju/agents/unit-mysql-k8s-1/charm/lib/charms/tempo_k8s/v1/charm_tracing.py", line 647, in wrapped_function
+    return callable(*args, **kwargs)  # type: ignore
+  File "/var/lib/juju/agents/unit-mysql-k8s-1/charm/src/mysql_k8s_helpers.py", line 614, in _run_mysqlsh_script
+    raise MySQLClientError(e.stderr)
+charms.mysql.v0.mysql.MySQLClientError: Cannot set LC_ALL to locale en_US.UTF-8: No such file or directory
+verbose: 2024-07-09T01:42:04Z: Loading startup files...
+verbose: 2024-07-09T01:42:04Z: Loading plugins...
+verbose: 2024-07-09T01:42:04Z: Connecting to MySQL at: clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local
+verbose: 2024-07-09T01:42:04Z: Shell.connect: tid=284: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local
+verbose: 2024-07-09T01:42:04Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000
+verbose: 2024-07-09T01:42:04Z: Dba.get_cluster: tid=285: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306
+verbose: 2024-07-09T01:42:04Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000
+verbose: 2024-07-09T01:42:04Z: Dba.get_cluster: tid=286: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306
+verbose: 2024-07-09T01:42:04Z: Group Replication 'group_name' value: 62317895-3d94-11ef-a726-7a5633453d20
+verbose: 2024-07-09T01:42:04Z: Metadata 'group_name' value: 62317895-3d94-11ef-a726-7a5633453d20
+verbose: 2024-07-09T01:42:04Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000
+verbose: 2024-07-09T01:42:04Z: Dba.get_cluster: tid=287: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306
+verbose: 2024-07-09T01:42:04Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000
+verbose: 2024-07-09T01:42:04Z: Dba.get_cluster: tid=288: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306
+[33mWARNING: [0mThe password option is deprecated and will be removed in a future release.
+
+verbose: 2024-07-09T01:42:04Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000
+verbose: 2024-07-09T01:42:04Z: Cluster.add_instance: tid=289: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306
+verbose: 2024-07-09T01:42:04Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000
+verbose: 2024-07-09T01:42:04Z: Cluster.add_instance: tid=290: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306
+verbose: 2024-07-09T01:42:04Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000
+verbose: 2024-07-09T01:42:04Z: Cluster.add_instance: tid=291: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306
+verbose: 2024-07-09T01:42:04Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000
+verbose: 2024-07-09T01:42:04Z: Cluster.add_instance: tid=292: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306
+verbose: 2024-07-09T01:42:04Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000
+verbose: 2024-07-09T01:42:04Z: Cluster.add_instance: tid=294: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306
+verbose: 2024-07-09T01:42:04Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000
+verbose: 2024-07-09T01:42:04Z: Cluster.add_instance: tid=295: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306
+verbose: 2024-07-09T01:42:04Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local?connect-timeout=5000
+verbose: 2024-07-09T01:42:04Z: Cluster.add_instance: tid=23: CONNECTED: mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local
+
+[36mNOTE: [0mThe target instance 'mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306' has not been pre-provisioned (GTID set is empty). The Shell is unable to decide whether incremental state recovery can correctly provision it.
+The safest and most convenient way to provision a new instance is through automatic clone provisioning, which will completely overwrite the state of 'mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306' with a physical snapshot from an existing cluster member. To use this method by default, set the 'recoveryMethod' option to 'clone'.
+
+The incremental state recovery may be safely used if you are sure all updates ever executed in the cluster were done with GTIDs enabled, there are no purged transactions and the new instance contains the same GTID set as the cluster or a subset of it. To use this method by default, set the 'recoveryMethod' option to 'incremental'.
+
+[31mERROR: [0mMYSQLSH 51167: 'recoveryMethod' option must be set to 'clone' or 'incremental'
+Traceback (most recent call last):
+  File "<string>", line 4, in <module>
+mysqlsh.Error: Shell Error (51167): Cluster.add_instance: 'recoveryMethod' option must be set to 'clone' or 'incremental'
+
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-mysql-k8s-1/charm/src/mysql_k8s_helpers.py", line 611, in _run_mysqlsh_script
+    stdout, _ = process.wait_output()
+  File "/var/lib/juju/agents/unit-mysql-k8s-1/charm/venv/ops/pebble.py", line 1635, in wait_output
+    raise ExecError[AnyStr](self._command, exit_code, out_value, err_value)
+ops.pebble.ExecError: non-zero exit code 1 executing ['/usr/bin/mysqlsh', '--no-wizard', '--python', '--verbose=1', '-f', '/tmp/script.py', ';', 'rm', '/tmp/script.py'], stdout='', stderr='Cannot set LC_ALL to locale en_US.UTF-8: No such file or directory\nverbose: 2024-07-09T01:42:04Z: Loading startup files...\nverbose: 2024-07-09T01:42:04Z: Loading plugins...\nverbose: 2024-07-09T01:42:04Z: Connecting to MySQL at: clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local\nverbose: 2024-07-09T01:42:04Z: Shell.connect: tid=299: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local\nverbose: 2024-07-09T01:42:04Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000\nverbose: 2024-07-09T01:42:04Z: Dba.get_cluster: tid=300: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306\nverbose: 2024-07-09T01:42:04Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000\nverbose: 2024-07-09T01:42:04Z: Dba.get_cluster: tid=301: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306\nverbose: 2024-07-09T01:42:04Z: Group ' [truncated]
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-mysql-k8s-1/charm/lib/charms/mysql/v0/mysql.py", line 1659, in add_instance_to_cluster
+    self._run_mysqlsh_script("\n".join(connect_commands + add_instance_command))
+  File "/var/lib/juju/agents/unit-mysql-k8s-1/charm/lib/charms/tempo_k8s/v1/charm_tracing.py", line 647, in wrapped_function
+    return callable(*args, **kwargs)  # type: ignore
+  File "/var/lib/juju/agents/unit-mysql-k8s-1/charm/src/mysql_k8s_helpers.py", line 614, in _run_mysqlsh_script
+    raise MySQLClientError(e.stderr)
+charms.mysql.v0.mysql.MySQLClientError: Cannot set LC_ALL to locale en_US.UTF-8: No such file or directory
+verbose: 2024-07-09T01:42:04Z: Loading startup files...
+verbose: 2024-07-09T01:42:04Z: Loading plugins...
+verbose: 2024-07-09T01:42:04Z: Connecting to MySQL at: clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local
+verbose: 2024-07-09T01:42:04Z: Shell.connect: tid=299: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local
+verbose: 2024-07-09T01:42:04Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000
+verbose: 2024-07-09T01:42:04Z: Dba.get_cluster: tid=300: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306
+verbose: 2024-07-09T01:42:04Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000
+verbose: 2024-07-09T01:42:04Z: Dba.get_cluster: tid=301: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306
+verbose: 2024-07-09T01:42:04Z: Group Replication 'group_name' value: 62317895-3d94-11ef-a726-7a5633453d20
+verbose: 2024-07-09T01:42:04Z: Metadata 'group_name' value: 62317895-3d94-11ef-a726-7a5633453d20
+verbose: 2024-07-09T01:42:04Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000
+verbose: 2024-07-09T01:42:04Z: Dba.get_cluster: tid=302: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306
+verbose: 2024-07-09T01:42:04Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000
+verbose: 2024-07-09T01:42:04Z: Dba.get_cluster: tid=303: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306
+[33mWARNING: [0mThe password option is deprecated and will be removed in a future release.
+
+verbose: 2024-07-09T01:42:04Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000
+verbose: 2024-07-09T01:42:04Z: Cluster.add_instance: tid=304: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306
+verbose: 2024-07-09T01:42:04Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000
+verbose: 2024-07-09T01:42:04Z: Cluster.add_instance: tid=305: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306
+verbose: 2024-07-09T01:42:04Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000
+verbose: 2024-07-09T01:42:04Z: Cluster.add_instance: tid=306: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306
+verbose: 2024-07-09T01:42:05Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000
+verbose: 2024-07-09T01:42:05Z: Cluster.add_instance: tid=307: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306
+verbose: 2024-07-09T01:42:05Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000
+verbose: 2024-07-09T01:42:05Z: Cluster.add_instance: tid=309: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306
+verbose: 2024-07-09T01:42:05Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000
+verbose: 2024-07-09T01:42:05Z: Cluster.add_instance: tid=310: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306
+verbose: 2024-07-09T01:42:05Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local?connect-timeout=5000
+verbose: 2024-07-09T01:42:05Z: Cluster.add_instance: tid=24: CONNECTED: mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local
+
+[36mNOTE: [0mThe target instance 'mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306' has not been pre-provisioned (GTID set is empty). The Shell is unable to decide whether incremental state recovery can correctly provision it.
+
+Clone based recovery selected through the recoveryMethod option
+
+Validating instance configuration at mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306...
+verbose: 2024-07-09T01:42:05Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000
+verbose: 2024-07-09T01:42:05Z: Cluster.add_instance: tid=25: CONNECTED: mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306
+verbose: 2024-07-09T01:42:05Z: Validating account clusteradmin@%...
+verbose: 2024-07-09T01:42:05Z: clusteradmin user has 1 accounts with wildcard or netmask and 0 without
+
+This instance reports its own address as [1mmysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306[0m
+verbose: 2024-07-09T01:42:05Z: Validating InnoDB page size of instance 'mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306'.
+verbose: 2024-07-09T01:42:05Z: Checking if performance_schema is enabled on instance 'mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306'.
+verbose: 2024-07-09T01:42:05Z: Validating configuration of mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306 (mycnf = )
+
+Instance configuration is suitable.
+verbose: 2024-07-09T01:42:05Z: Validating if 'lower_case_table_names' variable has the same value on target instance 'mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306' as it does on the cluster.
+verbose: 2024-07-09T01:42:05Z: Validating if 'default_table_encryption' variable has the same value on target instance 'mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306' as it does on the cluster.
+verbose: 2024-07-09T01:42:05Z: SSL mode used to configure the instance: 'REQUIRED'
+verbose: 2024-07-09T01:42:05Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000
+verbose: 2024-07-09T01:42:05Z: Cluster.add_instance: tid=312: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306
+[36mNOTE: [0mGroup Replication will communicate with other members using 'mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306'. Use the localAddress option to override.
+
+* Checking connectivity and SSL configuration...
+verbose: 2024-07-09T01:42:05Z: Checking connection from mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306 to mysqlsh-lo.test@mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306 (localAddress) ssl_mode=REQUIRED auth_type=PASSWORD cert_issuer= cert_subject=
+verbose: 2024-07-09T01:42:05Z: Setting up async source for channel 'mysqlsh.test' of mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306 to mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306 (user 'mysqlsh-lo.test')
+verbose: 2024-07-09T01:42:05Z: Connection check mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306 -> mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306 io_state=OFF io_error=Fatal error: The replica I/O thread stops because source and replica have equal MySQL server ids; these ids must be different for replication to work (or the --replicate-same-server-id option must be used on replica but this does not always make sense; please check the manual before using it). (13117) at 2024-07-09 01:42:05.190539
+verbose: 2024-07-09T01:42:05Z: Checking connection from mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306 to mysqlsh.test@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306 (report_host) ssl_mode=REQUIRED auth_type=PASSWORD cert_issuer= cert_subject=
+verbose: 2024-07-09T01:42:05Z: Setting up async source for channel 'mysqlsh.test' of mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306 to mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306 (user 'mysqlsh.test')
+verbose: 2024-07-09T01:42:05Z: Connection check mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306 -> mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306 io_state=OFF io_error=Source command COM_REGISTER_REPLICA failed: Access denied for user 'mysqlsh.test'@'%' (using password: YES) (Errno: 1045) (13120) at 2024-07-09 01:42:05.410647
+verbose: 2024-07-09T01:42:05Z: Checking connection from mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306 to mysqlsh.test@mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306 (report_host) ssl_mode=REQUIRED auth_type=PASSWORD cert_issuer= cert_subject=
+verbose: 2024-07-09T01:42:05Z: Setting up async source for channel 'mysqlsh.test' of mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306 to mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306 (user 'mysqlsh.test')
+verbose: 2024-07-09T01:42:05Z: Connection check mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306 -> mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306 io_state=OFF io_error=Source command COM_REGISTER_REPLICA failed: Access denied for user 'mysqlsh.test'@'%' (using password: YES) (Errno: 1045) (13120) at 2024-07-09 01:42:05.629600
+A new instance will be added to the InnoDB Cluster. Depending on the amount of
+data on the cluster this might take from a few seconds to several hours.
+
+verbose: 2024-07-09T01:42:05Z: Using Group Replication local address: mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306
+verbose: 2024-07-09T01:42:05Z: Using Group Replication group seeds: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306
+verbose: 2024-07-09T01:42:05Z: Using Group Replication failover consistency: EVENTUAL
+verbose: 2024-07-09T01:42:05Z: Using Group Replication expel timeout: 5
+Adding instance to the cluster...
+
+verbose: 2024-07-09T01:42:05Z: Validating if 'group_replication_gtid_assignment_block_size' variable has the same value on target instance 'mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306' as it does on the cluster.
+verbose: 2024-07-09T01:42:05Z: Installing the clone plugin on instance 'mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306'.
+verbose: 2024-07-09T01:42:05Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000
+verbose: 2024-07-09T01:42:05Z: Cluster.add_instance: tid=328: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306
+verbose: 2024-07-09T01:42:05Z: Installing the clone plugin on instance 'mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306'.
+verbose: 2024-07-09T01:42:05Z: Creating recovery account 'mysql_innodb_cluster_1682996470'@'%' for instance 'mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306'
+verbose: 2024-07-09T01:42:05Z: Joining 'mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306' to cluster using account 'clusteradmin' to peer 'mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306'.
+verbose: 2024-07-09T01:42:05Z: Creating recovery account 'mysql_innodb_cluster_1682996470'@'%' for instance 'mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306'
+verbose: 2024-07-09T01:42:05Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000
+verbose: 2024-07-09T01:42:05Z: Cluster.add_instance: tid=329: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306
+Monitoring recovery process of the new cluster member. Press ^C to stop monitoring and let it continue in background.
+verbose: 2024-07-09T01:42:39Z: Waiting for GR recovery to start for mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306...
+verbose: 2024-07-09T01:42:39Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000
+verbose: 2024-07-09T01:42:39Z: Cluster.add_instance: tid=49: CONNECTED: mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306
+verbose: 2024-07-09T01:42:39Z: mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306 has started
+verbose: 2024-07-09T01:42:39Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000
+verbose: 2024-07-09T01:42:39Z: Cluster.add_instance: tid=52: CONNECTED: mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306
+[1mClone based state recovery is now in progress.[0m
+
+[36mNOTE: [0mA server restart is expected to happen as part of the clone process. If the
+server does not support the RESTART command or does not come back after a
+while, you may need to manually start it back.
+
+* Waiting for clone to finish...
+[36mNOTE: [0mmysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306 is being cloned from mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306
+[31mERROR: [0mThe clone process has failed: Clone Donor Error: Connect failed: 2013 : Lost connection to MySQL server at 'waiting for initial communication packet', system error: 110. (3862)
+verbose: 2024-07-09T01:43:50Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000
+[31mERROR: [0mClone Donor Error: Connect failed: 2013 : Lost connection to MySQL server at 'waiting for initial communication packet', system error: 110.
+Traceback (most recent call last):
+  File "<string>", line 4, in <module>
+RuntimeError: Cluster.add_instance: Clone Donor Error: Connect failed: 2013 : Lost connection to MySQL server at 'waiting for initial communication packet', system error: 110.
+
+
+unit-mysql-k8s-1: 01:45:15 ERROR unit.mysql-k8s/1.juju-log database-peers:2: Uncaught exception while in charm code:
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-mysql-k8s-1/charm/src/mysql_k8s_helpers.py", line 611, in _run_mysqlsh_script
+    stdout, _ = process.wait_output()
+  File "/var/lib/juju/agents/unit-mysql-k8s-1/charm/venv/ops/pebble.py", line 1635, in wait_output
+    raise ExecError[AnyStr](self._command, exit_code, out_value, err_value)
+ops.pebble.ExecError: non-zero exit code 1 executing ['/usr/bin/mysqlsh', '--no-wizard', '--python', '--verbose=1', '-f', '/tmp/script.py', ';', 'rm', '/tmp/script.py'], stdout='', stderr='Cannot set LC_ALL to locale en_US.UTF-8: No such file or directory\nverbose: 2024-07-09T01:42:04Z: Loading startup files...\nverbose: 2024-07-09T01:42:04Z: Loading plugins...\nverbose: 2024-07-09T01:42:04Z: Connecting to MySQL at: clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local\nverbose: 2024-07-09T01:42:04Z: Shell.connect: tid=284: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local\nverbose: 2024-07-09T01:42:04Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000\nverbose: 2024-07-09T01:42:04Z: Dba.get_cluster: tid=285: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306\nverbose: 2024-07-09T01:42:04Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000\nverbose: 2024-07-09T01:42:04Z: Dba.get_cluster: tid=286: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306\nverbose: 2024-07-09T01:42:04Z: Group ' [truncated]
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-mysql-k8s-1/charm/lib/charms/mysql/v0/mysql.py", line 1659, in add_instance_to_cluster
+    self._run_mysqlsh_script("\n".join(connect_commands + add_instance_command))
+  File "/var/lib/juju/agents/unit-mysql-k8s-1/charm/lib/charms/tempo_k8s/v1/charm_tracing.py", line 647, in wrapped_function
+    return callable(*args, **kwargs)  # type: ignore
+  File "/var/lib/juju/agents/unit-mysql-k8s-1/charm/src/mysql_k8s_helpers.py", line 614, in _run_mysqlsh_script
+    raise MySQLClientError(e.stderr)
+charms.mysql.v0.mysql.MySQLClientError: Cannot set LC_ALL to locale en_US.UTF-8: No such file or directory
+verbose: 2024-07-09T01:42:04Z: Loading startup files...
+verbose: 2024-07-09T01:42:04Z: Loading plugins...
+verbose: 2024-07-09T01:42:04Z: Connecting to MySQL at: clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local
+verbose: 2024-07-09T01:42:04Z: Shell.connect: tid=284: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local
+verbose: 2024-07-09T01:42:04Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000
+verbose: 2024-07-09T01:42:04Z: Dba.get_cluster: tid=285: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306
+verbose: 2024-07-09T01:42:04Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000
+verbose: 2024-07-09T01:42:04Z: Dba.get_cluster: tid=286: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306
+verbose: 2024-07-09T01:42:04Z: Group Replication 'group_name' value: 62317895-3d94-11ef-a726-7a5633453d20
+verbose: 2024-07-09T01:42:04Z: Metadata 'group_name' value: 62317895-3d94-11ef-a726-7a5633453d20
+verbose: 2024-07-09T01:42:04Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000
+verbose: 2024-07-09T01:42:04Z: Dba.get_cluster: tid=287: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306
+verbose: 2024-07-09T01:42:04Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000
+verbose: 2024-07-09T01:42:04Z: Dba.get_cluster: tid=288: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306
+[33mWARNING: [0mThe password option is deprecated and will be removed in a future release.
+
+verbose: 2024-07-09T01:42:04Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000
+verbose: 2024-07-09T01:42:04Z: Cluster.add_instance: tid=289: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306
+verbose: 2024-07-09T01:42:04Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000
+verbose: 2024-07-09T01:42:04Z: Cluster.add_instance: tid=290: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306
+verbose: 2024-07-09T01:42:04Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000
+verbose: 2024-07-09T01:42:04Z: Cluster.add_instance: tid=291: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306
+verbose: 2024-07-09T01:42:04Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000
+verbose: 2024-07-09T01:42:04Z: Cluster.add_instance: tid=292: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306
+verbose: 2024-07-09T01:42:04Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000
+verbose: 2024-07-09T01:42:04Z: Cluster.add_instance: tid=294: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306
+verbose: 2024-07-09T01:42:04Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000
+verbose: 2024-07-09T01:42:04Z: Cluster.add_instance: tid=295: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306
+verbose: 2024-07-09T01:42:04Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local?connect-timeout=5000
+verbose: 2024-07-09T01:42:04Z: Cluster.add_instance: tid=23: CONNECTED: mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local
+
+[36mNOTE: [0mThe target instance 'mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306' has not been pre-provisioned (GTID set is empty). The Shell is unable to decide whether incremental state recovery can correctly provision it.
+The safest and most convenient way to provision a new instance is through automatic clone provisioning, which will completely overwrite the state of 'mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306' with a physical snapshot from an existing cluster member. To use this method by default, set the 'recoveryMethod' option to 'clone'.
+
+The incremental state recovery may be safely used if you are sure all updates ever executed in the cluster were done with GTIDs enabled, there are no purged transactions and the new instance contains the same GTID set as the cluster or a subset of it. To use this method by default, set the 'recoveryMethod' option to 'incremental'.
+
+[31mERROR: [0mMYSQLSH 51167: 'recoveryMethod' option must be set to 'clone' or 'incremental'
+Traceback (most recent call last):
+  File "<string>", line 4, in <module>
+mysqlsh.Error: Shell Error (51167): Cluster.add_instance: 'recoveryMethod' option must be set to 'clone' or 'incremental'
+
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-mysql-k8s-1/charm/src/mysql_k8s_helpers.py", line 611, in _run_mysqlsh_script
+    stdout, _ = process.wait_output()
+  File "/var/lib/juju/agents/unit-mysql-k8s-1/charm/venv/ops/pebble.py", line 1635, in wait_output
+    raise ExecError[AnyStr](self._command, exit_code, out_value, err_value)
+ops.pebble.ExecError: non-zero exit code 1 executing ['/usr/bin/mysqlsh', '--no-wizard', '--python', '--verbose=1', '-f', '/tmp/script.py', ';', 'rm', '/tmp/script.py'], stdout='', stderr='Cannot set LC_ALL to locale en_US.UTF-8: No such file or directory\nverbose: 2024-07-09T01:42:04Z: Loading startup files...\nverbose: 2024-07-09T01:42:04Z: Loading plugins...\nverbose: 2024-07-09T01:42:04Z: Connecting to MySQL at: clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local\nverbose: 2024-07-09T01:42:04Z: Shell.connect: tid=299: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local\nverbose: 2024-07-09T01:42:04Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000\nverbose: 2024-07-09T01:42:04Z: Dba.get_cluster: tid=300: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306\nverbose: 2024-07-09T01:42:04Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000\nverbose: 2024-07-09T01:42:04Z: Dba.get_cluster: tid=301: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306\nverbose: 2024-07-09T01:42:04Z: Group ' [truncated]
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-mysql-k8s-1/charm/lib/charms/mysql/v0/mysql.py", line 1659, in add_instance_to_cluster
+    self._run_mysqlsh_script("\n".join(connect_commands + add_instance_command))
+  File "/var/lib/juju/agents/unit-mysql-k8s-1/charm/lib/charms/tempo_k8s/v1/charm_tracing.py", line 647, in wrapped_function
+    return callable(*args, **kwargs)  # type: ignore
+  File "/var/lib/juju/agents/unit-mysql-k8s-1/charm/src/mysql_k8s_helpers.py", line 614, in _run_mysqlsh_script
+    raise MySQLClientError(e.stderr)
+charms.mysql.v0.mysql.MySQLClientError: Cannot set LC_ALL to locale en_US.UTF-8: No such file or directory
+verbose: 2024-07-09T01:42:04Z: Loading startup files...
+verbose: 2024-07-09T01:42:04Z: Loading plugins...
+verbose: 2024-07-09T01:42:04Z: Connecting to MySQL at: clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local
+verbose: 2024-07-09T01:42:04Z: Shell.connect: tid=299: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local
+verbose: 2024-07-09T01:42:04Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000
+verbose: 2024-07-09T01:42:04Z: Dba.get_cluster: tid=300: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306
+verbose: 2024-07-09T01:42:04Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000
+verbose: 2024-07-09T01:42:04Z: Dba.get_cluster: tid=301: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306
+verbose: 2024-07-09T01:42:04Z: Group Replication 'group_name' value: 62317895-3d94-11ef-a726-7a5633453d20
+verbose: 2024-07-09T01:42:04Z: Metadata 'group_name' value: 62317895-3d94-11ef-a726-7a5633453d20
+verbose: 2024-07-09T01:42:04Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000
+verbose: 2024-07-09T01:42:04Z: Dba.get_cluster: tid=302: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306
+verbose: 2024-07-09T01:42:04Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000
+verbose: 2024-07-09T01:42:04Z: Dba.get_cluster: tid=303: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306
+[33mWARNING: [0mThe password option is deprecated and will be removed in a future release.
+
+verbose: 2024-07-09T01:42:04Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000
+verbose: 2024-07-09T01:42:04Z: Cluster.add_instance: tid=304: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306
+verbose: 2024-07-09T01:42:04Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000
+verbose: 2024-07-09T01:42:04Z: Cluster.add_instance: tid=305: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306
+verbose: 2024-07-09T01:42:04Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000
+verbose: 2024-07-09T01:42:04Z: Cluster.add_instance: tid=306: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306
+verbose: 2024-07-09T01:42:05Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000
+verbose: 2024-07-09T01:42:05Z: Cluster.add_instance: tid=307: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306
+verbose: 2024-07-09T01:42:05Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000
+verbose: 2024-07-09T01:42:05Z: Cluster.add_instance: tid=309: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306
+verbose: 2024-07-09T01:42:05Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000
+verbose: 2024-07-09T01:42:05Z: Cluster.add_instance: tid=310: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306
+verbose: 2024-07-09T01:42:05Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local?connect-timeout=5000
+verbose: 2024-07-09T01:42:05Z: Cluster.add_instance: tid=24: CONNECTED: mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local
+
+[36mNOTE: [0mThe target instance 'mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306' has not been pre-provisioned (GTID set is empty). The Shell is unable to decide whether incremental state recovery can correctly provision it.
+
+Clone based recovery selected through the recoveryMethod option
+
+Validating instance configuration at mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306...
+verbose: 2024-07-09T01:42:05Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000
+verbose: 2024-07-09T01:42:05Z: Cluster.add_instance: tid=25: CONNECTED: mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306
+verbose: 2024-07-09T01:42:05Z: Validating account clusteradmin@%...
+verbose: 2024-07-09T01:42:05Z: clusteradmin user has 1 accounts with wildcard or netmask and 0 without
+
+This instance reports its own address as [1mmysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306[0m
+verbose: 2024-07-09T01:42:05Z: Validating InnoDB page size of instance 'mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306'.
+verbose: 2024-07-09T01:42:05Z: Checking if performance_schema is enabled on instance 'mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306'.
+verbose: 2024-07-09T01:42:05Z: Validating configuration of mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306 (mycnf = )
+
+Instance configuration is suitable.
+verbose: 2024-07-09T01:42:05Z: Validating if 'lower_case_table_names' variable has the same value on target instance 'mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306' as it does on the cluster.
+verbose: 2024-07-09T01:42:05Z: Validating if 'default_table_encryption' variable has the same value on target instance 'mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306' as it does on the cluster.
+verbose: 2024-07-09T01:42:05Z: SSL mode used to configure the instance: 'REQUIRED'
+verbose: 2024-07-09T01:42:05Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000
+verbose: 2024-07-09T01:42:05Z: Cluster.add_instance: tid=312: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306
+[36mNOTE: [0mGroup Replication will communicate with other members using 'mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306'. Use the localAddress option to override.
+
+* Checking connectivity and SSL configuration...
+verbose: 2024-07-09T01:42:05Z: Checking connection from mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306 to mysqlsh-lo.test@mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306 (localAddress) ssl_mode=REQUIRED auth_type=PASSWORD cert_issuer= cert_subject=
+verbose: 2024-07-09T01:42:05Z: Setting up async source for channel 'mysqlsh.test' of mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306 to mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306 (user 'mysqlsh-lo.test')
+verbose: 2024-07-09T01:42:05Z: Connection check mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306 -> mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306 io_state=OFF io_error=Fatal error: The replica I/O thread stops because source and replica have equal MySQL server ids; these ids must be different for replication to work (or the --replicate-same-server-id option must be used on replica but this does not always make sense; please check the manual before using it). (13117) at 2024-07-09 01:42:05.190539
+verbose: 2024-07-09T01:42:05Z: Checking connection from mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306 to mysqlsh.test@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306 (report_host) ssl_mode=REQUIRED auth_type=PASSWORD cert_issuer= cert_subject=
+verbose: 2024-07-09T01:42:05Z: Setting up async source for channel 'mysqlsh.test' of mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306 to mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306 (user 'mysqlsh.test')
+verbose: 2024-07-09T01:42:05Z: Connection check mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306 -> mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306 io_state=OFF io_error=Source command COM_REGISTER_REPLICA failed: Access denied for user 'mysqlsh.test'@'%' (using password: YES) (Errno: 1045) (13120) at 2024-07-09 01:42:05.410647
+verbose: 2024-07-09T01:42:05Z: Checking connection from mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306 to mysqlsh.test@mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306 (report_host) ssl_mode=REQUIRED auth_type=PASSWORD cert_issuer= cert_subject=
+verbose: 2024-07-09T01:42:05Z: Setting up async source for channel 'mysqlsh.test' of mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306 to mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306 (user 'mysqlsh.test')
+verbose: 2024-07-09T01:42:05Z: Connection check mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306 -> mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306 io_state=OFF io_error=Source command COM_REGISTER_REPLICA failed: Access denied for user 'mysqlsh.test'@'%' (using password: YES) (Errno: 1045) (13120) at 2024-07-09 01:42:05.629600
+A new instance will be added to the InnoDB Cluster. Depending on the amount of
+data on the cluster this might take from a few seconds to several hours.
+
+verbose: 2024-07-09T01:42:05Z: Using Group Replication local address: mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306
+verbose: 2024-07-09T01:42:05Z: Using Group Replication group seeds: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306
+verbose: 2024-07-09T01:42:05Z: Using Group Replication failover consistency: EVENTUAL
+verbose: 2024-07-09T01:42:05Z: Using Group Replication expel timeout: 5
+Adding instance to the cluster...
+
+verbose: 2024-07-09T01:42:05Z: Validating if 'group_replication_gtid_assignment_block_size' variable has the same value on target instance 'mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306' as it does on the cluster.
+verbose: 2024-07-09T01:42:05Z: Installing the clone plugin on instance 'mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306'.
+verbose: 2024-07-09T01:42:05Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000
+verbose: 2024-07-09T01:42:05Z: Cluster.add_instance: tid=328: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306
+verbose: 2024-07-09T01:42:05Z: Installing the clone plugin on instance 'mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306'.
+verbose: 2024-07-09T01:42:05Z: Creating recovery account 'mysql_innodb_cluster_1682996470'@'%' for instance 'mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306'
+verbose: 2024-07-09T01:42:05Z: Joining 'mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306' to cluster using account 'clusteradmin' to peer 'mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306'.
+verbose: 2024-07-09T01:42:05Z: Creating recovery account 'mysql_innodb_cluster_1682996470'@'%' for instance 'mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306'
+verbose: 2024-07-09T01:42:05Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000
+verbose: 2024-07-09T01:42:05Z: Cluster.add_instance: tid=329: CONNECTED: mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306
+Monitoring recovery process of the new cluster member. Press ^C to stop monitoring and let it continue in background.
+verbose: 2024-07-09T01:42:39Z: Waiting for GR recovery to start for mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306...
+verbose: 2024-07-09T01:42:39Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000
+verbose: 2024-07-09T01:42:39Z: Cluster.add_instance: tid=49: CONNECTED: mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306
+verbose: 2024-07-09T01:42:39Z: mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306 has started
+verbose: 2024-07-09T01:42:39Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000
+verbose: 2024-07-09T01:42:39Z: Cluster.add_instance: tid=52: CONNECTED: mysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306
+[1mClone based state recovery is now in progress.[0m
+
+[36mNOTE: [0mA server restart is expected to happen as part of the clone process. If the
+server does not support the RESTART command or does not come back after a
+while, you may need to manually start it back.
+
+* Waiting for clone to finish...
+[36mNOTE: [0mmysql-k8s-1.mysql-k8s-endpoints.test.svc.cluster.local:3306 is being cloned from mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306
+[31mERROR: [0mThe clone process has failed: Clone Donor Error: Connect failed: 2013 : Lost connection to MySQL server at 'waiting for initial communication packet', system error: 110. (3862)
+verbose: 2024-07-09T01:43:50Z: Connecting to MySQL at: mysql://clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local:3306?connect-timeout=5000
+[31mERROR: [0mClone Donor Error: Connect failed: 2013 : Lost connection to MySQL server at 'waiting for initial communication packet', system error: 110.
+Traceback (most recent call last):
+  File "<string>", line 4, in <module>
+RuntimeError: Cluster.add_instance: Clone Donor Error: Connect failed: 2013 : Lost connection to MySQL server at 'waiting for initial communication packet', system error: 110.
+
+
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-mysql-k8s-1/charm/lib/charms/mysql/v0/mysql.py", line 1666, in add_instance_to_cluster
+    raise MySQLAddInstanceToClusterError
+charms.mysql.v0.mysql.MySQLAddInstanceToClusterError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-mysql-k8s-1/charm/src/mysql_k8s_helpers.py", line 611, in _run_mysqlsh_script
+    stdout, _ = process.wait_output()
+  File "/var/lib/juju/agents/unit-mysql-k8s-1/charm/venv/ops/pebble.py", line 1635, in wait_output
+    raise ExecError[AnyStr](self._command, exit_code, out_value, err_value)
+ops.pebble.ExecError: non-zero exit code 1 executing ['/usr/bin/mysqlsh', '--no-wizard', '--python', '--verbose=1', '-f', '/tmp/script.py', ';', 'rm', '/tmp/script.py'], stdout='', stderr='Cannot set LC_ALL to locale en_US.UTF-8: No such file or directory\nverbose: 2024-07-09T01:43:55Z: Loading startup files...\nverbose: 2024-07-09T01:43:55Z: Loading plugins...\nverbose: 2024-07-09T01:43:55Z: Connecting to MySQL at: clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local\nTraceback (most recent call last):\n  File "<string>", line 1, in <module>\nValueError: Shell.connect: X protocol error: MySQL server has gone away\nClassic protocol error: MySQL Error 2013 (HY000): Lost connection to MySQL server at \'waiting for initial communication packet\', system error: 110\n\n'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-mysql-k8s-1/charm/lib/charms/mysql/v0/mysql.py", line 1671, in add_instance_to_cluster
+    self.add_instance_to_cluster(
+  File "/var/lib/juju/agents/unit-mysql-k8s-1/charm/lib/charms/tempo_k8s/v1/charm_tracing.py", line 647, in wrapped_function
+    return callable(*args, **kwargs)  # type: ignore
+  File "/var/lib/juju/agents/unit-mysql-k8s-1/charm/lib/charms/mysql/v0/mysql.py", line 1680, in add_instance_to_cluster
+    self._release_lock(local_lock_instance, instance_unit_label, UNIT_ADD_LOCKNAME)
+  File "/var/lib/juju/agents/unit-mysql-k8s-1/charm/lib/charms/tempo_k8s/v1/charm_tracing.py", line 647, in wrapped_function
+    return callable(*args, **kwargs)  # type: ignore
+  File "/var/lib/juju/agents/unit-mysql-k8s-1/charm/lib/charms/mysql/v0/mysql.py", line 2166, in _release_lock
+    self._run_mysqlsh_script("\n".join(release_lock_commands))
+  File "/var/lib/juju/agents/unit-mysql-k8s-1/charm/lib/charms/tempo_k8s/v1/charm_tracing.py", line 647, in wrapped_function
+    return callable(*args, **kwargs)  # type: ignore
+  File "/var/lib/juju/agents/unit-mysql-k8s-1/charm/src/mysql_k8s_helpers.py", line 614, in _run_mysqlsh_script
+    raise MySQLClientError(e.stderr)
+charms.mysql.v0.mysql.MySQLClientError: Cannot set LC_ALL to locale en_US.UTF-8: No such file or directory
+verbose: 2024-07-09T01:43:55Z: Loading startup files...
+verbose: 2024-07-09T01:43:55Z: Loading plugins...
+verbose: 2024-07-09T01:43:55Z: Connecting to MySQL at: clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+ValueError: Shell.connect: X protocol error: MySQL server has gone away
+Classic protocol error: MySQL Error 2013 (HY000): Lost connection to MySQL server at 'waiting for initial communication packet', system error: 110
+
+
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-mysql-k8s-1/charm/src/mysql_k8s_helpers.py", line 611, in _run_mysqlsh_script
+    stdout, _ = process.wait_output()
+  File "/var/lib/juju/agents/unit-mysql-k8s-1/charm/venv/ops/pebble.py", line 1635, in wait_output
+    raise ExecError[AnyStr](self._command, exit_code, out_value, err_value)
+ops.pebble.ExecError: non-zero exit code 1 executing ['/usr/bin/mysqlsh', '--no-wizard', '--python', '--verbose=1', '-f', '/tmp/script.py', ';', 'rm', '/tmp/script.py'], stdout='', stderr='Cannot set LC_ALL to locale en_US.UTF-8: No such file or directory\nverbose: 2024-07-09T01:44:35Z: Loading startup files...\nverbose: 2024-07-09T01:44:35Z: Loading plugins...\nverbose: 2024-07-09T01:44:35Z: Connecting to MySQL at: clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local\nTraceback (most recent call last):\n  File "<string>", line 1, in <module>\nValueError: Shell.connect: X protocol error: MySQL server has gone away\nClassic protocol error: MySQL Error 2013 (HY000): Lost connection to MySQL server at \'waiting for initial communication packet\', system error: 110\n\n'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-mysql-k8s-1/charm/./src/charm.py", line 849, in <module>
+    main(MySQLOperatorCharm)
+  File "/var/lib/juju/agents/unit-mysql-k8s-1/charm/venv/ops/main.py", line 548, in main
+    manager.run()
+  File "/var/lib/juju/agents/unit-mysql-k8s-1/charm/venv/ops/main.py", line 527, in run
+    self._emit()
+  File "/var/lib/juju/agents/unit-mysql-k8s-1/charm/venv/ops/main.py", line 516, in _emit
+    _emit_charm_event(self.charm, self.dispatcher.event_name)
+  File "/var/lib/juju/agents/unit-mysql-k8s-1/charm/venv/ops/main.py", line 147, in _emit_charm_event
+    event_to_emit.emit(*args, **kwargs)
+  File "/var/lib/juju/agents/unit-mysql-k8s-1/charm/venv/ops/framework.py", line 348, in emit
+    framework._emit(event)
+  File "/var/lib/juju/agents/unit-mysql-k8s-1/charm/venv/ops/framework.py", line 860, in _emit
+    self._reemit(event_path)
+  File "/var/lib/juju/agents/unit-mysql-k8s-1/charm/venv/ops/framework.py", line 950, in _reemit
+    custom_handler(event)
+  File "/var/lib/juju/agents/unit-mysql-k8s-1/charm/lib/charms/tempo_k8s/v1/charm_tracing.py", line 647, in wrapped_function
+    return callable(*args, **kwargs)  # type: ignore
+  File "/var/lib/juju/agents/unit-mysql-k8s-1/charm/./src/charm.py", line 809, in _on_peer_relation_changed
+    self.join_unit_to_cluster()
+  File "/var/lib/juju/agents/unit-mysql-k8s-1/charm/lib/charms/tempo_k8s/v1/charm_tracing.py", line 647, in wrapped_function
+    return callable(*args, **kwargs)  # type: ignore
+  File "/var/lib/juju/agents/unit-mysql-k8s-1/charm/./src/charm.py", line 362, in join_unit_to_cluster
+    self._mysql.add_instance_to_cluster(
+  File "/var/lib/juju/agents/unit-mysql-k8s-1/charm/lib/charms/tempo_k8s/v1/charm_tracing.py", line 647, in wrapped_function
+    return callable(*args, **kwargs)  # type: ignore
+  File "/var/lib/juju/agents/unit-mysql-k8s-1/charm/lib/charms/mysql/v0/mysql.py", line 1680, in add_instance_to_cluster
+    self._release_lock(local_lock_instance, instance_unit_label, UNIT_ADD_LOCKNAME)
+  File "/var/lib/juju/agents/unit-mysql-k8s-1/charm/lib/charms/tempo_k8s/v1/charm_tracing.py", line 647, in wrapped_function
+    return callable(*args, **kwargs)  # type: ignore
+  File "/var/lib/juju/agents/unit-mysql-k8s-1/charm/lib/charms/mysql/v0/mysql.py", line 2166, in _release_lock
+    self._run_mysqlsh_script("\n".join(release_lock_commands))
+  File "/var/lib/juju/agents/unit-mysql-k8s-1/charm/lib/charms/tempo_k8s/v1/charm_tracing.py", line 647, in wrapped_function
+    return callable(*args, **kwargs)  # type: ignore
+  File "/var/lib/juju/agents/unit-mysql-k8s-1/charm/src/mysql_k8s_helpers.py", line 614, in _run_mysqlsh_script
+    raise MySQLClientError(e.stderr)
+charms.mysql.v0.mysql.MySQLClientError: Cannot set LC_ALL to locale en_US.UTF-8: No such file or directory
+verbose: 2024-07-09T01:44:35Z: Loading startup files...
+verbose: 2024-07-09T01:44:35Z: Loading plugins...
+verbose: 2024-07-09T01:44:35Z: Connecting to MySQL at: clusteradmin@mysql-k8s-0.mysql-k8s-endpoints.test.svc.cluster.local
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+ValueError: Shell.connect: X protocol error: MySQL server has gone away
+Classic protocol error: MySQL Error 2013 (HY000): Lost connection to MySQL server at 'waiting for initial communication packet', system error: 110
+
+
+unit-mysql-k8s-1: 01:45:15 ERROR juju.worker.uniter.operation hook "database-peers-relation-changed" (via hook dispatching script: dispatch) failed: exit status 1
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:947 Forgetting model main...
