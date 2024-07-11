@@ -8,7 +8,7 @@ from dataclasses import dataclass
 
 import ops
 from charms.grafana_k8s.v0.grafana_dashboard import GrafanaDashboardProvider
-from charms.loki_k8s.v0.loki_push_api import LogProxyConsumer
+from charms.loki_k8s.v1.loki_push_api import LogProxyConsumer
 from charms.prometheus_k8s.v0.prometheus_scrape import MetricsEndpointProvider
 
 import container
@@ -39,7 +39,7 @@ class COSRelation:
     _METRICS_RELATION_NAME = "metrics-endpoint"
     _LOGGING_RELATION_NAME = "logging"
     _PEER_RELATION_NAME = "cos"
-    _ROUTER_LOG_FILE = "/var/log/mysqlrouter/mysqlrouter.log"
+    _ROUTER_LOG_FILES_TARGET = "/var/log/mysqlrouter/**/*log*"
 
     MONITORING_USERNAME = "monitoring"
     _MONITORING_PASSWORD_KEY = "monitoring-password"
@@ -53,9 +53,12 @@ class COSRelation:
         )
         self._loki_push = LogProxyConsumer(
             charm_,
-            log_files=[self._ROUTER_LOG_FILE],
             relation_name=self._LOGGING_RELATION_NAME,
-            container_name=CONTAINER_NAME,
+            logs_scheme={
+                CONTAINER_NAME: {
+                    "log-files": [self._ROUTER_LOG_FILES_TARGET],
+                },
+            },
         )
 
         self._charm = charm_
