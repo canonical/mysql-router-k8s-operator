@@ -109,7 +109,7 @@ async def test_exporter_endpoint(ops_test: OpsTest) -> None:
     unit_address = await get_unit_address(ops_test, unit.name)
 
     try:
-        requests.get(f"http://{unit_address}:49152/metrics", stream=False)
+        requests.get(f"http://{unit_address}:9152/metrics", stream=False)
     except requests.exceptions.ConnectionError as e:
         assert "[Errno 111] Connection refused" in str(e), "❌ expected connection refused error"
     else:
@@ -134,7 +134,7 @@ async def test_exporter_endpoint(ops_test: OpsTest) -> None:
         wait=tenacity.wait_fixed(10),
     ):
         with attempt:
-            response = requests.get(f"http://{unit_address}:49152/metrics", stream=False)
+            response = requests.get(f"http://{unit_address}:9152/metrics", stream=False)
             response.raise_for_status()
             assert (
                 "mysqlrouter_route_health" in response.text
@@ -153,7 +153,7 @@ async def test_exporter_endpoint(ops_test: OpsTest) -> None:
     ):
         with attempt:
             try:
-                requests.get(f"http://{unit_address}:49152/metrics", stream=False)
+                requests.get(f"http://{unit_address}:9152/metrics", stream=False)
             except requests.exceptions.ConnectionError as e:
                 assert "[Errno 111] Connection refused" in str(
                     e
