@@ -29,12 +29,13 @@ class ExporterConfig:
     url: str
     username: str
     password: str
+    listen_port: str
 
 
 class COSRelation:
     """Relation with the cos bundle."""
 
-    _EXPORTER_PORT = "49151"
+    _EXPORTER_PORT = "9152"
     HTTP_SERVER_PORT = "8443"
     _METRICS_RELATION_NAME = "metrics-endpoint"
     _LOGGING_RELATION_NAME = "logging"
@@ -83,6 +84,7 @@ class COSRelation:
             url=f"https://127.0.0.1:{self.HTTP_SERVER_PORT}",
             username=self.MONITORING_USERNAME,
             password=self.get_monitoring_password(),
+            listen_port=self._EXPORTER_PORT,
         )
 
     @property
