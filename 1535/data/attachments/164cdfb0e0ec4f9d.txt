@@ -1,0 +1,2 @@
+[32mINFO    [0m integration.test_node_port:test_node_port.py:143 Assert TLS file exists
+[32mINFO    [0m integration.test_node_port:test_node_port.py:149 Asserting connections after relation
