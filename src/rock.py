@@ -161,6 +161,7 @@ class Rock(container.Container):
             startup = ops.pebble.ServiceStartup.ENABLED.value
 
             environment = {
+                "MYSQLROUTER_EXPORTER_LISTEN_PORT": config.listen_port,
                 "MYSQLROUTER_EXPORTER_USER": config.username,
                 "MYSQLROUTER_EXPORTER_PASS": config.password,
                 "MYSQLROUTER_EXPORTER_URL": config.url,
