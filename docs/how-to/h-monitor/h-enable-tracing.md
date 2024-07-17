@@ -22,8 +22,10 @@ This feature is available for Charmed MySQL Router K8s revision 117+ only.
 
 ## Prerequisites
 Enabling tracing with Tempo requires that you:
-- Have deployed a Charmed MySQL Router K8s application
-  - See [How to manage units](https://discourse.charmhub.io/t/mysql-router-k8s-how-to-manage-units/12240)
+- Have deployed a Charmed MySQL K8s application
+  - See [How to manage MySQL K8s units](https://discourse.charmhub.io/t/charmed-mysql-k8s-how-to-manage-units/9659)
+- Have deployed a Charmed MySQL Router K8s application in the same model as the Charmed MySQL application
+  - See [How to manage MySQL Router K8s units](https://discourse.charmhub.io/t/mysql-router-k8s-how-to-manage-units/12240)
 - Have deployed a 'cos-lite' bundle from the `latest/edge` track in a Kubernetes environment
   - See [Getting started on MicroK8s](https://charmhub.io/topics/canonical-observability-stack/tutorials/install-microk8s)
 
@@ -138,7 +140,7 @@ tempo-k8s:tracing                    mysql-router-k8s:tracing             tracin
 
 <a href="#heading--view"><h2 id="heading--view"> View traces </h2></a>
 
-After this is complete, the Tempo traces will be accessible from Grafana under the `Explore` section with `tempo-k8s` as the data source. You will be able to select `mysql` as the `Service Name` under the `Search` tab to view traces belonging to Charmed MySQL Router K8s.
+After this is complete, the Tempo traces will be accessible from Grafana under the `Explore` section with `tempo-k8s` as the data source. You will be able to select `mysql-router-k8s` as the `Service Name` under the `Search` tab to view traces belonging to Charmed MySQL Router K8s.
 
 Below is a screenshot demonstrating a Charmed MySQL Router K8s trace:
 
