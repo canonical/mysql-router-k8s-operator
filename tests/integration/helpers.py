@@ -157,7 +157,7 @@ async def delete_file_or_directory_in_unit(
     if path.strip() in ["/", "."]:
         return
 
-    return_code, _, _ = await ops_test.juju(
+    await ops_test.juju(
         "ssh",
         "--container",
         container_name,
@@ -274,7 +274,7 @@ async def ls_la_in_unit(
     Args:
         ops_test: The ops test framework
         unit_name: The name of unit in which to run ls -la
-        path: The path from which to run ls -la
+        directory: The directory from which to run ls -la
         container_name: The container where to run ls -la
 
     Returns:
@@ -592,7 +592,7 @@ async def ensure_all_units_continuous_writes_incrementing(
                             select_all_continuous_writes_sql,
                         )
                     )
-                    numbers = {n for n in range(1, max_written_value)}
+                    numbers = {range(1, max_written_value)}
                     assert (
                         numbers <= all_written_values
                     ), f"Missing numbers in database for unit {unit.name}"

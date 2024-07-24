@@ -46,7 +46,8 @@ def patch(monkeypatch):
 def kubernetes_patch(monkeypatch):
     monkeypatch.setattr("kubernetes_charm.KubernetesRouterCharm.model_service_domain", "")
     monkeypatch.setattr(
-        "rock.Rock._run_command", lambda *args, **kwargs: "null"  # Use "null" for `json.loads()`
+        "rock.Rock._run_command",
+        lambda *args, **kwargs: "null",  # Use "null" for `json.loads()`
     )
     monkeypatch.setattr("rock._Path.read_text", lambda *args, **kwargs: "")
     monkeypatch.setattr("rock._Path.write_text", lambda *args, **kwargs: None)

@@ -113,7 +113,7 @@ async def test_exporter_endpoint(ops_test: OpsTest) -> None:
 
     try:
         requests.get(f"http://{unit_address}:9152/metrics", stream=False)
-    except requests.exceptions.ConnectionError as e:
+    except requests.exceptions.ConnectionError_ as e:
         assert "[Errno 111] Connection refused" in str(e), "❌ expected connection refused error"
     else:
         assert False, "❌ can connect to metrics endpoint without relation with cos"
@@ -157,7 +157,7 @@ async def test_exporter_endpoint(ops_test: OpsTest) -> None:
         with attempt:
             try:
                 requests.get(f"http://{unit_address}:9152/metrics", stream=False)
-            except requests.exceptions.ConnectionError as e:
+            except requests.exceptions.ConnectionError_ as e:
                 assert "[Errno 111] Connection refused" in str(
                     e
                 ), "❌ expected connection refused error"

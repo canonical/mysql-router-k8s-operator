@@ -2,6 +2,7 @@
 # See LICENSE file for licensing details.
 
 """Relation to the cos charms."""
+
 import logging
 import typing
 from dataclasses import dataclass
