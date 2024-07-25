@@ -116,20 +116,18 @@ class Rock(container.Container):
             startup = ops.pebble.ServiceStartup.ENABLED.value
         else:
             startup = ops.pebble.ServiceStartup.DISABLED.value
-        layer = ops.pebble.Layer(
-            {
-                "services": {
-                    self._SERVICE_NAME: {
-                        "override": "replace",
-                        "summary": "MySQL Router",
-                        "command": command,
-                        "startup": startup,
-                        "user": _UNIX_USERNAME,
-                        "group": _UNIX_USERNAME,
-                    },
+        layer = ops.pebble.Layer({
+            "services": {
+                self._SERVICE_NAME: {
+                    "override": "replace",
+                    "summary": "MySQL Router",
+                    "command": command,
+                    "startup": startup,
+                    "user": _UNIX_USERNAME,
+                    "group": _UNIX_USERNAME,
                 },
-            }
-        )
+            },
+        })
         self._container.add_layer(self._SERVICE_NAME, layer, combine=True)
         # `self._container.replan()` does not stop services that have been disabled
         # Use `restart()` and `stop()` instead
@@ -168,32 +166,28 @@ class Rock(container.Container):
                 "MYSQLROUTER_EXPORTER_SERVICE_NAME": self._unit_name.replace("/", "-"),
             }
             if tls:
-                environment.update(
-                    {
-                        "MYSQLROUTER_TLS_CACERT_PATH": certificate_authority_filename,
-                        "MYSQLROUTER_TLS_CERT_PATH": certificate_filename,
-                        "MYSQLROUTER_TLS_KEY_PATH": key_filename,
-                    }
-                )
+                environment.update({
+                    "MYSQLROUTER_TLS_CACERT_PATH": certificate_authority_filename,
+                    "MYSQLROUTER_TLS_CERT_PATH": certificate_filename,
+                    "MYSQLROUTER_TLS_KEY_PATH": key_filename,
+                })
         else:
             startup = ops.pebble.ServiceStartup.DISABLED.value
             environment = {}
 
-        layer = ops.pebble.Layer(
-            {
-                "services": {
-                    self._EXPORTER_SERVICE_NAME: {
-                        "override": "replace",
-                        "summary": "MySQL Router Exporter",
-                        "command": "/start-mysql-router-exporter.sh",
-                        "startup": startup,
-                        "user": _UNIX_USERNAME,
-                        "group": _UNIX_USERNAME,
-                        "environment": environment,
-                    },
+        layer = ops.pebble.Layer({
+            "services": {
+                self._EXPORTER_SERVICE_NAME: {
+                    "override": "replace",
+                    "summary": "MySQL Router Exporter",
+                    "command": "/start-mysql-router-exporter.sh",
+                    "startup": startup,
+                    "user": _UNIX_USERNAME,
+                    "group": _UNIX_USERNAME,
+                    "environment": environment,
                 },
-            }
-        )
+            },
+        })
         self._container.add_layer(self._EXPORTER_SERVICE_NAME, layer, combine=True)
         # `self._container.replan()` does not stop services that have been disabled
         # Use `restart()` and `stop()` instead
@@ -216,20 +210,18 @@ class Rock(container.Container):
             if enabled
             else ops.pebble.ServiceStartup.DISABLED.value
         )
-        layer = ops.pebble.Layer(
-            {
-                "services": {
-                    self._LOGROTATE_EXECUTOR_SERVICE_NAME: {
-                        "override": "replace",
-                        "summary": "Logrotate executor",
-                        "command": "python3 /logrotate_executor.py",
-                        "startup": startup,
-                        "user": _UNIX_USERNAME,
-                        "group": _UNIX_USERNAME,
-                    },
+        layer = ops.pebble.Layer({
+            "services": {
+                self._LOGROTATE_EXECUTOR_SERVICE_NAME: {
+                    "override": "replace",
+                    "summary": "Logrotate executor",
+                    "command": "python3 /logrotate_executor.py",
+                    "startup": startup,
+                    "user": _UNIX_USERNAME,
+                    "group": _UNIX_USERNAME,
                 },
-            }
-        )
+            },
+        })
         self._container.add_layer(self._LOGROTATE_EXECUTOR_SERVICE_NAME, layer, combine=True)
         # `self._container.replan()` does not stop services that have been disabled
         # Use `restart()` and `stop()` instead
@@ -240,7 +232,11 @@ class Rock(container.Container):
 
     # TODO python3.10 min version: Use `list` instead of `typing.List`
     def _run_command(
-        self, command: typing.List[str], *, timeout: typing.Optional[int], input: str = None
+        self,
+        command: typing.List[str],
+        *,
+        timeout: typing.Optional[int],
+        input: str = None,  # noqa: A002 Match subprocess.run()
     ) -> str:
         try:
             process = self._container.exec(

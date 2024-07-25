@@ -101,12 +101,16 @@ async def test_build_and_deploy(ops_test: OpsTest):
 
     async with ops_test.fast_forward():
         logger.info("Relating mysql, mysqlrouter and application")
-        await ops_test.model.relate(
-            f"{MYSQL_APP_NAME}", f"{SELF_SIGNED_CERTIFICATE_NAME}:certificates"
-        ),
-        await ops_test.model.relate(
-            f"{MYSQL_ROUTER_APP_NAME}", f"{SELF_SIGNED_CERTIFICATE_NAME}:certificates"
-        ),
+        (
+            await ops_test.model.relate(
+                f"{MYSQL_APP_NAME}", f"{SELF_SIGNED_CERTIFICATE_NAME}:certificates"
+            ),
+        )
+        (
+            await ops_test.model.relate(
+                f"{MYSQL_ROUTER_APP_NAME}", f"{SELF_SIGNED_CERTIFICATE_NAME}:certificates"
+            ),
+        )
 
         # Relate the database with mysqlrouter
         await ops_test.model.relate(
@@ -173,13 +177,11 @@ async def test_node_port_and_clusterip_setup():
     for app_name in [DATA_INTEGRATOR, APPLICATION_APP_NAME]:
         try:
             relation_info = yaml.safe_load(
-                subprocess.check_output(
-                    [
-                        "juju",
-                        "show-unit",
-                        f"{app_name}/0",
-                    ]
-                )
+                subprocess.check_output([
+                    "juju",
+                    "show-unit",
+                    f"{app_name}/0",
+                ])
             )[f"{app_name}/0"]["relation-info"]
             if app_name == DATA_INTEGRATOR:
                 endpoint = list(filter(lambda x: x["endpoint"] == "mysql", relation_info))[0][

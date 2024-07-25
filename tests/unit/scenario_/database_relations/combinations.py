@@ -17,12 +17,10 @@ def _relation_combinations(
     for number_of_relations in relation_amounts:
         for combination in itertools.combinations_with_replacement(relations, number_of_relations):
             combination: tuple[scenario.Relation]
-            combinations.append(
-                [
-                    relation.replace(relation_id=scenario.state.next_relation_id())
-                    for relation in combination
-                ]
-            )
+            combinations.append([
+                relation.replace(relation_id=scenario.state.next_relation_id())
+                for relation in combination
+            ])
     return combinations
 
 

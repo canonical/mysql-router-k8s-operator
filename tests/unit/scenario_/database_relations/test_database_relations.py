@@ -38,13 +38,11 @@ def output_states(*, relations: list[scenario.Relation]) -> typing.Iterable[scen
     )
     events = [container.pebble_ready_event]
     for relation in relations:
-        events.extend(
-            (
-                relation.created_event,
-                # data_interfaces lib does not always emit event (to charm) on *-relation-changed
-                # relation.changed_event,
-            )
-        )
+        events.extend((
+            relation.created_event,
+            # data_interfaces lib does not always emit event (to charm) on *-relation-changed
+            # relation.changed_event,
+        ))
     for event in events:
         output = context.run(event, input_state)
         output.relations.pop()  # Remove PeerRelation
