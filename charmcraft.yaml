@@ -25,6 +25,7 @@ parts:
       - workload_version
       - scripts
     build-packages:
+      - libyaml-dev  # for PyYAML C bindings
       - libffi-dev
       - libssl-dev
       - pkg-config
