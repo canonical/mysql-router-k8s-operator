@@ -1,0 +1,17 @@
+"DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
+"Test that the exporter endpoint works when related with TLS","204346","test_exporter_endpoint","tests.integration","Sat Jul 27 01:36:24 UTC 2024","passed","Sat Jul 27 01:39:48 UTC 2024","","test_exporter_with_tls","",""
+"Upgrade mysqlrouter while ensuring continuous writes incrementing.","189573","test_upgrade_from_edge","tests.integration","Sat Jul 27 01:38:17 UTC 2024","passed","Sat Jul 27 01:41:27 UTC 2024","","test_upgrade","",""
+"Simple test to ensure that mysql, mysqlrouter and application charms deploy.","121321","test_deploy_edge","tests.integration","Sat Jul 27 01:36:16 UTC 2024","passed","Sat Jul 27 01:38:17 UTC 2024","","test_upgrade","",""
+"Test encryption when backend database is using TLS.","97615","test_build_deploy_and_relate","tests.integration","Sat Jul 27 01:36:20 UTC 2024","passed","Sat Jul 27 01:37:58 UTC 2024","","test_tls","",""
+"Test the nodeport.","4122","test_data_integrator","tests.integration","Sat Jul 27 01:39:52 UTC 2024","passed","Sat Jul 27 01:39:56 UTC 2024","","test_node_port","",""
+"Test encryption when backend database is using TLS.","22099","test_connected_encryption","tests.integration","Sat Jul 27 01:37:58 UTC 2024","passed","Sat Jul 27 01:38:20 UTC 2024","","test_tls","",""
+"Test the nodeport.","622","test_node_port_and_clusterip_setup","tests.integration","Sat Jul 27 01:39:51 UTC 2024","passed","Sat Jul 27 01:39:52 UTC 2024","","test_node_port","",""
+"Test the deployment of the charm.","215025","test_build_and_deploy","tests.integration","Sat Jul 27 01:36:15 UTC 2024","passed","Sat Jul 27 01:39:50 UTC 2024","","test_node_port","",""
+"Test the database relation.","259264","test_database_relation","tests.integration","Sat Jul 27 01:36:14 UTC 2024","passed","Sat Jul 27 01:40:34 UTC 2024","","test_charm","",""
+"Upgrade to an invalid version and test rollback.
+
+    Relies on the charm built in the previous test (test_upgrade_from_edge).
+    ","217488","test_fail_and_rollback","tests.integration","Sat Jul 27 01:41:27 UTC 2024","passed","Sat Jul 27 01:45:04 UTC 2024","","test_upgrade","",""
+"Test the database relation.","1592","test_tls","tests.integration","Sat Jul 27 01:39:50 UTC 2024","passed","Sat Jul 27 01:39:51 UTC 2024","","test_node_port","",""
+"Test log rotation.","111550","test_log_rotation","tests.integration","Sat Jul 27 01:36:18 UTC 2024","passed","Sat Jul 27 01:38:09 UTC 2024","","test_log_rotation","",""
+"Test that exporter endpoint is functional.","143299","test_exporter_endpoint","tests.integration","Sat Jul 27 01:36:15 UTC 2024","passed","Sat Jul 27 01:38:39 UTC 2024","","test_exporter","",""
