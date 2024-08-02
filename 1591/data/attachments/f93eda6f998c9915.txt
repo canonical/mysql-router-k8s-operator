@@ -1,0 +1,6 @@
+[32mINFO    [0m integration.helpers:helpers.py:550 Ensure continuous writes are incrementing
+[32mINFO    [0m integration.helpers:helpers.py:502 Retrieving primary unit
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:104 Build charm locally
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:111 Update workload version and snap revision in the charm
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:114 Refresh the charm
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:117 Wait for the first unit to be refreshed and the app to move to blocked status

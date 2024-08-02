@@ -1,0 +1,25 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:862 Model status:
+
+Model  Controller          Cloud/Region        Version  SLA          Timestamp
+test   microk8s-localhost  microk8s/localhost  3.4.3    unsupported  01:47:19Z
+
+App                       Version  Status   Scale  Charm                     Channel        Rev  Address         Exposed  Message
+data-integrator                    waiting      1  data-integrator           latest/edge     38  10.152.183.75   no       installing agent
+mysql-k8s                          error      0/3  mysql-k8s                 8.0/edge       169  10.152.183.159  no       create Pod mysql-k8s-1 in StatefulSet mysql-k8s failed error: failed to create PVC mysql-k8s-database-611e2a2e-mysql-...
+mysql-router-k8s                   waiting      1  mysql-router-k8s                           0  10.152.183.253  no       installing agent
+mysql-test-app            0.0.2    waiting      1  mysql-test-app            latest/edge     46  10.152.183.77   no       installing agent
+self-signed-certificates           active       1  self-signed-certificates  latest/stable  155  10.152.183.63   no       
+
+Unit                         Workload  Agent       Address      Ports  Message
+data-integrator/0*           blocked   idle        10.1.92.201         Please relate the data-integrator with the desired product
+mysql-k8s/0*                 waiting   allocating                      agent initialising
+mysql-k8s/1                  waiting   allocating                      agent initialising
+mysql-k8s/2                  waiting   allocating                      agent initialising
+mysql-router-k8s/0*          unknown   idle        10.1.92.200         
+mysql-test-app/0*            waiting   idle        10.1.92.202         
+self-signed-certificates/0*  active    idle        10.1.92.203         
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:868 Juju error logs:
+
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:947 Forgetting model main...
