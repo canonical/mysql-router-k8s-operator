@@ -1,0 +1,38 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:734 Connecting to existing model microk8s-localhost:test on unspecified cloud
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:47 Deploying all applications
+[32mINFO    [0m juju.model:model.py:2097 Deploying ch:amd64/jammy/mysql-test-app-46
+[32mINFO    [0m juju.model:model.py:2097 Deploying ch:amd64/jammy/mysql-k8s-169
+[32mINFO    [0m juju.model:model.py:2097 Deploying ch:amd64/jammy/mysql-router-k8s-142
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:76 Relating mysql-router-k8s to mysql-k8s and mysql-test-app
+[33mWARNING [0m juju.model:model.py:1563 relate is deprecated and will be removed. Use integrate instead.
+[33mWARNING [0m juju.model:model.py:1563 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:85 Waiting for applications to become active
+[32mINFO    [0m juju.model:model.py:2971 Waiting for model:
+  mysql-k8s/0 [allocating] waiting: installing agent
+  mysql-router-k8s/0 [allocating] waiting: installing agent
+  mysql-router-k8s/1 [allocating] waiting: installing agent
+  mysql-router-k8s/2 [allocating] waiting: installing agent
+  mysql-test-app/0 [allocating] waiting: installing agent
+[32mINFO    [0m juju.model:model.py:2971 Waiting for model:
+  mysql-k8s/0 [allocating] waiting: agent initialising
+  mysql-router-k8s/0 [executing] maintenance: installing charm software
+  mysql-router-k8s/1 [executing] maintenance: installing charm software
+  mysql-router-k8s/2 [executing] maintenance: installing charm software
+  mysql-test-app/0 [idle] waiting: 
+[32mINFO    [0m juju.model:model.py:2971 Waiting for model:
+  mysql-k8s/0 [executing] maintenance: Initialising mysqld
+  mysql-router-k8s/0 [executing] waiting: 
+  mysql-router-k8s/1 [executing] waiting: 
+  mysql-router-k8s/2 [executing] waiting: 
+  mysql-test-app/0 [idle] waiting: 
+[32mINFO    [0m juju.model:model.py:2971 Waiting for model:
+  mysql-k8s/0 [executing] active: Primary
+  mysql-router-k8s/0 [idle] waiting: 
+  mysql-router-k8s/1 [idle] waiting: 
+  mysql-router-k8s/2 [idle] waiting: 
+  mysql-test-app/0 [idle] waiting: 
+[32mINFO    [0m juju.model:model.py:2971 Waiting for model:
+  mysql-k8s/0 [idle] active: Primary
+  mysql-router-k8s/0 [idle] active: 
+  mysql-router-k8s/1 [idle] active: 
+  mysql-router-k8s/2 [idle] active:
