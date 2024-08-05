@@ -1,0 +1,27 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:734 Connecting to existing model microk8s-localhost:test on unspecified cloud
+[32mINFO    [0m integration.test_charm:test_charm.py:48 Deploying mysql, mysqlrouter and application
+[32mINFO    [0m juju.model:model.py:2097 Deploying local:jammy/mysql-router-k8s-0
+[32mINFO    [0m juju.model:model.py:2097 Deploying ch:amd64/jammy/mysql-test-app-46
+[32mINFO    [0m juju.model:model.py:2097 Deploying ch:amd64/jammy/mysql-k8s-169
+[32mINFO    [0m integration.test_charm:test_charm.py:79 Waiting for mysqlrouter to be in BlockedStatus
+[32mINFO    [0m pytest_operator.plugin:plugin.py:862 Model status:
+
+Model  Controller          Cloud/Region        Version  SLA          Timestamp
+test   microk8s-localhost  microk8s/localhost  3.4.3    unsupported  02:05:04Z
+
+App               Version                  Status   Scale  Charm             Channel      Rev  Address         Exposed  Message
+mysql-k8s         8.0.37-0ubuntu0.22.04.3  active       3  mysql-k8s         8.0/edge     169  10.152.183.51   no       
+mysql-router-k8s                           waiting      1  mysql-router-k8s                 0  10.152.183.249  no       installing agent
+mysql-test-app    0.0.2                    waiting      1  mysql-test-app    latest/edge   46  10.152.183.57   no       installing agent
+
+Unit                 Workload  Agent  Address      Ports  Message
+mysql-k8s/0*         active    idle   10.1.124.13         Primary
+mysql-k8s/1          active    idle   10.1.124.14         
+mysql-k8s/2          active    idle   10.1.124.15         
+mysql-router-k8s/0*  unknown   idle   10.1.124.8          
+mysql-test-app/0*    waiting   idle   10.1.124.9          
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:868 Juju error logs:
+
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:947 Forgetting model main...
