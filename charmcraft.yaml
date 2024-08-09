@@ -10,14 +10,12 @@ bases:
     channel: "22.04"
     architectures: [arm64]
 parts:
-  version_files:
-    plugin: nil
+  files:
+    plugin: dump
+    source: scripts/
     prime:
       - charm_version
       - workload_version
-  scripts:
-    plugin: dump
-    source: scripts/
   charm:
     override-pull: |
       craftctl default

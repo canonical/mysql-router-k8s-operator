@@ -6,6 +6,7 @@ import logging
 import os
 import pathlib
 import shutil
+import time
 import typing
 import zipfile
 from pathlib import Path
@@ -195,6 +196,9 @@ async def test_fail_and_rollback(ops_test: OpsTest, continuous_writes) -> None:
 
     logger.info("Re-refresh the charm")
     await mysql_router_application.refresh(path="./upgrade.charm")
+
+    # sleep to ensure that active status from before re-refresh does not affect below check
+    time.sleep(15)
 
     await ops_test.model.block_until(
         lambda: all(unit.workload_status == "active" for unit in mysql_router_application.units)
