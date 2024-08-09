@@ -10,6 +10,14 @@ bases:
     channel: "22.04"
     architectures: [arm64]
 parts:
+  version_files:
+    plugin: nil
+    prime:
+      - charm_version
+      - workload_version
+  scripts:
+    plugin: dump
+    source: scripts/
   charm:
     override-pull: |
       craftctl default
@@ -20,10 +28,6 @@ parts:
       fi
     charm-strict-dependencies: true
     charm-entrypoint: src/kubernetes_charm.py
-    prime:
-      - charm_version
-      - workload_version
-      - scripts
     build-packages:
       - libffi-dev
       - libssl-dev

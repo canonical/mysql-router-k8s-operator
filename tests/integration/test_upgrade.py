@@ -6,7 +6,6 @@ import logging
 import os
 import pathlib
 import shutil
-import time
 import typing
 import zipfile
 from pathlib import Path
@@ -197,7 +196,10 @@ async def test_fail_and_rollback(ops_test: OpsTest, continuous_writes) -> None:
     logger.info("Re-refresh the charm")
     await mysql_router_application.refresh(path="./upgrade.charm")
 
-    time.sleep(30)
+    await ops_test.model.block_until(
+        lambda: all(unit.workload_status == "active" for unit in mysql_router_application.units)
+        and all(unit.agent_status == "idle" for unit in mysql_router_application.units)
+    )
 
     logger.info("Running resume-upgrade on the mysql router leader unit")
     mysql_router_leader_unit = await get_leader_unit(ops_test, MYSQL_ROUTER_APP_NAME)
