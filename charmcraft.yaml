@@ -12,7 +12,7 @@ bases:
 parts:
   files:
     plugin: nil
-    override-prime: |
+    override-pull: |
       ls
       craftctl default
     prime:
