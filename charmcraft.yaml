@@ -12,10 +12,11 @@ bases:
 parts:
   files:
     plugin: dump
-    source: scripts/
+    source: .
     prime:
       - charm_version
       - workload_version
+      - scripts
   charm:
     override-pull: |
       craftctl default
