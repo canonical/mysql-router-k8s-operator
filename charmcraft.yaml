@@ -13,10 +13,6 @@ parts:
   files:
     plugin: dump
     source: .
-    override-pull: |
-      ls
-      craftctl default
-      ls
     prime:
       - charm_version
       - workload_version
