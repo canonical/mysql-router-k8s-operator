@@ -1,4 +1,4 @@
-# Copyright 2022 Canonical Ltd.
+# Copyright 2022,2024 Canonical Ltd.
 # See LICENSE file for licensing details.
 
 type: charm
@@ -10,23 +10,27 @@ bases:
     channel: "22.04"
     architectures: [arm64]
 parts:
-  charm:
-    override-pull: |
-      craftctl default
-      if [[ ! -f requirements.txt ]]
-      then
-          echo 'ERROR: Use "tox run -e build-dev" instead of calling "charmcraft pack" directly' >&2
-          exit 1
-      fi
-    charm-strict-dependencies: true
-    charm-entrypoint: src/kubernetes_charm.py
-    prime:
+  charm-files:
+    # Extra files this charm uses.
+    plugin: dump
+    source: .
+    stage:
       - charm_version
       - workload_version
       - scripts
+  charm:
+    override-pull: |
+      craftctl default
+      pipx install poetry~=1.8
+      $HOME/.local/bin/poetry export --only main,charm-libs --output requirements.txt
+    charm-strict-dependencies: true
+    charm-entrypoint: src/kubernetes_charm.py
+    charm-requirements:
+      - requirements.txt
     build-packages:
       - libffi-dev
       - libssl-dev
       - pkg-config
       - rustc
       - cargo
+      - pipx
