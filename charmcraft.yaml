@@ -11,7 +11,8 @@ bases:
     architectures: [arm64]
 parts:
   files:
-    plugin: nil
+    plugin: dump
+    source: .
     override-pull: |
       ls
       craftctl default
