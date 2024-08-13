@@ -27,12 +27,12 @@ This MySQL Router K8s charm is an official distribution of MySQL Router. It’s 
 # Contents
 
 1. [Tutorial](tutorial)
-  1. [1. Introduction](tutorial/t-overview.md)
-  1. [2. Set up the environment](tutorial/t-setup-environment.md)
-  1. [3. Deploy MySQL Router](tutorial/t-deploy-charm.md)
-  1. [4. Manage units](tutorial/t-managing-units.md)
-  1. [5. Enable security](tutorial/t-enable-security.md)
-  1. [6. Cleanup environment](tutorial/t-cleanup-environment.md)
+  1. [1. Introduction](tutorial/t-introduction.md)
+  1. [2. Set up the environment](tutorial/t-set-up.md)
+  1. [3. Deploy MySQL Router](tutorial/t-deploy.md)
+  1. [4. Manage units](tutorial/t-manage-units.md)
+  1. [5. Enable TLS encryption](tutorial/t-enable-tls.md)
+  1. [6. Cleanup environment](tutorial/t-clean-up.md)
 1. [How To](how-to)
   1. [Setup](how-to/h-setup)
     1. [Deploy on MicroK8s](how-to/h-setup/h-deploy-microk8s.md)

@@ -1,4 +1,4 @@
-# Environment Setup
+# Set up your environment
 
 This is part of the [MySQL Router K8s Tutorial](/t/12176). Please refer to this page for more information and the overview of the content.
 
