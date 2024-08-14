@@ -88,8 +88,8 @@ juju refresh mysql-router-k8s --channel 8.0/edge
 # example with channel selection and juju 3.x
 juju refresh mysql-router-k8s --channel 8.0/edge --trust
 
-# example with specific revision selection
-juju refresh mysql-router-k8s --revision=89
+# example with specific revision selection (do NOT miss OCI resource!)
+juju refresh mysql-router-k8s --revision=89 --resource mysql-router-image=...
 ```
 
 After the Router upgrade is completed, upgrade the Server:
