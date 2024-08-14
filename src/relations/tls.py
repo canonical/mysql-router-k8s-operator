@@ -11,7 +11,7 @@ import re
 import socket
 import typing
 
-import charms.tls_certificates_interface.v1.tls_certificates as tls_certificates
+import charms.tls_certificates_interface.v2.tls_certificates as tls_certificates
 import ops
 
 import relations.secrets
@@ -49,7 +49,7 @@ class _Relation:
     """Relation to TLS certificate provider"""
 
     _charm: "kubernetes_charm.KubernetesRouterCharm"
-    _interface: tls_certificates.TLSCertificatesRequiresV1
+    _interface: tls_certificates.TLSCertificatesRequiresV2
     _secrets: relations.secrets.RelationSecrets
 
     @property
@@ -171,7 +171,7 @@ class RelationEndpoint(ops.Object):
     def __init__(self, charm_: "kubernetes_charm.KubernetesRouterCharm") -> None:
         super().__init__(charm_, self.NAME)
         self._charm = charm_
-        self._interface = tls_certificates.TLSCertificatesRequiresV1(self._charm, self.NAME)
+        self._interface = tls_certificates.TLSCertificatesRequiresV2(self._charm, self.NAME)
 
         self._secrets = relations.secrets.RelationSecrets(
             charm_, self._interface.relationship_name, unit_secret_fields=[_TLS_PRIVATE_KEY]
