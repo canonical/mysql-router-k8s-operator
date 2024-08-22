@@ -60,7 +60,7 @@ async def test_build_deploy_and_relate(ops_test: OpsTest) -> None:
             channel="8.0/edge",
             application_name=MYSQL_APP_NAME,
             config={"profile": "testing"},
-            series="jammy",
+            base="ubuntu@22.04",
             num_units=1,
             trust=True,
         )
@@ -73,7 +73,7 @@ async def test_build_deploy_and_relate(ops_test: OpsTest) -> None:
             ops_test.model.deploy(
                 mysqlrouter_charm,
                 application_name=MYSQL_ROUTER_APP_NAME,
-                series="jammy",
+                base="ubuntu@22.04",
                 resources=mysqlrouter_resources,
                 num_units=1,
                 trust=True,
@@ -83,13 +83,13 @@ async def test_build_deploy_and_relate(ops_test: OpsTest) -> None:
                 application_name=tls_app_name,
                 channel=tls_channel,
                 config=tls_config,
-                series="jammy",
+                base="ubuntu@22.04",
             ),
             ops_test.model.deploy(
                 TEST_APP_NAME,
                 application_name=TEST_APP_NAME,
                 channel="latest/edge",
-                series="jammy",
+                base="ubuntu@22.04",
             ),
         )
 

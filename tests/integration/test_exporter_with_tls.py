@@ -68,14 +68,14 @@ async def test_exporter_endpoint(ops_test: OpsTest) -> None:
             channel="8.0/edge",
             application_name=MYSQL_APP_NAME,
             config={"profile": "testing"},
-            series="jammy",
+            base="ubuntu@22.04",
             num_units=1,
             trust=True,
         ),
         ops_test.model.deploy(
             mysqlrouter_charm,
             application_name=MYSQL_ROUTER_APP_NAME,
-            series="jammy",
+            base="ubuntu@22.04",
             resources=mysqlrouter_resources,
             num_units=1,
             trust=True,
@@ -84,14 +84,14 @@ async def test_exporter_endpoint(ops_test: OpsTest) -> None:
             APPLICATION_APP_NAME,
             channel="latest/edge",
             application_name=APPLICATION_APP_NAME,
-            series="jammy",
+            base="ubuntu@22.04",
             num_units=1,
         ),
         ops_test.model.deploy(
             GRAFANA_AGENT_APP_NAME,
             application_name=GRAFANA_AGENT_APP_NAME,
             num_units=1,
-            series="jammy",
+            base="ubuntu@22.04",
             channel="latest/stable",
         ),
     )
@@ -141,7 +141,7 @@ async def test_exporter_endpoint(ops_test: OpsTest) -> None:
         application_name=tls_app_name,
         channel=tls_channel,
         config=tls_config,
-        series="jammy",
+        base="ubuntu@22.04",
     )
 
     await ops_test.model.wait_for_idle([tls_app_name], status="active", timeout=SLOW_TIMEOUT)

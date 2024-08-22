@@ -52,7 +52,7 @@ async def test_deploy_edge(ops_test: OpsTest) -> None:
             channel="8.0/edge",
             application_name=MYSQL_APP_NAME,
             config={"profile": "testing"},
-            series="jammy",
+            base="ubuntu@22.04",
             num_units=1,
             trust=True,  # Necessary after a6f1f01: Fix/endpoints as k8s services (#142)
         ),
@@ -60,7 +60,7 @@ async def test_deploy_edge(ops_test: OpsTest) -> None:
             MYSQL_ROUTER_APP_NAME,
             channel="8.0/edge",
             application_name=MYSQL_ROUTER_APP_NAME,
-            series="jammy",
+            base="ubuntu@22.04",
             num_units=3,
             trust=True,
         ),
@@ -68,7 +68,7 @@ async def test_deploy_edge(ops_test: OpsTest) -> None:
             APPLICATION_APP_NAME,
             channel="latest/edge",
             application_name=APPLICATION_APP_NAME,
-            series="jammy",
+            base="ubuntu@22.04",
             num_units=1,
         ),
     )
