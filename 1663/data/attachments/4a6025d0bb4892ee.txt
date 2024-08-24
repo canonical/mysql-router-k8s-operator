@@ -1,0 +1,95 @@
+[32mINFO    [0m integration.helpers:helpers.py:550 Ensure continuous writes are incrementing
+[32mINFO    [0m integration.helpers:helpers.py:502 Retrieving primary unit
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:177 Creating invalid upgrade charm
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:180 Refreshing mysql router with an invalid charm
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:183 Wait for upgrade to fail
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:194 Ensure continuous writes while in failure state
+[32mINFO    [0m integration.helpers:helpers.py:550 Ensure continuous writes are incrementing
+[32mINFO    [0m integration.helpers:helpers.py:502 Retrieving primary unit
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:197 Re-refresh the charm
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:208 Running resume-upgrade on the mysql router leader unit
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:212 Wait for the charm to be rolled back
+[32mINFO    [0m juju.model:model.py:2971 Waiting for model:
+  mysql-router-k8s/0 [idle] active: Router 8.0.37+testupgrade running (restart pending); Charmed operator 1.2+70d6969
+  mysql-router-k8s/1 [idle] active: Router 8.0.37+testupgrade running (restart pending); Charmed operator 1.2+70d6969
+  mysql-router-k8s/2 [idle] active: Router 8.0.37+testupgrade running; Charmed operator 1.2+70d6969
+[32mINFO    [0m juju.model:model.py:2971 Waiting for model:
+  mysql-router-k8s/0 [idle] active: Router 8.0.37+testupgrade running (restart pending); Charmed operator 1.2+70d6969
+  mysql-router-k8s/1 [executing] maintenance: 
+  mysql-router-k8s/2 [idle] active: Router 8.0.37+testupgrade running; Charmed operator 1.2+70d6969
+[32mINFO    [0m juju.model:model.py:2971 Waiting for model:
+  mysql-router-k8s/0 [executing] maintenance: 
+  mysql-router-k8s/1 [idle] active: Router 8.0.37+testupgrade running; Charmed operator 1.2+70d6969
+  mysql-router-k8s/2 [idle] active: Router 8.0.37+testupgrade running; Charmed operator 1.2+70d6969
+[32mINFO    [0m juju.model:model.py:2971 Waiting for model:
+  mysql-router-k8s/0 [idle] active: 
+  mysql-router-k8s/1 [idle] active: 
+  mysql-router-k8s/2 [idle] active: 
+[32mINFO    [0m juju.model:model.py:2971 Waiting for model:
+  mysql-router-k8s/0 [idle] active: 
+  mysql-router-k8s/1 [idle] active: 
+  mysql-router-k8s/2 [idle] active: 
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:231 Ensure continuous writes after rollback procedure
+[32mINFO    [0m integration.helpers:helpers.py:550 Ensure continuous writes are incrementing
+[32mINFO    [0m integration.helpers:helpers.py:502 Retrieving primary unit
+[32mINFO    [0m pytest_operator.plugin:plugin.py:862 Model status:
+
+Model  Controller          Cloud/Region        Version  SLA          Timestamp
+test   microk8s-localhost  microk8s/localhost  3.4.3    unsupported  01:44:29Z
+
+App               Version                  Status  Scale  Charm             Channel      Rev  Address         Exposed  Message
+mysql-k8s         8.0.37-0ubuntu0.22.04.3  active      1  mysql-k8s         8.0/edge     180  10.152.183.151  no       
+mysql-router-k8s  8.0.37-0ubuntu0.22.04.3  active      3  mysql-router-k8s                 2  10.152.183.239  no       
+mysql-test-app    0.0.2                    active      1  mysql-test-app    latest/edge   46  10.152.183.252  no       
+
+Unit                 Workload  Agent  Address      Ports  Message
+mysql-k8s/0*         active    idle   10.1.72.205         Primary
+mysql-router-k8s/0   active    idle   10.1.72.212         
+mysql-router-k8s/1*  active    idle   10.1.72.211         
+mysql-router-k8s/2   active    idle   10.1.72.210         
+mysql-test-app/0*    active    idle   10.1.72.203         
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:868 Juju error logs:
+
+unit-mysql-router-k8s-1: 01:39:00 ERROR unit.mysql-router-k8s/1.juju-log Uncaught exception while in charm code:
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-mysql-router-k8s-1/charm/src/rock.py", line 245, in _run_command
+    output, _ = process.wait_output()
+  File "/var/lib/juju/agents/unit-mysql-router-k8s-1/charm/venv/ops/pebble.py", line 1441, in wait_output
+    raise ExecError[AnyStr](self._command, exit_code, out_value, err_value)
+ops.pebble.ExecError: non-zero exit code 129 executing ['mysqlrouter', '--version'], stdout='', stderr=''
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-mysql-router-k8s-1/charm/./src/kubernetes_charm.py", line 312, in <module>
+    ops.main.main(KubernetesRouterCharm)
+  File "/var/lib/juju/agents/unit-mysql-router-k8s-1/charm/venv/ops/main.py", line 436, in main
+    _emit_charm_event(charm, dispatcher.event_name)
+  File "/var/lib/juju/agents/unit-mysql-router-k8s-1/charm/venv/ops/main.py", line 144, in _emit_charm_event
+    event_to_emit.emit(*args, **kwargs)
+  File "/var/lib/juju/agents/unit-mysql-router-k8s-1/charm/venv/ops/framework.py", line 351, in emit
+    framework._emit(event)
+  File "/var/lib/juju/agents/unit-mysql-router-k8s-1/charm/venv/ops/framework.py", line 853, in _emit
+    self._reemit(event_path)
+  File "/var/lib/juju/agents/unit-mysql-router-k8s-1/charm/venv/ops/framework.py", line 942, in _reemit
+    custom_handler(event)
+  File "/var/lib/juju/agents/unit-mysql-router-k8s-1/charm/lib/charms/tempo_k8s/v1/charm_tracing.py", line 724, in wrapped_function
+    return callable(*args, **kwargs)  # type: ignore
+  File "/var/lib/juju/agents/unit-mysql-router-k8s-1/charm/./src/kubernetes_charm.py", line 289, in _on_workload_container_pebble_ready
+    self.unit.set_workload_version(self.get_workload(event=None).version)
+  File "/var/lib/juju/agents/unit-mysql-router-k8s-1/charm/src/workload.py", line 73, in version
+    version = self._container.run_mysql_router(["--version"])
+  File "/var/lib/juju/agents/unit-mysql-router-k8s-1/charm/lib/charms/tempo_k8s/v1/charm_tracing.py", line 724, in wrapped_function
+    return callable(*args, **kwargs)  # type: ignore
+  File "/var/lib/juju/agents/unit-mysql-router-k8s-1/charm/src/container.py", line 196, in run_mysql_router
+    return self._run_command(args, timeout=timeout)
+  File "/var/lib/juju/agents/unit-mysql-router-k8s-1/charm/lib/charms/tempo_k8s/v1/charm_tracing.py", line 724, in wrapped_function
+    return callable(*args, **kwargs)  # type: ignore
+  File "/var/lib/juju/agents/unit-mysql-router-k8s-1/charm/src/rock.py", line 247, in _run_command
+    raise container.CalledProcessError(
+container.CalledProcessError: Command '['mysqlrouter', '--version']' returned non-zero exit status 129.
+unit-mysql-router-k8s-1: 01:39:00 ERROR juju.worker.uniter.operation hook "mysql-router-pebble-ready" (via hook dispatching script: dispatch) failed: exit status 1
+unit-mysql-router-k8s-1: 01:39:00 ERROR juju.worker.uniter pebble poll failed for container "mysql-router": failed to send pebble-ready event: hook failed
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:947 Forgetting model main...
