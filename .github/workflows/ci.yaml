@@ -29,6 +29,6 @@ jobs:
       channel: 8.0/edge/test-31-oci
       artifact-prefix: ${{ needs.build.outputs.artifact-prefix }}
       create-github-release: false
-      charmcraft-snap-channel: 3/stable
+      charmcraft-snap-channel: 3.x/stable
     secrets:
       charmhub-token: ${{ secrets.CHARMHUB_TOKEN }}
