@@ -1,7 +1,8 @@
 >Reference > Release Notes > [All revisions](/t/12201) > Revision 117  
-# Revision 117 (`8.0/candidate` only)
 
-<sub>TODO: DD, MM, YYYY</sub>
+# Revision 117
+
+<sub>Aug 20, 2024</sub>
 
 Dear community,
 

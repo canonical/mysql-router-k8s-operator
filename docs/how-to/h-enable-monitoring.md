@@ -1,33 +1,56 @@
-# Enable monitoring
+[note]
+**Note**: All commands are written for [`juju >= v3.0`](https://juju.is/docs/juju/roadmap#heading--juju-3-0-0---22-oct-2022)
+[/note]
 
-> **:information_source: Hint**: Use [Juju 3](/t/5064). Otherwise replace `juju run ...` with `juju run-action --wait ...` and `juju integrate` with `juju relate` for Juju 2.9
+# How to enable monitoring with COS and Grafana
 
-Enabling monitoring requires that you:
+This guide goes over the steps to integrate MySQL Router K8s deployment with COS to enable monitoring in Grafana.
 
-* [Have a Charmed MySQLRouter K8s deployed](https://charmhub.io/mysql-router/docs/t-deploy-charm?channel=dpe/edge)
-* [Deploy cos-lite bundle in a Kubernetes environment](https://charmhub.io/topics/canonical-observability-stack/tutorials/install-microk8s)
+To learn about Alert Rules, see [Charmed MySQL K8s > How to enable COS Alert Rules](https://charmhub.io/mysql-k8s/docs/h-enable-alert-rules).
 
-Switch to the COS K8s environment and offer COS interfaces to be cross-model related with Charmed MySQLRouter K8s model:
+## Prerequisites
+* A deployed [Charmed MySQL Router K8s](/t/12233) operator
+* A deployed [‘cos-lite’ bundle in a Kubernetes environment](https://charmhub.io/topics/canonical-observability-stack/tutorials/install-microk8s)
+
+## Summary
+* [Offer interfaces via the COS controller](#offer-interfaces-via-the-cos-controller)
+* [Consume offers via the MySQL Router K8s model](#consume-offers-via-the-mysql-router-k8s-model)
+* [Deploy and integrate Grafana](#deploy-and-integrate-grafana)
+* [Connect to the Grafana web interface](#connect-to-the-grafana-web-interface)
+
+---
+
+## Offer interfaces via the COS controller
+
+First, we will switch to the COS K8s environment and offer COS interfaces to be cross-model integrated with the Charmed MySQLRouter K8s model.
+
+To switch to the Kubernetes controller for the COS model, run
 
 ```shell
-# Switch to the Kubernetes controller, on the COS model
-juju switch <k8s_cos_controller>:<cos_model_name>
+juju switch <k8s_controller>:<cos_model_name>
+```
 
+To offer the COS interfaces, run
+```shell
 juju offer grafana:grafana-dashboard
 juju offer loki:logging
 juju offer prometheus:receive-remote-write
 ```
+## Consume offers via the MySQL Router K8s model
 
-Switch to the Charmed MySQLRouter K8s model, find offers and consume them:
+Next, we will switch to the Charmed MySQL Router K8s model, find offers, and consume them.
+
+We are currently on the Kubernetes controller for the COS model. To switch to the MySQL Router K8smodel, run
 
 ```shell
-# We are on the Kubernetes controller, on the COS model. Switch the mysqlrouter model
 juju switch <k8s_db_controller>:<mysql_router_model_name>
-
+```
+Display a list of available interfaces with the following command:
+```shell
 juju find-offers <k8s_cos_controller>:  # Do not miss the ':' here!
 ```
 
-A similar output should appear, if `k8s` is the k8s controller name and `cos` is the model where cos-lite has been deployed:
+In the sample output below, `k8s` is the k8s controller name and `cos` is the model where `cos-lite` has been deployed:
 
 ```shell
 Store  URL               	Access  Interfaces
@@ -36,7 +59,7 @@ k8s	admin/cos.loki    	admin   loki_push_api:logging
 k8s	admin/cos.prometheus  admin   prometheus_remote_write:receive-remote-write
 ```
 
-Consume the offers to be reachable in the current model:
+To consume offers to be reachable in the current model, run
 
 ```shell
 juju consume k8s:admin/cos.grafana
@@ -44,23 +67,28 @@ juju consume k8s:admin/cos.loki
 juju consume k8s:admin/cos.prometheus
 ```
 
-Now, deploy ‘[grafana-agent-k8s](https://charmhub.io/grafana-agent-k8s)’ and integrate (relate) it with Charmed MySQLRouter K8s, then later integrate (relate) `grafana-agent-k8s` with the consumed COS offers:
+## Deploy and integrate Grafana
 
+First, deploy [grafana-agent](https://charmhub.io/grafana-agent):
 ```shell
 juju deploy grafana-agent-k8s --trust
-
+```
+Then, integrate (previously known as "[relate](https://juju.is/docs/juju/integration)") `grafana-agent` with Charmed MySQL Router K8s:
+```shell
 juju integrate grafana-agent-k8s grafana
 juju integrate grafana-agent-k8s loki
 juju integrate grafana-agent-k8s prometheus
-
+```
+Finally, integrate `grafana-agent-k8s` with the consumed COS offers:
+```shell
 juju integrate grafana-agent-k8s mysql-router-k8s:grafana-dashboard
 juju integrate grafana-agent-k8s mysql-router-k8s:logging
 juju integrate grafana-agent-k8s mysql-router-k8s:metrics-endpoint
 ```
 
-After this is complete, Grafana will show the new dashboards `MySQLRouter Exporter` and allow access for Charmed MySQLRouter K8s logs on Loki.
+After this is complete, Grafana will show the new dashboards `MySQLRouter Exporter` and allow access for Charmed MySQL Router K8s logs on Loki.
 
-An example of `juju status` on Charmed MySQLRouter K8s model:
+An example of `juju status` on Charmed MySQL Router K8s model:
 
 ```shell
 ubuntu@localhost:~$ juju status
@@ -114,7 +142,9 @@ loki    	loki     	loki-k8s    	124  2/2    	logging           	loki_push_api   
 prometheus  prometheus   prometheus-k8s  171  2/2    	receive-remote-write  prometheus_remote_write  provider
 ```
 
-To connect Grafana WEB interface, follow the COS section “[Browse dashboards](https://charmhub.io/topics/canonical-observability-stack/tutorials/install-microk8s#heading--browse-dashboards)”:
+## Connect to Grafana web interface
+
+To connect to the Grafana web interface, follow the [Browse dashboards](https://charmhub.io/topics/canonical-observability-stack/tutorials/install-microk8s?_ga=2.201254254.1948444620.1704703837-757109492.1701777558#heading--browse-dashboards) section of the MicroK8s "Getting started" guide.
 
 ```shell
 juju run grafana/leader get-admin-password --model <k8s_controller>:<cos_model_name>
