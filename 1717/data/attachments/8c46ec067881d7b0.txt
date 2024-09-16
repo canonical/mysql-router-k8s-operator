@@ -1,0 +1,128 @@
+[32mINFO    [0m integration.helpers:helpers.py:550 Ensure continuous writes are incrementing
+[32mINFO    [0m integration.helpers:helpers.py:502 Retrieving primary unit
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:104 Build charm locally
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:111 Update workload version and snap revision in the charm
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:114 Refresh the charm
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:117 Wait for the first unit to be refreshed and the app to move to blocked status
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:137 Running resume-upgrade on the mysql router leader unit
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:140 Waiting for upgrade to complete on all units
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  mysql-router-k8s/0 [executing] active: Router 8.0.37 running (restart pending); Charmed operator 1.2+a648a2e
+  mysql-router-k8s/1 [executing] active: Router 8.0.37 running (restart pending); Charmed operator 1.2+a648a2e
+  mysql-router-k8s/2 [executing] active: Router 8.0.37+testupgrade running; Charmed operator 1.2+a648a2e
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  mysql-router-k8s/0 [idle] active: Router 8.0.37 running (restart pending); Charmed operator 1.2+a648a2e
+  mysql-router-k8s/1 [idle] active: Router 8.0.37 running (restart pending); Charmed operator 1.2+a648a2e
+  mysql-router-k8s/2 [idle] active: Router 8.0.37+testupgrade running; Charmed operator 1.2+a648a2e
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  mysql-router-k8s/0 [idle] active: Router 8.0.37 running (restart pending); Charmed operator 1.2+a648a2e
+  mysql-router-k8s/1 [idle] active: Router 8.0.37 running (restart pending); Charmed operator 1.2+a648a2e
+  mysql-router-k8s/2 [idle] active: Router 8.0.37+testupgrade running; Charmed operator 1.2+a648a2e
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  mysql-router-k8s/0 [idle] active: Router 8.0.37 running (restart pending); Charmed operator 1.2+a648a2e
+  mysql-router-k8s/1 [idle] active: Router 8.0.37 running (restart pending); Charmed operator 1.2+a648a2e
+  mysql-router-k8s/2 [idle] active: Router 8.0.37+testupgrade running; Charmed operator 1.2+a648a2e
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  mysql-router-k8s/0 [idle] active: Router 8.0.37 running (restart pending); Charmed operator 1.2+a648a2e
+  mysql-router-k8s/1 [idle] active: Router 8.0.37 running (restart pending); Charmed operator 1.2+a648a2e
+  mysql-router-k8s/2 [idle] active: Router 8.0.37+testupgrade running; Charmed operator 1.2+a648a2e
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  mysql-router-k8s/0 [idle] active: Router 8.0.37 running (restart pending); Charmed operator 1.2+a648a2e
+  mysql-router-k8s/1 [idle] active: Router 8.0.37 running (restart pending); Charmed operator 1.2+a648a2e
+  mysql-router-k8s/2 [idle] active: Router 8.0.37+testupgrade running; Charmed operator 1.2+a648a2e
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  mysql-router-k8s/0 [idle] active: Router 8.0.37 running (restart pending); Charmed operator 1.2+a648a2e
+  mysql-router-k8s/1 [idle] active: Router 8.0.37 running (restart pending); Charmed operator 1.2+a648a2e
+  mysql-router-k8s/2 [idle] active: Router 8.0.37+testupgrade running; Charmed operator 1.2+a648a2e
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  mysql-router-k8s/0 [idle] active: Router 8.0.37 running (restart pending); Charmed operator 1.2+a648a2e
+  mysql-router-k8s/1 [idle] active: Router 8.0.37 running (restart pending); Charmed operator 1.2+a648a2e
+  mysql-router-k8s/2 [idle] active: Router 8.0.37+testupgrade running; Charmed operator 1.2+a648a2e
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  mysql-router-k8s/0 [idle] active: Router 8.0.37 running (restart pending); Charmed operator 1.2+a648a2e
+  mysql-router-k8s/1 [idle] active: Router 8.0.37 running (restart pending); Charmed operator 1.2+a648a2e
+  mysql-router-k8s/2 [idle] active: Router 8.0.37+testupgrade running; Charmed operator 1.2+a648a2e
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  mysql-router-k8s/0 [idle] active: Router 8.0.37 running (restart pending); Charmed operator 1.2+a648a2e
+  mysql-router-k8s/1 [idle] active: Router 8.0.37 running (restart pending); Charmed operator 1.2+a648a2e
+  mysql-router-k8s/2 [idle] active: Router 8.0.37+testupgrade running; Charmed operator 1.2+a648a2e
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  mysql-router-k8s/0 [idle] active: Router 8.0.37 running (restart pending); Charmed operator 1.2+a648a2e
+  mysql-router-k8s/1 [idle] active: Router 8.0.37 running (restart pending); Charmed operator 1.2+a648a2e
+  mysql-router-k8s/2 [idle] active: Router 8.0.37+testupgrade running; Charmed operator 1.2+a648a2e
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  mysql-router-k8s/0 [idle] active: Router 8.0.37 running (restart pending); Charmed operator 1.2+a648a2e
+  mysql-router-k8s/1 [idle] active: Router 8.0.37 running (restart pending); Charmed operator 1.2+a648a2e
+  mysql-router-k8s/2 [idle] active: Router 8.0.37+testupgrade running; Charmed operator 1.2+a648a2e
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  mysql-router-k8s/0 [idle] active: Router 8.0.37 running (restart pending); Charmed operator 1.2+a648a2e
+  mysql-router-k8s/1 [idle] active: Router 8.0.37 running (restart pending); Charmed operator 1.2+a648a2e
+  mysql-router-k8s/2 [idle] active: Router 8.0.37+testupgrade running; Charmed operator 1.2+a648a2e
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  mysql-router-k8s/0 [idle] active: Router 8.0.37 running (restart pending); Charmed operator 1.2+a648a2e
+  mysql-router-k8s/1 [idle] active: Router 8.0.37 running (restart pending); Charmed operator 1.2+a648a2e
+  mysql-router-k8s/2 [idle] active: Router 8.0.37+testupgrade running; Charmed operator 1.2+a648a2e
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  mysql-router-k8s/0 [idle] active: Router 8.0.37 running (restart pending); Charmed operator 1.2+a648a2e
+  mysql-router-k8s/1 [idle] active: Router 8.0.37 running (restart pending); Charmed operator 1.2+a648a2e
+  mysql-router-k8s/2 [idle] active: Router 8.0.37+testupgrade running; Charmed operator 1.2+a648a2e
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  mysql-router-k8s/0 [idle] active: Router 8.0.37 running (restart pending); Charmed operator 1.2+a648a2e
+  mysql-router-k8s/1 [idle] active: Router 8.0.37 running (restart pending); Charmed operator 1.2+a648a2e
+  mysql-router-k8s/2 [idle] active: Router 8.0.37+testupgrade running; Charmed operator 1.2+a648a2e
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  mysql-router-k8s/0 [idle] active: Router 8.0.37 running (restart pending); Charmed operator 1.2+a648a2e
+  mysql-router-k8s/1 [idle] active: Router 8.0.37 running (restart pending); Charmed operator 1.2+a648a2e
+  mysql-router-k8s/2 [idle] active: Router 8.0.37+testupgrade running; Charmed operator 1.2+a648a2e
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  mysql-router-k8s/0 [idle] active: Router 8.0.37 running (restart pending); Charmed operator 1.2+a648a2e
+  mysql-router-k8s/1 [idle] active: Router 8.0.37 running (restart pending); Charmed operator 1.2+a648a2e
+  mysql-router-k8s/2 [idle] active: Router 8.0.37+testupgrade running; Charmed operator 1.2+a648a2e
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  mysql-router-k8s/0 [idle] active: Router 8.0.37 running (restart pending); Charmed operator 1.2+a648a2e
+  mysql-router-k8s/1 [idle] active: Router 8.0.37 running (restart pending); Charmed operator 1.2+a648a2e
+  mysql-router-k8s/2 [idle] active: Router 8.0.37+testupgrade running; Charmed operator 1.2+a648a2e
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  mysql-router-k8s/0 [idle] active: Router 8.0.37 running (restart pending); Charmed operator 1.2+a648a2e
+  mysql-router-k8s/1 [idle] active: Router 8.0.37 running (restart pending); Charmed operator 1.2+a648a2e
+  mysql-router-k8s/2 [idle] active: Router 8.0.37+testupgrade running; Charmed operator 1.2+a648a2e
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  mysql-router-k8s/0 [idle] active: Router 8.0.37 running (restart pending); Charmed operator 1.2+a648a2e
+  mysql-router-k8s/1 [idle] active: Router 8.0.37 running (restart pending); Charmed operator 1.2+a648a2e
+  mysql-router-k8s/2 [idle] active: Router 8.0.37+testupgrade running; Charmed operator 1.2+a648a2e
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  mysql-router-k8s/0 [idle] active: Router 8.0.37 running (restart pending); Charmed operator 1.2+a648a2e
+  mysql-router-k8s/1 [idle] active: Router 8.0.37 running (restart pending); Charmed operator 1.2+a648a2e
+  mysql-router-k8s/2 [idle] active: Router 8.0.37+testupgrade running; Charmed operator 1.2+a648a2e
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  mysql-router-k8s/0 [idle] active: Router 8.0.37 running (restart pending); Charmed operator 1.2+a648a2e
+  mysql-router-k8s/1 [idle] active: Router 8.0.37 running (restart pending); Charmed operator 1.2+a648a2e
+  mysql-router-k8s/2 [idle] active: Router 8.0.37+testupgrade running; Charmed operator 1.2+a648a2e
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  mysql-router-k8s/0 [idle] active: Router 8.0.37 running (restart pending); Charmed operator 1.2+a648a2e
+  mysql-router-k8s/1 [idle] active: Router 8.0.37 running (restart pending); Charmed operator 1.2+a648a2e
+  mysql-router-k8s/2 [idle] active: Router 8.0.37+testupgrade running; Charmed operator 1.2+a648a2e
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  mysql-router-k8s/0 [idle] active: Router 8.0.37 running (restart pending); Charmed operator 1.2+a648a2e
+  mysql-router-k8s/1 [idle] active: Router 8.0.37 running (restart pending); Charmed operator 1.2+a648a2e
+  mysql-router-k8s/2 [idle] active: Router 8.0.37+testupgrade running; Charmed operator 1.2+a648a2e
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  mysql-router-k8s/0 [idle] active: Router 8.0.37 running (restart pending); Charmed operator 1.2+a648a2e
+  mysql-router-k8s/1 [idle] active: Router 8.0.37 running (restart pending); Charmed operator 1.2+a648a2e
+  mysql-router-k8s/2 [idle] active: Router 8.0.37+testupgrade running; Charmed operator 1.2+a648a2e
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  mysql-router-k8s/0 [idle] active: Router 8.0.37 running (restart pending); Charmed operator 1.2+a648a2e
+  mysql-router-k8s/1 [idle] active: Router 8.0.37 running (restart pending); Charmed operator 1.2+a648a2e
+  mysql-router-k8s/2 [idle] active: Router 8.0.37+testupgrade running; Charmed operator 1.2+a648a2e
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  mysql-router-k8s/0 [idle] active: Router 8.0.37 running (restart pending); Charmed operator 1.2+a648a2e
+  mysql-router-k8s/1 [idle] active: Router 8.0.37 running (restart pending); Charmed operator 1.2+a648a2e
+  mysql-router-k8s/2 [idle] active: Router 8.0.37+testupgrade running; Charmed operator 1.2+a648a2e
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  mysql-router-k8s/0 [idle] active: Router 8.0.37 running (restart pending); Charmed operator 1.2+a648a2e
+  mysql-router-k8s/1 [idle] active: Router 8.0.37 running (restart pending); Charmed operator 1.2+a648a2e
+  mysql-router-k8s/2 [idle] active: Router 8.0.37+testupgrade running; Charmed operator 1.2+a648a2e
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  mysql-router-k8s/0 [idle] active: Router 8.0.37 running (restart pending); Charmed operator 1.2+a648a2e
+  mysql-router-k8s/1 [idle] active: Router 8.0.37 running (restart pending); Charmed operator 1.2+a648a2e
+  mysql-router-k8s/2 [idle] active: Router 8.0.37+testupgrade running; Charmed operator 1.2+a648a2e
