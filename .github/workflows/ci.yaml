@@ -2,10 +2,6 @@
 # See LICENSE file for licensing details.
 name: Tests
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
 on:
   pull_request:
   schedule:
@@ -65,8 +61,6 @@ jobs:
   build:
     name: Build charm
     uses: canonical/data-platform-workflows/.github/workflows/build_charm.yaml@remove-wrapper
-    with:
-      cache: true
 
   integration-test:
     strategy:
