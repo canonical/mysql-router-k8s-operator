@@ -49,4 +49,5 @@ parts:
       # Exclude charm_version file during staging
       - -charm_version
     charm-strict-dependencies: true
+    charm-requirements: [requirements.txt]
     charm-entrypoint: src/kubernetes_charm.py
