@@ -1,0 +1,32 @@
+[32mINFO    [0m integration.test_tls:test_tls.py:131 Relating TLS with mysqlrouter
+[33mWARNING [0m juju.model:model.py:1564 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m integration.test_tls:test_tls.py:134 Getting certificate issuer after relating with tls operator
+[32mINFO    [0m integration.test_tls:test_tls.py:151 Removing relation TLS with mysqlrouter
+[32mINFO    [0m pytest_operator.plugin:plugin.py:862 Model status:
+
+Model  Controller          Cloud/Region        Version  SLA          Timestamp
+test   microk8s-localhost  microk8s/localhost  3.4.5    unsupported  01:47:05Z
+
+App                       Version                  Status  Scale  Charm                     Channel        Rev  Address         Exposed  Message
+mysql-k8s                 8.0.37-0ubuntu0.22.04.3  active      1  mysql-k8s                 8.0/edge       201  10.152.183.246  no       
+mysql-router-k8s          8.0.37-0ubuntu0.22.04.3  active      1  mysql-router-k8s                           0  10.152.183.27   no       
+mysql-test-app            0.0.2                    active      1  mysql-test-app            latest/edge     63  10.152.183.199  no       Last written value=1262
+self-signed-certificates                           active      1  self-signed-certificates  latest/stable  155  10.152.183.37   no       
+
+Unit                         Workload  Agent  Address      Ports  Message
+mysql-k8s/0*                 active    idle   10.1.217.9          Primary
+mysql-router-k8s/0*          active    idle   10.1.217.12         
+mysql-test-app/0*            active    idle   10.1.217.10         Last written value=1262
+self-signed-certificates/0*  active    idle   10.1.217.11         
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:868 Juju error logs:
+
+unit-mysql-k8s-0: 01:45:20 ERROR unit.mysql-k8s/0.juju-log Failed to get member state: mysqld daemon is down
+unit-mysql-k8s-0: 01:45:30 ERROR unit.mysql-k8s/0.juju-log Failed to get member state: mysqld daemon is down
+unit-mysql-k8s-0: 01:45:30 ERROR unit.mysql-k8s/0.juju-log Error getting member state while checking if cluster is blocked
+unit-mysql-k8s-0: 01:45:30 ERROR unit.mysql-k8s/0.juju-log Failed to get member state: mysqld daemon is down
+unit-mysql-k8s-0: 01:45:40 ERROR unit.mysql-k8s/0.juju-log Failed to get member state: mysqld daemon is down
+unit-mysql-k8s-0: 01:45:50 ERROR unit.mysql-k8s/0.juju-log Failed to get member state: mysqld daemon is down
+unit-mysql-k8s-0: 01:45:50 ERROR unit.mysql-k8s/0.juju-log Error getting member state while checking if cluster is blocked
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:947 Forgetting model main...
