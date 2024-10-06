@@ -1,0 +1,56 @@
+[32mINFO    [0m integration.helpers:helpers.py:550 Ensure continuous writes are incrementing
+[32mINFO    [0m integration.helpers:helpers.py:502 Retrieving primary unit
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:177 Creating invalid upgrade charm
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:180 Refreshing mysql router with an invalid charm
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:183 Wait for upgrade to fail
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:194 Ensure continuous writes while in failure state
+[32mINFO    [0m integration.helpers:helpers.py:550 Ensure continuous writes are incrementing
+[32mINFO    [0m integration.helpers:helpers.py:502 Retrieving primary unit
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:197 Re-refresh the charm
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:208 Running resume-upgrade on the mysql router leader unit
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:212 Wait for the charm to be rolled back
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  mysql-router-k8s/0 [idle] active: Router 8.0.37+testupgrade running (restart pending); Charmed operator 1.2+da06da4
+  mysql-router-k8s/1 [idle] active: Router 8.0.37+testupgrade running (restart pending); Charmed operator 1.2+da06da4
+  mysql-router-k8s/2 [idle] active: Router 8.0.37+testupgrade running; Charmed operator 1.2+da06da4
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  mysql-router-k8s/0 [idle] active: Router 8.0.37+testupgrade running (restart pending); Charmed operator 1.2+da06da4
+  mysql-router-k8s/1 [executing] maintenance: 
+  mysql-router-k8s/2 [idle] active: Router 8.0.37+testupgrade running; Charmed operator 1.2+da06da4
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  mysql-router-k8s/0 [executing] maintenance: 
+  mysql-router-k8s/1 [idle] active: 
+  mysql-router-k8s/2 [idle] active: 
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  mysql-router-k8s/0 [idle] active: 
+  mysql-router-k8s/1 [idle] active: 
+  mysql-router-k8s/2 [idle] active: 
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  mysql-router-k8s/0 [idle] active: 
+  mysql-router-k8s/1 [idle] active: 
+  mysql-router-k8s/2 [idle] active: 
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:231 Ensure continuous writes after rollback procedure
+[32mINFO    [0m integration.helpers:helpers.py:550 Ensure continuous writes are incrementing
+[32mINFO    [0m integration.helpers:helpers.py:502 Retrieving primary unit
+[32mINFO    [0m pytest_operator.plugin:plugin.py:862 Model status:
+
+Model  Controller          Cloud/Region        Version  SLA          Timestamp
+test   microk8s-localhost  microk8s/localhost  3.4.5    unsupported  01:45:35Z
+
+App               Version                  Status  Scale  Charm             Channel      Rev  Address         Exposed  Message
+mysql-k8s         8.0.37-0ubuntu0.22.04.3  active      1  mysql-k8s         8.0/edge     201  10.152.183.86   no       
+mysql-router-k8s  8.0.37-0ubuntu0.22.04.3  active      3  mysql-router-k8s                 2  10.152.183.146  no       
+mysql-test-app    0.0.2                    active      1  mysql-test-app    latest/edge   63  10.152.183.155  no       
+
+Unit                 Workload  Agent  Address       Ports  Message
+mysql-k8s/0*         active    idle   10.1.125.141         Primary
+mysql-router-k8s/0   active    idle   10.1.125.148         
+mysql-router-k8s/1   active    idle   10.1.125.147         
+mysql-router-k8s/2*  active    idle   10.1.125.146         
+mysql-test-app/0*    active    idle   10.1.125.139         
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:868 Juju error logs:
+
+unit-mysql-router-k8s-2: 01:42:57 ERROR juju.worker.uniter container "mysql-router": WaitNotices error, waiting 1s: cannot communicate with server: Get "http://localhost/v1/notices?timeout=30s": EOF
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:947 Forgetting model main...
