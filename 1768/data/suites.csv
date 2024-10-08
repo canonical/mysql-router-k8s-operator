@@ -1,0 +1,17 @@
+"DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
+"Upgrade mysqlrouter while ensuring continuous writes incrementing.","214814","test_upgrade_from_edge","tests.integration","Tue Oct 08 01:38:28 UTC 2024","passed","Tue Oct 08 01:42:03 UTC 2024","","test_upgrade","",""
+"Upgrade to an invalid version and test rollback.
+
+    Relies on the charm built in the previous test (test_upgrade_from_edge).
+    ","237618","test_fail_and_rollback","tests.integration","Tue Oct 08 01:42:03 UTC 2024","passed","Tue Oct 08 01:46:00 UTC 2024","","test_upgrade","",""
+"Test encryption when backend database is using TLS.","21824","test_connected_encryption","tests.integration","Tue Oct 08 01:38:03 UTC 2024","passed","Tue Oct 08 01:38:25 UTC 2024","","test_tls","",""
+"Simple test to ensure that mysql, mysqlrouter and application charms deploy.","122009","test_deploy_edge","tests.integration","Tue Oct 08 01:36:26 UTC 2024","passed","Tue Oct 08 01:38:28 UTC 2024","","test_upgrade","",""
+"Test the deployment of the charm.","906149","test_build_and_deploy","tests.integration","Tue Oct 08 01:36:05 UTC 2024","broken","Tue Oct 08 01:51:11 UTC 2024","","test_node_port","",""
+"Test log rotation.","100649","test_log_rotation","tests.integration","Tue Oct 08 01:36:28 UTC 2024","passed","Tue Oct 08 01:38:08 UTC 2024","","test_log_rotation","",""
+"Test that the exporter endpoint works when related with TLS","215636","test_exporter_endpoint","tests.integration","Tue Oct 08 01:36:36 UTC 2024","passed","Tue Oct 08 01:40:12 UTC 2024","","test_exporter_with_tls","",""
+"Test the database relation.","1029504","test_database_relation","tests.integration","Tue Oct 08 01:36:17 UTC 2024","broken","Tue Oct 08 01:53:26 UTC 2024","","test_charm","",""
+"Test the nodeport.","0","test_node_port_and_clusterip_setup","tests.integration","Tue Oct 08 01:51:11 UTC 2024","skipped","Tue Oct 08 01:51:11 UTC 2024","","test_node_port","",""
+"Test encryption when backend database is using TLS.","96800","test_build_deploy_and_relate","tests.integration","Tue Oct 08 01:36:26 UTC 2024","passed","Tue Oct 08 01:38:03 UTC 2024","","test_tls","",""
+"Test that exporter endpoint is functional.","143853","test_exporter_endpoint","tests.integration","Tue Oct 08 01:36:28 UTC 2024","passed","Tue Oct 08 01:38:52 UTC 2024","","test_exporter","",""
+"Test the nodeport.","0","test_data_integrator","tests.integration","Tue Oct 08 01:51:11 UTC 2024","skipped","Tue Oct 08 01:51:11 UTC 2024","","test_node_port","",""
+"Test the database relation.","0","test_tls","tests.integration","Tue Oct 08 01:51:11 UTC 2024","skipped","Tue Oct 08 01:51:11 UTC 2024","","test_node_port","",""
