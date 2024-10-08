@@ -19,9 +19,9 @@ requests = "^2.32.3"
 ops = ">=2.0.0"
 # loki-k8s/v1/loki_push_api.py and prometheus_k8s/v0/prometheus_scrape.py
 cosl = "*"
-# tempo_k8s/v1/charm_tracing.py
+# tempo_coordinator_k8s/v0/charm_tracing.py
 opentelemetry-exporter-otlp-proto-http = "1.21.0"
-# tempo_k8s/v2/tracing.py
+# tempo_coordinator_k8s/v0/tracing.py
 pydantic = "*"
 # tls_certificates_interface/v1/tls_certificates.py
 cryptography = "*"

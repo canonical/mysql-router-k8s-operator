@@ -16,7 +16,7 @@ import lightkube.models.meta_v1
 import lightkube.resources.core_v1
 import ops
 import tenacity
-from charms.tempo_k8s.v1.charm_tracing import trace_charm
+from charms.tempo_coordinator_k8s.v0.charm_tracing import trace_charm
 
 import abstract_charm
 import kubernetes_logrotate
