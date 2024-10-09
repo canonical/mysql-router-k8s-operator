@@ -77,7 +77,7 @@ class CompleteConnectionInformation(ConnectionInformation):
             raise _MissingRelation(endpoint_name=endpoint_name)
         for unit_or_app, databag in charm.Endpoint(endpoint_name).relation.items():
             logger.warning(f"FOO2 {unit_or_app=}")
-            for key, value in databag:
+            for key, value in databag.items():
                 logger.warning(f"BAR1 {key=} {value=}")
         assert len(relations) == 1
         relation = relations[0]
