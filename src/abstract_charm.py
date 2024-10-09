@@ -57,7 +57,7 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
         )
 
         # Observe all events
-        for bound_event in self.on.events():
+        for bound_event in self.on.events().values():
             self.framework.observe(bound_event, self.reconcile)
 
     @property
