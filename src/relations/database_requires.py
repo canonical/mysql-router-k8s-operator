@@ -71,8 +71,14 @@ class CompleteConnectionInformation(ConnectionInformation):
     def __init__(self, *, interface: data_interfaces.DatabaseRequires, event) -> None:
         relations = interface.relations
         endpoint_name = interface.relation_name
+        import charm
+        logger.warning(f"FOO1 {charm.Endpoint(endpoint_name).relation=}")
         if not relations:
             raise _MissingRelation(endpoint_name=endpoint_name)
+        for unit_or_app, databag in charm.Endpoint(endpoint_name).relation.values():
+            logger.warning(f"FOO2 {unit_or_app=}")
+            for key, value in databag:
+                logger.warning(f"BAR1 {key=} {value=}")
         assert len(relations) == 1
         relation = relations[0]
         if isinstance(event, ops.RelationBrokenEvent) and event.relation.id == relation.id:
@@ -118,7 +124,8 @@ class RelationEndpoint:
         """Information for connection to MySQL cluster"""
         try:
             return CompleteConnectionInformation(interface=self._interface, event=event)
-        except (_MissingRelation, remote_databag.IncompleteDatabag):
+        except (_MissingRelation, remote_databag.IncompleteDatabag) as e:
+            logger.exception("foobar")
             return
 
     def is_relation_breaking(self, event) -> bool:
