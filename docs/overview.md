@@ -43,6 +43,7 @@ This MySQL Router K8s charm is an official distribution of MySQL Router. It’s 
 | 3 | h-manage-units | [Manage units](/t/12240) |
 | 3 | h-enable-encryption | [Enable encryption](/t/12241) |
 | 3 | h-manage-app | [Manage applications](/t/12242) |
+| 3 | h-external-k8s-connection | [External k8s connection](/t/15730) |
 | 2 | h-monitor | [Monitor (COS)]() |
 | 3 | h-enable-monitoring | [Enable monitoring](/t/14101) |
 | 3 | h-enable-tracing | [Enable tracing](/t/14553) |
