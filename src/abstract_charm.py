@@ -56,6 +56,10 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
             self, relation_name=self._TRACING_RELATION_NAME, protocols=[self._TRACING_PROTOCOL]
         )
 
+        # Observe all events
+        for bound_event in self.on.events():
+            self.framework.observe(bound_event, self.reconcile)
+
     @property
     @abc.abstractmethod
     def _subordinate_relation_endpoint_names(self) -> typing.Optional[typing.Iterable[str]]:
