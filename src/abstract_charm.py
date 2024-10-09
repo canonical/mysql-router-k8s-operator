@@ -49,19 +49,6 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
         self._database_requires = relations.database_requires.RelationEndpoint(self)
         self._database_provides = relations.database_provides.RelationEndpoint(self)
         self._cos_relation = relations.cos.COSRelation(self, self._container)
-        self.framework.observe(self.on.update_status, self.reconcile)
-        # TODO needed to set status/react?
-        self.framework.observe(
-            self.on["refresh-v-three"].relation_changed, self.reconcile
-        )
-        # TODO remove?
-        self.framework.observe(
-            self.on["refresh-v-three"].relation_departed, self.reconcile
-        )
-        # Set status on first start if no relations active
-        self.framework.observe(self.on.start, self.reconcile)
-        # Update app status
-        self.framework.observe(self.on.leader_elected, self.reconcile)
         self.tls = relations.tls.RelationEndpoint(self)
 
         self.tracing = TracingEndpointRequirer(
