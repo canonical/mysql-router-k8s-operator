@@ -82,8 +82,6 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         self.framework.observe(
             self.on[rock.CONTAINER_NAME].pebble_ready, self._on_workload_container_pebble_ready
         )
-        # TODO remove?
-        self.framework.observe(self.on.stop, self.reconcile)
         try:
             self.refresh = charm_refresh.Refresh(
                 RouterRefresh(
@@ -98,6 +96,7 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
             if self.unit.is_leader():
                 self.app.status = ops.MaintenanceStatus("Waiting for peer relation")
             exit()
+        self.reconcile()
 
     @property
     def _subordinate_relation_endpoint_names(self) -> typing.Optional[typing.Iterable[str]]:

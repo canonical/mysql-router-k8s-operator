@@ -67,10 +67,6 @@ class COSRelation:
         self._container = container_
 
         charm_.framework.observe(
-            charm_.on[self._METRICS_RELATION_NAME].relation_created,
-            charm_.reconcile,
-        )
-        charm_.framework.observe(
             charm_.on[self._METRICS_RELATION_NAME].relation_broken,
             charm_.reconcile,
         )
