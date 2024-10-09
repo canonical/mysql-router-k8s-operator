@@ -140,6 +140,8 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
         logger.error(f'FIZZ {self.model.relations["backend-database"]=}')
         for relation in self.model.relations["backend-database"]:
             logger.error(f'FIZZ2 {relation=}')
+            logger.error(f'FIZZ3 {relation.data=}')
+            logger.error(f'FIZZ4 {repr(relation.data)=}')
         if connection_info := self._database_requires.get_connection_info(event=event):
             return self._authenticated_workload_type(
                 container_=self._container,
