@@ -198,8 +198,9 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
             return self.refresh.unit_status_higher_priority
         statuses = []
         workload_status = self.get_workload(event=event).status
-        statuses.append(workload_status)
-        if not statuses:
+        if workload_status:
+            statuses.append(workload_status)
+        if not statuses and self.refresh.unit_status_lower_priority:
             return self.refresh.unit_status_lower_priority
         return self._prioritize_statuses(statuses)
 
