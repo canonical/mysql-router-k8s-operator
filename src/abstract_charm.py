@@ -5,7 +5,6 @@
 
 import abc
 import logging
-import pathlib
 import typing
 
 import charm_refresh
@@ -144,15 +143,6 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
 
     def get_workload(self, *, event):
         """MySQL Router workload"""
-        logger.error(f'FIZZ {self.model.relations["backend-database"]=}')
-        for relation in self.model.relations["backend-database"]:
-            logger.error(f'FIZZ2 {relation=}')
-            try:
-                logger.error(f'FIZZ3 {relation.data=}')
-            except ops.ModelError:
-                logger.error("FIZZ4")
-                if pathlib.Path("foo").exists():
-                    raise
         if connection_info := self._database_requires.get_connection_info(event=event):
             return self._authenticated_workload_type(
                 container_=self._container,
