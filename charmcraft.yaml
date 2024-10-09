@@ -22,7 +22,7 @@ parts:
     stage:
       # Exclude requirements.txt file during staging
       # Workaround for https://github.com/canonical/charmcraft/issues/1389 on charmcraft 2
-      - -requirements.txt
+      # - -requirements.txt
       - refresh_versions.toml
     prime:
       - scripts
@@ -37,13 +37,13 @@ parts:
       rustup default stable
 
       # Convert subset of poetry.lock to requirements.txt
-      curl -sSL https://install.python-poetry.org | python3 -
-      /root/.local/bin/poetry export --only main,charm-libs --output requirements.txt
+      # curl -sSL https://install.python-poetry.org | python3 -
+      # /root/.local/bin/poetry export --only main,charm-libs --output requirements.txt
 
       craftctl default
-    stage:
+    # stage:
       # Exclude refresh_versions.toml file during staging
-      - -refresh_versions.toml
+    #  - -refresh_versions.toml
     charm-strict-dependencies: true
     charm-requirements: [requirements.txt]
     charm-entrypoint: src/kubernetes_charm.py
