@@ -94,6 +94,9 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
                 )
             )
         except charm_refresh.PeerRelationMissing:
+            self.unit.status = ops.MaintenanceStatus("Waiting for peer relation")
+            if self.unit.is_leader():
+                self.app.status = ops.MaintenanceStatus("Waiting for peer relation")
             exit()
 
     @property
