@@ -75,7 +75,7 @@ class CompleteConnectionInformation(ConnectionInformation):
         logger.warning(f"FOO1 {charm.Endpoint(endpoint_name).relation=}")
         if not relations:
             raise _MissingRelation(endpoint_name=endpoint_name)
-        for unit_or_app, databag in charm.Endpoint(endpoint_name).relation.values():
+        for unit_or_app, databag in charm.Endpoint(endpoint_name).relation.items():
             logger.warning(f"FOO2 {unit_or_app=}")
             for key, value in databag:
                 logger.warning(f"BAR1 {key=} {value=}")
