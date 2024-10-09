@@ -5,6 +5,7 @@
 
 import abc
 import logging
+import pathlib
 import typing
 
 import charm_refresh
@@ -144,6 +145,8 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
                 logger.error(f'FIZZ3 {relation.data=}')
             except ops.ModelError:
                 logger.error("FIZZ4")
+                if pathlib.Path("foo").exists():
+                    raise
         if connection_info := self._database_requires.get_connection_info(event=event):
             return self._authenticated_workload_type(
                 container_=self._container,

@@ -4,7 +4,10 @@
 """Relation to MySQL charm"""
 
 import logging
+import pathlib
 import typing
+
+import charm
 
 import charms.data_platform_libs.v0.data_interfaces as data_interfaces
 import ops
@@ -72,7 +75,6 @@ class CompleteConnectionInformation(ConnectionInformation):
         relations = interface.relations
         endpoint_name = interface.relation_name
         # import charm
-        # rel = charm.Endpoint(endpoint_name).relation
         # logger.warning(f"FOO1 {rel=}")
         # if rel:
         #     for unit_or_app, databag in charm.Endpoint(endpoint_name).relation.items():
@@ -81,6 +83,7 @@ class CompleteConnectionInformation(ConnectionInformation):
         #             logger.warning(f"BAR1 {key=} {value=}")
         if not relations:
             raise _MissingRelation(endpoint_name=endpoint_name)
+        pathlib.Path("foo").touch()
         assert len(relations) == 1
         relation = relations[0]
         if isinstance(event, ops.RelationBrokenEvent) and event.relation.id == relation.id:
