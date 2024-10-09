@@ -56,8 +56,10 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
             self, relation_name=self._TRACING_RELATION_NAME, protocols=[self._TRACING_PROTOCOL]
         )
 
-        # Observe all events
+        # Observe all events (except custom events)
         for bound_event in self.on.events().values():
+            if bound_event.event_type == ops.CollectStatusEvent:
+                continue
             self.framework.observe(bound_event, self.reconcile)
 
     @property
