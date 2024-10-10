@@ -55,7 +55,11 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         super().__init__(*args)
         self._namespace = self.model.name
 
+        self._service_name = f"{self.app.name}-service"
+        self._lightkube_client = lightkube.Client()
+
         self.framework.observe(self.on.install, self._on_install)
+        self.framework.observe(self.on.config_changed, self.reconcile)
         self.framework.observe(
             self.on[rock.CONTAINER_NAME].pebble_ready, self._on_workload_container_pebble_ready
         )
@@ -83,8 +87,82 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
     def is_externally_accessible(self, *, event) -> typing.Optional[bool]:
         """No-op since this charm is exposed with node-port"""
 
-    def _reconcile_node_port(self, *, event) -> None:
-        self._patch_service(event)
+    def _get_current_service_type(self) -> typing.Optional[str]:
+        """Get the current service type."""
+        try:
+            service = self._lightkube_client.get(
+                res=lightkube.resources.core_v1.Service,
+                name=self._service_name,
+                namespace=self.model.name,
+            )
+        except lightkube.core.exceptions.ApiError as e:
+            if e.status.code == 404:
+                return None
+            raise
+
+        return service.spec.type
+
+    def _apply_service(self, service_type: str) -> None:
+        """Apply the service type provided."""
+        pod0 = self._lightkube_client.get(
+            res=lightkube.resources.core_v1.Pod,
+            name=self.app.name + "-0",
+            namespace=self.model.name,
+        )
+
+        service = lightkube.resources.core_v1.Service(
+            metadata=lightkube.models.meta_v1.ObjectMeta(
+                name=self._service_name,
+                namespace=self.model.name,
+                ownerReferences=pod0.metadata.ownerReferences,  # the stateful set
+                labels={"app.kubernetes.io/name": self.app.name},
+            ),
+            spec=lightkube.models.core_v1.ServiceSpec(
+                ports=[
+                    lightkube.models.core_v1.ServicePort(
+                        name="mysql-rw",
+                        port=self._READ_WRITE_PORT,
+                        targetPort=self._READ_WRITE_PORT,
+                    ),
+                    lightkube.models.core_v1.ServicePort(
+                        name="mysql-ro",
+                        port=self._READ_ONLY_PORT,
+                        targetPort=self._READ_ONLY_PORT,
+                    ),
+                ],
+                type=service_type,
+                selector={"app.kubernetes.io/name": self.app.name},
+            ),
+        )
+
+        try:
+            logger.info(f"Applying service {service_type=}")
+            self._lightkube_client.apply(service, field_manager=self.app.name)
+            logger.info(f"Applied service {service_type=}")
+        except lightkube.core.exceptions.ApiError as e:
+            if e.status.code == 403:
+                # TODO: send charm into a blocked status
+                logger.error("Could not create service, application needs `juju trust`")
+            raise
+
+    def _reconcile_services(self) -> None:
+        expose_external = self.config.get("expose-external", "false")
+        if expose_external not in ["false", "nodeport", "loadbalancer"]:
+            logger.warning(f"Invalid config value {expose_external=}")
+            return
+
+        expose_external_to_service_type = {
+            "false": "ClusterIP",
+            "nodeport": "NodePort",
+            "loadbalancer": "LoadBalancer",
+        }
+
+        current_service_type = self._get_current_service_type()
+        if (
+            not current_service_type
+            or current_service_type != expose_external_to_service_type[expose_external]
+        ):
+            self._apply_service(expose_external_to_service_type[expose_external])
 
     def _reconcile_ports(self, *, event) -> None:
         """Needed for VM, so no-op"""
@@ -130,74 +208,44 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         # Example: mysql-router-k8s.my-model.svc.cluster.local
         return f"{self.app.name}.{self.model_service_domain}"
 
+    def _get_host_port(self, port_type: str) -> str:
+        """Gets the host and port for the endpoint depending of type of service."""
+        if port_type not in ["rw", "ro"]:
+            return ""
+
+        current_service_type = self._get_current_service_type()
+        if current_service_type == "ClusterIP":
+            port = self._READ_WRITE_PORT if port_type == "rw" else self._READ_ONLY_PORT
+            return f"{self._host}:{port}"
+
+        service = self._lightkube_client.get(
+            lightkube.resources.core_v1.Service,
+            name=self._service_name,
+            namespace=self.model.name,
+        )
+
+        port = None
+        for p in service.spec.ports:
+            if p.name == f"mysql-{port_type}":
+                port = p.port
+
+        if not port:
+            return ""
+
+        if current_service_type == "NodePort":
+            return f"{service.spec.clusterIP}:{port}"
+        elif current_service_type == "LoadBalancer" and service.status.loadBalancer.ingress:
+            return f"{service.status.loadBalancer.ingress[0].ip}:{port}"
+
+        return ""
+
     @property
     def _read_write_endpoint(self) -> str:
-        return f"{self._host}:{self._READ_WRITE_PORT}"
+        return self._get_host_port("rw")
 
     @property
     def _read_only_endpoint(self) -> str:
-        return f"{self._host}:{self._READ_ONLY_PORT}"
-
-    @property
-    def _exposed_read_write_endpoint(self) -> str:
-        return f"{self._node_ip}:{self._node_port('rw')}"
-
-    @property
-    def _exposed_read_only_endpoint(self) -> str:
-        return f"{self._node_ip}:{self._node_port('ro')}"
-
-    def _patch_service(self, event=None) -> None:
-        """Patch Juju-created k8s service.
-
-        The k8s service will be tied to pod-0 so that the service is auto cleaned by
-        k8s when the last pod is scaled down.
-        """
-        logger.debug("Patching k8s service")
-        client = lightkube.Client()
-        pod0 = client.get(
-            res=lightkube.resources.core_v1.Pod,
-            name=self.app.name + "-0",
-            namespace=self.model.name,
-        )
-        service = lightkube.resources.core_v1.Service(
-            metadata=lightkube.models.meta_v1.ObjectMeta(
-                name=self.app.name,
-                namespace=self.model.name,
-                ownerReferences=pod0.metadata.ownerReferences,
-                labels={
-                    "app.kubernetes.io/name": self.app.name,
-                },
-            ),
-            spec=lightkube.models.core_v1.ServiceSpec(
-                ports=[
-                    lightkube.models.core_v1.ServicePort(
-                        name="mysql-rw",
-                        port=self._READ_WRITE_PORT,
-                        targetPort=self._READ_WRITE_PORT,  # Value ignored if NodePort
-                    ),
-                    lightkube.models.core_v1.ServicePort(
-                        name="mysql-ro",
-                        port=self._READ_ONLY_PORT,
-                        targetPort=self._READ_ONLY_PORT,  # Value ignored if NodePort
-                    ),
-                ],
-                type=(
-                    "NodePort"
-                    if self._database_provides.external_connectivity(event)
-                    else "ClusterIP"
-                ),
-                selector={"app.kubernetes.io/name": self.app.name},
-            ),
-        )
-        client.patch(
-            res=lightkube.resources.core_v1.Service,
-            obj=service,
-            name=service.metadata.name,
-            namespace=service.metadata.namespace,
-            force=True,
-            field_manager=self.app.name,
-        )
-        logger.debug("Patched k8s service")
+        return self._get_host_port("ro")
 
     @property
     def _node_name(self) -> str:
@@ -227,47 +275,6 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
                 hostnames.append(a.address)
         return hostnames, ips
 
-    @property
-    def _node_ip(self) -> typing.Optional[str]:
-        """Return node IP."""
-        node = lightkube.Client().get(
-            lightkube.resources.core_v1.Node,
-            name=self._node_name,
-            namespace=self._namespace,
-        )
-        # [
-        #    NodeAddress(address='192.168.0.228', type='InternalIP'),
-        #    NodeAddress(address='example.com', type='Hostname')
-        # ]
-        # Remember that OpenStack, for example, will return an internal hostname, which is not
-        # accessible from the outside. Give preference to ExternalIP, then InternalIP first
-        # Separated, as we want to give preference to ExternalIP, InternalIP and then Hostname
-        for typ in ["ExternalIP", "InternalIP", "Hostname"]:
-            for a in node.status.addresses:
-                if a.type == typ:
-                    return a.address
-
-    def _node_port(self, port_type: str) -> int:
-        """Return node port."""
-        service = lightkube.Client().get(
-            lightkube.resources.core_v1.Service, self.app.name, namespace=self._namespace
-        )
-        if not service or not service.spec.type == "NodePort":
-            return -1
-        # svc.spec.ports
-        # [ServicePort(port=3306, appProtocol=None, name=None, nodePort=31438, protocol='TCP', targetPort=3306)]
-        if port_type == "rw":
-            port = self._READ_WRITE_PORT
-        elif port_type == "ro":
-            port = self._READ_ONLY_PORT
-        else:
-            raise ValueError(f"Invalid {port_type=}")
-        logger.debug(f"Looking for NodePort for {port_type} in {service.spec.ports}")
-        for svc_port in service.spec.ports:
-            if svc_port.port == port:
-                return svc_port.nodePort
-        raise Exception(f"NodePort not found for {port_type}")
-
     # =======================
     #  Handlers
     # =======================
@@ -279,11 +286,8 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
                 self.unit.open_port("tcp", port)
         if not self.unit.is_leader():
             return
-        try:
-            self._patch_service()
-        except lightkube.ApiError:
-            logger.exception("Failed to patch k8s service")
-            raise
+
+        self._apply_service("ClusterIP")
 
     def _on_workload_container_pebble_ready(self, _) -> None:
         self.unit.set_workload_version(self.get_workload(event=None).version)

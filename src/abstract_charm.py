@@ -107,16 +107,6 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
     def _read_only_endpoint(self) -> str:
         """MySQL Router read-only endpoint"""
 
-    @property
-    @abc.abstractmethod
-    def _exposed_read_write_endpoint(self) -> str:
-        """The exposed read-write endpoint"""
-
-    @property
-    @abc.abstractmethod
-    def _exposed_read_only_endpoint(self) -> str:
-        """The exposed read-only endpoint"""
-
     @abc.abstractmethod
     def is_externally_accessible(self, *, event) -> typing.Optional[bool]:
         """Whether endpoints should be externally accessible.
@@ -232,8 +222,8 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
         """
 
     @abc.abstractmethod
-    def _reconcile_node_port(self, *, event) -> None:
-        """Reconcile node port.
+    def _reconcile_services(self) -> None:
+        """Reconcile services.
 
         Only applies to Kubernetes charm
         """
@@ -324,14 +314,16 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
                     and isinstance(workload_, workload.AuthenticatedWorkload)
                     and workload_.container_ready
                 ):
-                    self._reconcile_node_port(event=event)
+                    self._reconcile_services()
                     self._database_provides.reconcile_users(
                         event=event,
                         router_read_write_endpoint=self._read_write_endpoint,
                         router_read_only_endpoint=self._read_only_endpoint,
-                        exposed_read_write_endpoint=self._exposed_read_write_endpoint,
-                        exposed_read_only_endpoint=self._exposed_read_only_endpoint,
                         shell=workload_.shell,
+                    )
+                    self._database_provides.update_endpoints(
+                        router_read_write_endpoint=self._read_write_endpoint,
+                        router_read_only_endpoint=self._read_only_endpoint,
                     )
             if workload_.container_ready:
                 workload_.reconcile(

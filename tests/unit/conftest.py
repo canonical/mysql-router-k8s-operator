@@ -1,6 +1,8 @@
 # Copyright 2023 Canonical Ltd.
 # See LICENSE file for licensing details.
 
+from unittest.mock import MagicMock
+
 import pytest
 from charms.tempo_k8s.v1.charm_tracing import charm_tracing_disabled
 
@@ -44,7 +46,9 @@ def patch(monkeypatch):
 
 @pytest.fixture(autouse=True)
 def kubernetes_patch(monkeypatch):
-    monkeypatch.setattr("kubernetes_charm.KubernetesRouterCharm.model_service_domain", "")
+    monkeypatch.setattr(
+        "kubernetes_charm.KubernetesRouterCharm.model_service_domain", "my-model.svc.cluster.local"
+    )
     monkeypatch.setattr(
         "rock.Rock._run_command",
         lambda *args, **kwargs: "null",  # Use "null" for `json.loads()`
@@ -54,18 +58,17 @@ def kubernetes_patch(monkeypatch):
     monkeypatch.setattr("rock._Path.unlink", lambda *args, **kwargs: None)
     monkeypatch.setattr("rock._Path.mkdir", lambda *args, **kwargs: None)
     monkeypatch.setattr("rock._Path.rmtree", lambda *args, **kwargs: None)
-    monkeypatch.setattr("lightkube.Client", lambda *args, **kwargs: None)
+    monkeypatch.setattr("lightkube.Client", lambda *args, **kwargs: MagicMock())
     monkeypatch.setattr(
-        "kubernetes_charm.KubernetesRouterCharm._patch_service", lambda *args, **kwargs: None
+        "kubernetes_charm.KubernetesRouterCharm._apply_service", lambda *args, **kwargs: None
     )
-    monkeypatch.setattr("kubernetes_charm.KubernetesRouterCharm._node_ip", None)
-    monkeypatch.setattr("kubernetes_charm.KubernetesRouterCharm._node_name", None)
+    monkeypatch.setattr(
+        "kubernetes_charm.KubernetesRouterCharm._get_current_service_type",
+        lambda *args, **kwargs: "ClusterIP",
+    )
     monkeypatch.setattr(
         "kubernetes_charm.KubernetesRouterCharm.get_all_k8s_node_hostnames_and_ips",
         lambda *args, **kwargs: None,
-    )
-    monkeypatch.setattr(
-        "kubernetes_charm.KubernetesRouterCharm._node_port", lambda *args, **kwargs: None
     )
     monkeypatch.setattr("kubernetes_upgrade._Partition.get", lambda *args, **kwargs: 0)
     monkeypatch.setattr("kubernetes_upgrade._Partition.set", lambda *args, **kwargs: None)
