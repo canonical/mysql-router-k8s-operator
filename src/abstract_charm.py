@@ -267,6 +267,7 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
                         exposed_read_only_endpoint=self._exposed_read_only_endpoint,
                         shell=workload_.shell,
                     )
+            # todo: consider moving `self.refresh.workload_allowed_to_start` inside `workload._reconcile()`
             if workload_.container_ready and self.refresh.workload_allowed_to_start:
                 workload_.reconcile(
                     event=event,
