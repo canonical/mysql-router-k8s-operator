@@ -1,0 +1,37 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:862 Model status:
+
+Model  Controller          Cloud/Region        Version  SLA          Timestamp
+test   microk8s-localhost  microk8s/localhost  3.5.4    unsupported  01:46:09Z
+
+App                       Version                  Status  Scale  Charm                     Channel        Rev  Address         Exposed  Message
+data-integrator                                    active      1  data-integrator           latest/edge     71  10.152.183.47   no       
+mysql-k8s                 8.0.37-0ubuntu0.22.04.3  active      3  mysql-k8s                 8.0/edge       206  10.152.183.30   no       
+mysql-router-k8s          8.0.37-0ubuntu0.22.04.3  active      1  mysql-router-k8s                           0  10.152.183.229  no       
+mysql-test-app            0.0.2                    active      1  mysql-test-app            latest/edge     63  10.152.183.33   no       Last written value=2324
+self-signed-certificates                           active      1  self-signed-certificates  latest/stable  155  10.152.183.77   no       
+
+Unit                         Workload  Agent      Address       Ports  Message
+data-integrator/0*           active    idle       10.1.236.201         
+mysql-k8s/0                  active    executing  10.1.236.206         
+mysql-k8s/1*                 active    executing  10.1.236.208         Primary
+mysql-k8s/2                  active    idle       10.1.236.207         
+mysql-router-k8s/0*          active    idle       10.1.236.200         
+mysql-test-app/0*            active    idle       10.1.236.202         Last written value=2324
+self-signed-certificates/0*  active    idle       10.1.236.209         
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:868 Juju error logs:
+
+controller-0: 01:38:55 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-test-app": more than 20 retries ensuring scale: setting scale to 1 for "mysql-test-app": statefulset "mysql-test-app" not found
+controller-0: 01:38:57 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-k8s": more than 20 retries ensuring trust: updating application "mysql-k8s" to desired trust true: getting service account role "mysql-k8s": k8s: roles.rbac.authorization.k8s.io "mysql-k8s" not found
+controller-0: 01:38:59 ERROR juju.worker.caasapplicationprovisioner.runner exited "self-signed-certificates": more than 20 retries ensuring scale: setting scale to 1 for "self-signed-certificates": statefulset "self-signed-certificates" not found
+controller-0: 01:39:59 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-test-app": more than 20 retries ensuring scale: setting scale to 1 for "mysql-test-app": statefulset "mysql-test-app" not found
+controller-0: 01:40:01 ERROR juju.worker.caasapplicationprovisioner.runner exited "self-signed-certificates": more than 20 retries ensuring scale: setting scale to 1 for "self-signed-certificates": statefulset "self-signed-certificates" not found
+controller-0: 01:40:01 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-k8s": more than 20 retries ensuring scale: setting scale to 3 for "mysql-k8s": statefulset "mysql-k8s" not found
+controller-0: 01:41:04 ERROR juju.worker.caasapplicationprovisioner.runner exited "self-signed-certificates": more than 20 retries ensuring scale: setting scale to 1 for "self-signed-certificates": statefulset "self-signed-certificates" not found
+controller-0: 01:41:05 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-k8s": more than 20 retries ensuring scale: setting scale to 3 for "mysql-k8s": statefulset "mysql-k8s" not found
+controller-0: 01:42:06 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-k8s": more than 20 retries ensuring scale: setting scale to 3 for "mysql-k8s": statefulset "mysql-k8s" not found
+controller-0: 01:42:07 ERROR juju.worker.caasapplicationprovisioner.runner exited "self-signed-certificates": more than 20 retries ensuring scale: setting scale to 1 for "self-signed-certificates": statefulset "self-signed-certificates" not found
+controller-0: 01:43:09 ERROR juju.worker.caasapplicationprovisioner.runner exited "self-signed-certificates": more than 20 retries ensuring scale: setting scale to 1 for "self-signed-certificates": statefulset "self-signed-certificates" not found
+controller-0: 01:44:10 ERROR juju.worker.caasapplicationprovisioner.runner exited "self-signed-certificates": more than 20 retries ensuring scale: setting scale to 1 for "self-signed-certificates": statefulset "self-signed-certificates" not found
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:947 Forgetting model main...
