@@ -222,8 +222,8 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
         """
 
     @abc.abstractmethod
-    def _reconcile_services(self) -> None:
-        """Reconcile services.
+    def _reconcile_service(self) -> None:
+        """Reconcile service.
 
         Only applies to Kubernetes charm
         """
@@ -314,7 +314,7 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
                     and isinstance(workload_, workload.AuthenticatedWorkload)
                     and workload_.container_ready
                 ):
-                    self._reconcile_services()
+                    self._reconcile_service()
                     self._database_provides.reconcile_users(
                         event=event,
                         router_read_write_endpoint=self._read_write_endpoint,
