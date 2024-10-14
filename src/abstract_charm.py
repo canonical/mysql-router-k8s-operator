@@ -289,13 +289,17 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
                 ):
                     self._reconcile_ports(event=event)
 
-            # Empty waiting status means we're waiting for database requires relation before
-            # starting workload
-            # TODO add comment about unit started for scale up case since start event will fire after relation created
-            if (
-                not workload_.status or workload_.status == ops.WaitingStatus()
-            ) and self._unit_started.exists():
+            if not workload_.status:
                 self.refresh.next_unit_allowed_to_refresh = True
+            # TODO add comment about unit started for scale up case since start event will fire after relation created
+            # TODO add checks to reconcile debug log
+            elif workload_.status == ops.WaitingStatus() and self._unit_started.exists():
+                if self._database_requires.does_relation_exist(event):
+                    # Waiting for relation-changed event before starting workload
+                    pass
+                else:
+                    # Waiting for database requires relation; refresh can continue
+                    self.refresh.next_unit_allowed_to_refresh = True
             self.set_status(event=event)
         except server_exceptions.Error as e:
             # If not for `unit=False`, another `server_exceptions.Error` could be thrown here

@@ -135,3 +135,12 @@ class RelationEndpoint:
             CompleteConnectionInformation(interface=self._interface, event=event)
         except (_MissingRelation, remote_databag.IncompleteDatabag) as exception:
             return exception.status
+
+    def does_relation_exist(self, event) -> bool:
+        try:
+            CompleteConnectionInformation(interface=self._interface, event=event)
+        except _MissingRelation:
+            return False
+        except remote_databag.IncompleteDatabag:
+            pass
+        return True
