@@ -5,6 +5,7 @@
 
 import abc
 import logging
+import pathlib
 import typing
 
 import charm_refresh
@@ -54,6 +55,8 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
         self.tracing = TracingEndpointRequirer(
             self, relation_name=self._TRACING_RELATION_NAME, protocols=[self._TRACING_PROTOCOL]
         )
+        self._unit_started = pathlib.Path(".router_unit_started")
+        self.framework.observe(self.on.start, self._on_start)
 
         # Observe all events (except custom events)
         for bound_event in self.on.events().values():
@@ -231,6 +234,9 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
     #  Handlers
     # =======================
 
+    def _on_start(self, _) -> None:
+        self._unit_started.touch()
+
     def reconcile(self, event=None) -> None:  # noqa: C901
         """Handle most events."""
         workload_ = self.get_workload(event=event)
@@ -285,7 +291,10 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
 
             # Empty waiting status means we're waiting for database requires relation before
             # starting workload
-            if not workload_.status or workload_.status == ops.WaitingStatus():
+            # TODO add comment about unit started for scale up case since start event will fire after relation created
+            if (
+                not workload_.status or workload_.status == ops.WaitingStatus()
+            ) and self._unit_started.exists():
                 self.refresh.next_unit_allowed_to_refresh = True
             self.set_status(event=event)
         except server_exceptions.Error as e:
