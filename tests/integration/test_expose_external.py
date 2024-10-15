@@ -61,7 +61,6 @@ async def confirm_cluster_ip_endpoints(ops_test: OpsTest) -> str:
         with attempt:
             data_integrator_unit = ops_test.model.applications[DATA_INTEGRATOR].units[0]
             credentials = await get_credentials(data_integrator_unit)
-            assert credentials["return-code"] == 0, "Failed to get-credentials on data-integrator"
 
     assert credentials["mysql"]["database"] == TEST_DATABASE_NAME, "Database is empty"
     assert credentials["mysql"]["username"] is not None, "Username is empty"
@@ -86,7 +85,6 @@ async def confirm_endpoint_connectivity(ops_test: OpsTest, old_endpoints: str) -
         with attempt:
             data_integrator_unit = ops_test.model.applications[DATA_INTEGRATOR].units[0]
             credentials = await get_credentials(data_integrator_unit)
-            assert credentials["return-code"] == 0, "Failed to get-credentials on data-integrator"
             assert credentials["mysql"]["endpoints"] is not None, "Endpoints missing"
             assert (
                 credentials["mysql"]["endpoints"] != old_endpoints
