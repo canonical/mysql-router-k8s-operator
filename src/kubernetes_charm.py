@@ -92,6 +92,7 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
                 )
             )
         except charm_refresh.UnitTearingDown:
+            # todo cleanup of mysql user for bootstrap?
             self.unit.status = ops.MaintenanceStatus("Tearing down")
             exit()
         except charm_refresh.KubernetesJujuAppNotTrusted:
