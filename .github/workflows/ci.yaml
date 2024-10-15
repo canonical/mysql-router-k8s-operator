@@ -3,7 +3,7 @@
 name: Tests
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}-1
+  group: ${{ github.workflow }}-${{ github.ref }}-2
   cancel-in-progress: true
 
 on:
@@ -75,7 +75,7 @@ jobs:
       - build
     uses: canonical/data-platform-workflows/.github/workflows/release_charm.yaml@v22.0.0
     with:
-      channel: 8.0/edge/test-refresh-v3-8.0.39
+      channel: 8.0/edge/test-refresh-v3-incompat
       artifact-prefix: ${{ needs.build.outputs.artifact-prefix }}
       create-github-release: false
     secrets:
