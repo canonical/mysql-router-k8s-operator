@@ -1,0 +1,25 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:862 Model status:
+
+Model  Controller          Cloud/Region        Version  SLA          Timestamp
+test   microk8s-localhost  microk8s/localhost  3.5.4    unsupported  01:37:21Z
+
+App                       Version  Status       Scale  Charm                     Channel        Rev  Address         Exposed  Message
+data-integrator                    blocked          1  data-integrator           latest/edge     71  10.152.183.182  no       Please relate the data-integrator with the desired product
+mysql-k8s                          error          0/3  mysql-k8s                 8.0/edge       206  10.152.183.136  no       create Pod mysql-k8s-2 in StatefulSet mysql-k8s failed error: failed to create PVC mysql-k8s-database-b21cecdf-mysql-...
+mysql-router-k8s                   maintenance      1  mysql-router-k8s                           0  10.152.183.40   no       installing charm software
+mysql-test-app            0.0.2    waiting          1  mysql-test-app            latest/edge     63  10.152.183.104  no       installing agent
+self-signed-certificates           waiting          1  self-signed-certificates  latest/stable  155  10.152.183.224  no       installing agent
+
+Unit                         Workload     Agent       Address      Ports  Message
+data-integrator/0*           blocked      idle        10.1.215.72         Please relate the data-integrator with the desired product
+mysql-k8s/0                  waiting      allocating  10.1.215.77         agent initialising
+mysql-k8s/1                  waiting      allocating  10.1.215.78         agent initialising
+mysql-k8s/2*                 waiting      allocating  10.1.215.79         agent initialising
+mysql-router-k8s/0*          maintenance  executing   10.1.215.81         (install) installing charm software
+mysql-test-app/0*            waiting      idle        10.1.215.76         
+self-signed-certificates/0*  active       executing   10.1.215.80         
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:868 Juju error logs:
+
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:947 Forgetting model main...
