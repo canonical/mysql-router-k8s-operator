@@ -229,6 +229,10 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
         """
 
     @abc.abstractmethod
+    def _wait_until_service_reconciled(self) -> None:
+        """Waits until the service is reconciled (retrievable with lightkube.)"""
+
+    @abc.abstractmethod
     def _reconcile_ports(self, *, event) -> None:
         """Reconcile exposed ports.
 
@@ -315,6 +319,7 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
                     and workload_.container_ready
                 ):
                     self._reconcile_service()
+                    self._wait_until_service_reconciled()
                     self._database_provides.reconcile_users(
                         event=event,
                         router_read_write_endpoint=self._read_write_endpoint,

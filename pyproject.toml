@@ -59,7 +59,7 @@ pyyaml = "^6.0.1"
 tenacity = "^8.5.0"
 allure-pytest = "^2.13.5"
 allure-pytest-collection-report = {git = "https://github.com/canonical/data-platform-workflows", tag = "v22.0.0", subdirectory = "python/pytest_plugins/allure_pytest_collection_report"}
-
+ops = "^2.9.0"
 
 [tool.coverage.run]
 branch = true

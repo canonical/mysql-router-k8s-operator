@@ -76,8 +76,8 @@ def assert_complete_local_app_databag(
         )
     assert local_app_data == {
         "database": provides.remote_app_data["database"],
-        "endpoints": f"mysql-router-k8s.{model_service_domain}:6446",
-        "read-only-endpoints": f"mysql-router-k8s.{model_service_domain}:6447",
+        "endpoints": f"mysql-router-k8s-service.{model_service_domain}:6446",
+        "read-only-endpoints": f"mysql-router-k8s-service.{model_service_domain}:6447",
     }
 
 

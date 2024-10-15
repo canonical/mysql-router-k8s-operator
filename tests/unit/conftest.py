@@ -1,7 +1,7 @@
 # Copyright 2023 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, PropertyMock
 
 import pytest
 from charms.tempo_k8s.v1.charm_tracing import charm_tracing_disabled
@@ -62,10 +62,15 @@ def kubernetes_patch(monkeypatch):
     monkeypatch.setattr(
         "kubernetes_charm.KubernetesRouterCharm._apply_service", lambda *args, **kwargs: None
     )
+
+    service_mock = MagicMock()
+    type_mock = MagicMock()
+    type(type_mock).type = PropertyMock(return_value="ClusterIP")
+    type(service_mock).spec = PropertyMock(return_value=type_mock)
     monkeypatch.setattr(
-        "kubernetes_charm.KubernetesRouterCharm._get_current_service_type",
-        lambda *args, **kwargs: "ClusterIP",
+        "kubernetes_charm.KubernetesRouterCharm._get_service", lambda *args, **kwargs: service_mock
     )
+
     monkeypatch.setattr(
         "kubernetes_charm.KubernetesRouterCharm.get_all_k8s_node_hostnames_and_ips",
         lambda *args, **kwargs: None,

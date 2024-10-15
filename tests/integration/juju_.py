@@ -4,6 +4,7 @@
 import importlib.metadata
 
 import juju.unit
+import ops
 
 # libjuju version != juju agent version, but the major version should be identical—which is good
 _libjuju_version = importlib.metadata.version("juju")
@@ -14,6 +15,7 @@ is_3_1_or_higher = (
 )
 
 is_3_or_higher = int(_libjuju_version.split(".")[0]) >= 3
+has_secrets = ops.JujuVersion(_libjuju_version).has_secrets
 
 
 async def run_action(unit: juju.unit.Unit, action_name, **params):

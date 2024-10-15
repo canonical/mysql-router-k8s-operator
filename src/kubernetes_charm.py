@@ -178,9 +178,24 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
             "loadbalancer": ServiceType.LOAD_BALANCER,
         }[expose_external]
 
-        service_type = self._get_service().spec.type
-        if not service_type or service_type != desired_service_type.value:
+        service = self._get_service()
+        if not service or service.spec.type != desired_service_type.value:
             self._apply_service(desired_service_type)
+
+    def _wait_until_service_reconciled(self) -> None:
+        try:
+            for attempt in tenacity.Retrying(
+                reraise=True,
+                stop=tenacity.stop_after_delay(60 * 3),
+                wait=tenacity.wait_fixed(15),
+            ):
+                with attempt:
+                    self._get_service()
+        except:
+            logger.exception("Unable to reconcile applied K8s service")
+            raise
+        else:
+            logger.debug("Applied K8s service is available")
 
     def _reconcile_ports(self, *, event) -> None:
         """Needed for VM, so no-op"""
