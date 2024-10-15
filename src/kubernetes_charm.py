@@ -91,6 +91,9 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
                     oci_resource_name="mysql-router-image",
                 )
             )
+        except charm_refresh.UnitTearingDown:
+            self.unit.status = ops.MaintenanceStatus("Tearing down")
+            exit()
         except charm_refresh.KubernetesJujuAppNotTrusted:
             exit()
         except charm_refresh.PeerRelationMissing:
