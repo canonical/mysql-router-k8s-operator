@@ -69,6 +69,9 @@ At this point your charm will be automatically instrumented so that:
     - every event as a span (including custom events)
     - every charm method call (except dunders) as a span
 
+We recommend that you scale up your tracing provider and relate it to an ingress so that your tracing requests
+go through the ingress and get load balanced across all units. Otherwise, if the provider's leader goes down, your tracing goes down.
+
 
 ## TLS support
 If your charm integrates with a TLS provider which is also trusted by the tracing provider (the Tempo charm),
@@ -269,7 +272,7 @@ LIBAPI = 0
 # Increment this PATCH version before using `charmcraft publish-lib` or reset
 # to 0 if you are raising the major API version
 
-LIBPATCH = 1
+LIBPATCH = 3
 
 PYDEPS = ["opentelemetry-exporter-otlp-proto-http==1.21.0"]
 
@@ -369,10 +372,6 @@ class TracingError(RuntimeError):
 
 class UntraceableObjectError(TracingError):
     """Raised when an object you're attempting to instrument cannot be autoinstrumented."""
-
-
-class TLSError(TracingError):
-    """Raised when the tracing endpoint is https but we don't have a cert yet."""
 
 
 def _get_tracing_endpoint(
@@ -484,10 +483,15 @@ def _setup_root_span_initializer(
         )
 
         if tracing_endpoint.startswith("https://") and not server_cert:
-            raise TLSError(
+            logger.error(
                 "Tracing endpoint is https, but no server_cert has been passed."
-                "Please point @trace_charm to a `server_cert` attr."
+                "Please point @trace_charm to a `server_cert` attr. "
+                "This might also mean that the tracing provider is related to a "
+                "certificates provider, but this application is not (yet). "
+                "In that case, you might just have to wait a bit for the certificates "
+                "integration to settle. "
             )
+            return
 
         exporter = OTLPSpanExporter(
             endpoint=tracing_endpoint,
