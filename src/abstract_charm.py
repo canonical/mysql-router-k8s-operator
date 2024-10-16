@@ -319,16 +319,11 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
                     and workload_.container_ready
                 ):
                     self._reconcile_service()
-                    self._wait_until_service_reconciled()
                     self._database_provides.reconcile_users(
                         event=event,
                         router_read_write_endpoint=self._read_write_endpoint,
                         router_read_only_endpoint=self._read_only_endpoint,
                         shell=workload_.shell,
-                    )
-                    self._database_provides.update_endpoints(
-                        router_read_write_endpoint=self._read_write_endpoint,
-                        router_read_only_endpoint=self._read_only_endpoint,
                     )
             if workload_.container_ready:
                 workload_.reconcile(
@@ -344,6 +339,18 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
                     workload_, workload.AuthenticatedWorkload
                 ):
                     self._reconcile_ports(event=event)
+
+            if (
+                self._unit_lifecycle.authorized_leader
+                and not self._upgrade.in_progress
+                and isinstance(workload_, workload.AuthenticatedWorkload)
+                and workload_.container_ready
+            ):
+                self._wait_until_service_reconciled()
+                self._database_provides.update_endpoints(
+                    router_read_write_endpoint=self._read_write_endpoint,
+                    router_read_only_endpoint=self._read_only_endpoint,
+                )
 
             # Empty waiting status means we're waiting for database requires relation before
             # starting workload

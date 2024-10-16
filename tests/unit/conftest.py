@@ -72,6 +72,10 @@ def kubernetes_patch(monkeypatch):
     )
 
     monkeypatch.setattr(
+        "kubernetes_charm.KubernetesRouterCharm._wait_until_service_reconciled",
+        lambda *args, **kwargs: None,
+    )
+    monkeypatch.setattr(
         "kubernetes_charm.KubernetesRouterCharm.get_all_k8s_node_hostnames_and_ips",
         lambda *args, **kwargs: None,
     )

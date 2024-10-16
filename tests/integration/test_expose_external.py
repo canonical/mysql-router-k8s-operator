@@ -30,7 +30,7 @@ MYSQL_ROUTER_APP_NAME = MYSQL_ROUTER_DEFAULT_APP_NAME
 APPLICATION_APP_NAME = APPLICATION_DEFAULT_APP_NAME
 DATA_INTEGRATOR = "data-integrator"
 SLOW_TIMEOUT = 15 * 60
-RETRY_TIMEOUT = 3 * 60
+RETRY_TIMEOUT = 5 * 60
 MODEL_CONFIG = {"logging-config": "<root>=INFO;unit=DEBUG"}
 TEST_DATABASE_NAME = "testdatabase"
 
@@ -169,10 +169,22 @@ async def test_expose_external(ops_test) -> None:
     mysql_router_application = ops_test.model.applications[MYSQL_ROUTER_APP_NAME]
 
     await mysql_router_application.set_config({"expose-external": "nodeport"})
+    await ops_test.model.wait_for_idle(
+        apps=[MYSQL_ROUTER_APP_NAME],
+        status="active",
+        timeout=SLOW_TIMEOUT,
+    )
+
     old_endpoints = await confirm_endpoint_connectivity(ops_test, old_endpoints)
 
     logger.info("Testing endpoint when expose-external=loadbalancer")
     await mysql_router_application.set_config({"expose-external": "loadbalancer"})
+    await ops_test.model.wait_for_idle(
+        apps=[MYSQL_ROUTER_APP_NAME],
+        status="active",
+        timeout=SLOW_TIMEOUT,
+    )
+
     await confirm_endpoint_connectivity(ops_test, old_endpoints)
 
 
@@ -184,6 +196,11 @@ async def test_expose_external_with_tls(ops_test: OpsTest) -> None:
 
     logger.info("Resetting expose-external=false")
     await mysql_router_application.set_config({"expose-external": "false"})
+    await ops_test.model.wait_for_idle(
+        apps=[MYSQL_ROUTER_APP_NAME],
+        status="active",
+        timeout=SLOW_TIMEOUT,
+    )
 
     logger.info("Deploying TLS operator")
     await ops_test.model.deploy(
@@ -209,8 +226,20 @@ async def test_expose_external_with_tls(ops_test: OpsTest) -> None:
 
     logger.info("Testing endpoint when expose-external=nodeport")
     await mysql_router_application.set_config({"expose-external": "nodeport"})
+    await ops_test.model.wait_for_idle(
+        apps=[MYSQL_ROUTER_APP_NAME],
+        status="active",
+        timeout=SLOW_TIMEOUT,
+    )
+
     old_endpoints = await confirm_endpoint_connectivity(ops_test, old_endpoints)
 
     logger.info("Testing endpoint when expose-external=loadbalancer")
     await mysql_router_application.set_config({"expose-external": "loadbalancer"})
+    await ops_test.model.wait_for_idle(
+        apps=[MYSQL_ROUTER_APP_NAME],
+        status="active",
+        timeout=SLOW_TIMEOUT,
+    )
+
     await confirm_endpoint_connectivity(ops_test, old_endpoints)

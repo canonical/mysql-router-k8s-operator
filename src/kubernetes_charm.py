@@ -62,6 +62,7 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
     """MySQL Router Kubernetes charm"""
 
     _PEER_RELATION_NAME = "mysql-router-peers"
+    _SERVICE_PATCH_TIMEOUT = 5 * 60
 
     def __init__(self, *args) -> None:
         super().__init__(*args)
@@ -128,12 +129,12 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         """Return the node for the provided unit name."""
         node_name = self._get_pod(unit_name).spec.nodeName
         return self._lightkube_client.get(
-            lightkube.resources.core_v1.Node,
+            res=lightkube.resources.core_v1.Node,
             name=node_name,
             namespace=self.model.name,
         )
 
-    def _apply_service(self, service_type: ServiceType) -> None:
+    def _apply_service(self, service_type: ServiceType, service_exists: bool = False) -> None:
         """Apply the service type provided."""
         pod0 = self._get_pod(f"{self.app.name}/0")
 
@@ -162,6 +163,16 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
             ),
         )
 
+        # Delete and re-create until https://bugs.launchpad.net/juju/+bug/2084711 resolved
+        if service_exists:
+            logger.info(f"Deleting service {service_type=}")
+            self._lightkube_client.delete(
+                res=lightkube.resources.core_v1.Service,
+                name=self._service_name,
+                namespace=self.model.name,
+            )
+            logger.info(f"Deleted service {service_type=}")
+
         logger.info(f"Applying service {service_type=}")
         self._lightkube_client.apply(service, field_manager=self.app.name)
         logger.info(f"Applied service {service_type=}")
@@ -180,17 +191,31 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
 
         service = self._get_service()
         if not service or service.spec.type != desired_service_type.value:
-            self._apply_service(desired_service_type)
+            self._apply_service(desired_service_type, service_exists=bool(service))
 
     def _wait_until_service_reconciled(self) -> None:
+        if not self._get_service() or not isinstance(
+            self.get_workload(event=None), workload.AuthenticatedWorkload
+        ):
+            return
+
         try:
             for attempt in tenacity.Retrying(
                 reraise=True,
-                stop=tenacity.stop_after_delay(60 * 3),
+                stop=tenacity.stop_after_delay(self._SERVICE_PATCH_TIMEOUT),
                 wait=tenacity.wait_fixed(15),
             ):
                 with attempt:
-                    self._get_service()
+                    for endpoints in (
+                        self._read_write_endpoint,
+                        self._read_only_endpoint,
+                    ):
+                        for endpoint in endpoints.split(","):
+                            if endpoint:
+                                with socket.socket() as s:
+                                    logger.error(f"Waiting for connection to {endpoint=}")
+                                    host, port = endpoint.split(":")
+                                    assert s.connect_ex((host, int(port))) == 0
         except:
             logger.exception("Unable to reconcile applied K8s service")
             raise
@@ -267,6 +292,9 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
             return ""
 
         service = self._get_service()
+        if not service:
+            return ""
+
         port = self._READ_WRITE_PORT if port_type == "rw" else self._READ_ONLY_PORT
 
         if service.spec.type == ServiceType.CLUSTER_IP.value:
