@@ -8,8 +8,8 @@ Dear community,
 Canonical's newest Charmed MySQL Router K8s operator has been published in the [8.0/stable channel].
 
 Due to the newly added support for arm64 architecture, the MySQL Router K8s charm now releases two revisions simultaneously:
-* Revision 155 is built for `amd64`
-* Revision 154 is built for `arm64`
+* Revision 155 is built for `amd64` ( mysql-router-image r57 )
+* Revision 154 is built for `arm64` ( mysql-router-image r57 )
 
 To make sure you deploy for the right architecture, we recommend setting an [architecture constraint](https://juju.is/docs/juju/constraint#heading--arch) for your entire Juju model.
 
@@ -47,7 +47,7 @@ If you are jumping over several stable revisions, check [previous release notes]
 See the [system requirements][] page for more details about software and hardware prerequisites.
 
 ### Packaging
-This charm is based on the [`charmed-mysql` rock] Revision TODO. It packages:
+This charm is based on the [`charmed-mysql` rock] (CharmHub  `mysql-router-image` [resource-revision 57](https://github.com/canonical/mysql-router-k8s-operator/releases/tag/rev155)). It packages:
 - mysql-router `v8.0.37`
   - [8.0.37-0ubuntu0.22.04.1]
 - mysql-shell `v8.0.37`
