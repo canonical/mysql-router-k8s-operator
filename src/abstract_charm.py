@@ -193,11 +193,15 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
         if self.refresh.unit_status_higher_priority:
             return self.refresh.unit_status_higher_priority
         statuses = []
-        workload_status = self.get_workload(event=event).status
+        workload_ = self.get_workload(event=event)
+        workload_status = workload_.status
         if workload_status:
             statuses.append(workload_status)
-        if not statuses and self.refresh.unit_status_lower_priority:
-            return self.refresh.unit_status_lower_priority
+        refresh_lower_priority = self.refresh.unit_status_lower_priority(
+            workload_is_running=isinstance(workload_, workload.AuthenticatedWorkload)
+        )
+        if not statuses and refresh_lower_priority:
+            return refresh_lower_priority
         return self._prioritize_statuses(statuses)
 
     def set_status(self, *, event, app=True, unit=True) -> None:
