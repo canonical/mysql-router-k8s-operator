@@ -213,7 +213,6 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
                         for endpoint in endpoints.split(","):
                             if endpoint:
                                 with socket.socket() as s:
-                                    logger.error(f"Waiting for connection to {endpoint=}")
                                     host, port = endpoint.split(":")
                                     assert s.connect_ex((host, int(port))) == 0
         except:
@@ -322,6 +321,16 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
     @property
     def _read_only_endpoint(self) -> str:
         return self._get_host_port("ro")
+
+    @property
+    def _exposed_read_write_endpoint(self) -> typing.Optional[str]:
+        """Only applies to VM charm, so no-op."""
+        pass
+
+    @property
+    def _exposed_read_only_endpoint(self) -> typing.Optional[str]:
+        """Only applies to VM charm, so no-op."""
+        pass
 
     def get_all_k8s_node_hostnames_and_ips(
         self,

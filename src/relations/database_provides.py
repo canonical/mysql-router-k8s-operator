@@ -220,6 +220,7 @@ class RelationEndpoint:
         router_read_write_endpoint: str,
         router_read_only_endpoint: str,
         shell: mysql_shell.Shell,
+        **_,
     ) -> None:
         """Create requested users and delete inactive users.
 
