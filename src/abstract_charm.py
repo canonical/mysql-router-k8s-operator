@@ -200,7 +200,7 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
         refresh_lower_priority = self.refresh.unit_status_lower_priority(
             workload_is_running=isinstance(workload_, workload.AuthenticatedWorkload)
         )
-        if not statuses and refresh_lower_priority:
+        if (not statuses or statuses == [ops.WaitingStatus()]) and refresh_lower_priority:
             return refresh_lower_priority
         return self._prioritize_statuses(statuses)
 
