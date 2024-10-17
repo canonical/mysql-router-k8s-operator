@@ -1,8 +1,6 @@
 # Copyright 2023 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-from unittest.mock import MagicMock, PropertyMock
-
 import pytest
 from charms.tempo_coordinator_k8s.v0.charm_tracing import charm_tracing_disabled
 
@@ -58,19 +56,19 @@ def kubernetes_patch(monkeypatch):
     monkeypatch.setattr("rock._Path.unlink", lambda *args, **kwargs: None)
     monkeypatch.setattr("rock._Path.mkdir", lambda *args, **kwargs: None)
     monkeypatch.setattr("rock._Path.rmtree", lambda *args, **kwargs: None)
-    monkeypatch.setattr("lightkube.Client", lambda *args, **kwargs: MagicMock())
+    monkeypatch.setattr("lightkube.Client", lambda *args, **kwargs: None)
     monkeypatch.setattr(
         "kubernetes_charm.KubernetesRouterCharm._apply_service", lambda *args, **kwargs: None
     )
-
-    service_mock = MagicMock()
-    type_mock = MagicMock()
-    type(type_mock).type = PropertyMock(return_value="ClusterIP")
-    type(service_mock).spec = PropertyMock(return_value=type_mock)
     monkeypatch.setattr(
-        "kubernetes_charm.KubernetesRouterCharm._get_service", lambda *args, **kwargs: service_mock
+        "kubernetes_charm.KubernetesRouterCharm._reconcile_service", lambda *args, **kwargs: None
     )
-
+    monkeypatch.setattr(
+        "kubernetes_charm.KubernetesRouterCharm._get_hosts_ports",
+        lambda _, port_type: "mysql-router-k8s-service.my-model.svc.cluster.local:6446"
+        if port_type == "rw"
+        else "mysql-router-k8s-service.my-model.svc.cluster.local:6447",
+    )
     monkeypatch.setattr(
         "kubernetes_charm.KubernetesRouterCharm._wait_until_service_reconciled",
         lambda *args, **kwargs: None,

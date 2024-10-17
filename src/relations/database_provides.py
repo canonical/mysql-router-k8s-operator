@@ -84,26 +84,26 @@ class _RelationThatRequestedUser(_Relation):
         *,
         username: str,
         password: str,
-        router_read_write_endpoint: str,
-        router_read_only_endpoint: str,
+        router_read_write_endpoints: str,
+        router_read_only_endpoints: str,
     ) -> None:
         """Share connection information with application charm."""
         logger.debug(
-            f"Setting databag {self._id=} {self._database=}, {username=}, {router_read_write_endpoint=}, {router_read_only_endpoint=}"
+            f"Setting databag {self._id=} {self._database=}, {username=}, {router_read_write_endpoints=}, {router_read_only_endpoints=}"
         )
         self._interface.set_database(self._id, self._database)
         self._interface.set_credentials(self._id, username, password)
-        self._interface.set_endpoints(self._id, router_read_write_endpoint)
-        self._interface.set_read_only_endpoints(self._id, router_read_only_endpoint)
+        self._interface.set_endpoints(self._id, router_read_write_endpoints)
+        self._interface.set_read_only_endpoints(self._id, router_read_only_endpoints)
         logger.debug(
-            f"Set databag {self._id=} {self._database=}, {username=}, {router_read_write_endpoint=}, {router_read_only_endpoint=}"
+            f"Set databag {self._id=} {self._database=}, {username=}, {router_read_write_endpoints=}, {router_read_only_endpoints=}"
         )
 
     def create_database_and_user(
         self,
         *,
-        router_read_write_endpoint: str,
-        router_read_only_endpoint: str,
+        router_read_write_endpoints: str,
+        router_read_only_endpoints: str,
         shell: mysql_shell.Shell,
     ) -> None:
         """Create database & user and update databag."""
@@ -123,8 +123,8 @@ class _RelationThatRequestedUser(_Relation):
         self._set_databag(
             username=username,
             password=password,
-            router_read_write_endpoint=router_read_write_endpoint,
-            router_read_only_endpoint=router_read_only_endpoint,
+            router_read_write_endpoints=router_read_write_endpoints,
+            router_read_only_endpoints=router_read_only_endpoints,
         )
 
 
@@ -148,17 +148,17 @@ class _RelationWithSharedUser(_Relation):
     def update_endpoints(
         self,
         *,
-        router_read_write_endpoint: str,
-        router_read_only_endpoint: str,
+        router_read_write_endpoints: str,
+        router_read_only_endpoints: str,
     ) -> None:
         """Update the endpoins in the databag."""
         logger.debug(
-            f"Updating endpoints {self._id} {router_read_write_endpoint=} {router_read_only_endpoint=}"
+            f"Updating endpoints {self._id} {router_read_write_endpoints=} {router_read_only_endpoints=}"
         )
-        self._interface.set_endpoints(self._id, router_read_write_endpoint)
-        self._interface.set_read_only_endpoints(self._id, router_read_only_endpoint)
+        self._interface.set_endpoints(self._id, router_read_write_endpoints)
+        self._interface.set_read_only_endpoints(self._id, router_read_only_endpoints)
         logger.debug(
-            f"Updated endpoints {self._id} {router_read_write_endpoint=} {router_read_only_endpoint=}"
+            f"Updated endpoints {self._id} {router_read_write_endpoints=} {router_read_only_endpoints=}"
         )
 
     def delete_databag(self) -> None:
@@ -203,22 +203,22 @@ class RelationEndpoint:
     def update_endpoints(
         self,
         *,
-        router_read_write_endpoint: str,
-        router_read_only_endpoint: str,
+        router_read_write_endpoints: str,
+        router_read_only_endpoints: str,
     ) -> None:
         """Update endpoints in the databags."""
         for relation in self._shared_users:
             relation.update_endpoints(
-                router_read_write_endpoint=router_read_write_endpoint,
-                router_read_only_endpoint=router_read_only_endpoint,
+                router_read_write_endpoints=router_read_write_endpoints,
+                router_read_only_endpoints=router_read_only_endpoints,
             )
 
     def reconcile_users(
         self,
         *,
         event,
-        router_read_write_endpoint: str,
-        router_read_only_endpoint: str,
+        router_read_write_endpoints: str,
+        router_read_only_endpoints: str,
         shell: mysql_shell.Shell,
         **_,
     ) -> None:
@@ -229,7 +229,7 @@ class RelationEndpoint:
         relation is broken.
         """
         logger.debug(
-            f"Reconciling users {event=}, {router_read_write_endpoint=}, {router_read_only_endpoint=}"
+            f"Reconciling users {event=}, {router_read_write_endpoints=}, {router_read_only_endpoints=}"
         )
         requested_users = []
         for relation in self._interface.relations:
@@ -249,15 +249,15 @@ class RelationEndpoint:
         for relation in requested_users:
             if relation not in self._shared_users:
                 relation.create_database_and_user(
-                    router_read_write_endpoint=router_read_write_endpoint,
-                    router_read_only_endpoint=router_read_only_endpoint,
+                    router_read_write_endpoints=router_read_write_endpoints,
+                    router_read_only_endpoints=router_read_only_endpoints,
                     shell=shell,
                 )
         for relation in self._shared_users:
             if relation not in requested_users:
                 relation.delete_user(shell=shell)
         logger.debug(
-            f"Reconciled users {event=}, {router_read_write_endpoint=}, {router_read_only_endpoint=}"
+            f"Reconciled users {event=}, {router_read_write_endpoints=}, {router_read_only_endpoints=}"
         )
 
     def delete_all_databags(self) -> None:

@@ -36,8 +36,8 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("httpcore").setLevel(logging.WARNING)
 
 
-class ServiceType(enum.Enum):
-    """Enum for the supported K8s service types"""
+class _ServiceType(enum.Enum):
+    """Supported K8s service types"""
 
     CLUSTER_IP = "ClusterIP"
     NODE_PORT = "NodePort"
@@ -68,7 +68,7 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         super().__init__(*args)
         self._namespace = self.model.name
 
-        self._service_name = f"{self.app.name}-service"
+        self.service_name = f"{self.app.name}-service"
         self._lightkube_client = lightkube.Client()
 
         self.framework.observe(self.on.install, self._on_install)
@@ -105,7 +105,7 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         try:
             service = self._lightkube_client.get(
                 res=lightkube.resources.core_v1.Service,
-                name=self._service_name,
+                name=self.service_name,
                 namespace=self.model.name,
             )
         except lightkube.core.exceptions.ApiError as e:
@@ -134,13 +134,13 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
             namespace=self.model.name,
         )
 
-    def _apply_service(self, service_type: ServiceType, service_exists: bool = False) -> None:
+    def _apply_service(self, service_type: _ServiceType, service_exists: bool) -> None:
         """Apply the service type provided."""
         pod0 = self._get_pod(f"{self.app.name}/0")
 
         service = lightkube.resources.core_v1.Service(
             metadata=lightkube.models.meta_v1.ObjectMeta(
-                name=self._service_name,
+                name=self.service_name,
                 namespace=self.model.name,
                 ownerReferences=pod0.metadata.ownerReferences,  # the stateful set
                 labels={"app.kubernetes.io/name": self.app.name},
@@ -168,7 +168,7 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
             logger.info(f"Deleting service {service_type=}")
             self._lightkube_client.delete(
                 res=lightkube.resources.core_v1.Service,
-                name=self._service_name,
+                name=self.service_name,
                 namespace=self.model.name,
             )
             logger.info(f"Deleted service {service_type=}")
@@ -184,14 +184,14 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
             return
 
         desired_service_type = {
-            "false": ServiceType.CLUSTER_IP,
-            "nodeport": ServiceType.NODE_PORT,
-            "loadbalancer": ServiceType.LOAD_BALANCER,
+            "false": _ServiceType.CLUSTER_IP,
+            "nodeport": _ServiceType.NODE_PORT,
+            "loadbalancer": _ServiceType.LOAD_BALANCER,
         }[expose_external]
 
         service = self._get_service()
-        if not service or service.spec.type != desired_service_type.value:
-            self._apply_service(desired_service_type, service_exists=bool(service))
+        if not service or _ServiceType(service.spec.type) != desired_service_type:
+            self._apply_service(desired_service_type, service is not None)
 
     def _wait_until_service_reconciled(self) -> None:
         if not self._get_service() or not isinstance(
@@ -207,9 +207,10 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
             ):
                 with attempt:
                     for endpoints in (
-                        self._read_write_endpoint,
-                        self._read_only_endpoint,
+                        self._read_write_endpoints,
+                        self._read_only_endpoints,
                     ):
+                        assert endpoints != ""
                         for endpoint in endpoints.split(","):
                             if endpoint:
                                 with socket.socket() as s:
@@ -263,9 +264,9 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
     def _host(self) -> str:
         """K8s service hostname for MySQL Router"""
         # Example: mysql-router-k8s-service.my-model.svc.cluster.local
-        return f"{self._service_name}.{self.model_service_domain}"
+        return f"{self.service_name}.{self.model_service_domain}"
 
-    def _get_node_hosts(self) -> list[str]:
+    def _get_node_hosts(self) -> set[str]:
         """Return the node ports of nodes where units of this app are scheduled."""
         peer_relation = self.model.get_relation(self._PEER_RELATION_NAME)
         if not peer_relation:
@@ -279,13 +280,13 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
                     if address.type == typ:
                         return address.address
 
-        hosts = []
+        hosts = set()
         for unit in peer_relation.units | {self.model.unit}:
             node = self._get_node(unit.name)
-            hosts.append(_get_node_address(node))
+            hosts.add(_get_node_address(node))
         return hosts
 
-    def _get_host_port(self, port_type: str) -> str:
+    def _get_hosts_ports(self, port_type: str) -> str:
         """Gets the host and port for the endpoint depending of type of service."""
         if port_type not in ["rw", "ro"]:
             return ""
@@ -296,9 +297,11 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
 
         port = self._READ_WRITE_PORT if port_type == "rw" else self._READ_ONLY_PORT
 
-        if service.spec.type == ServiceType.CLUSTER_IP.value:
+        service_type = _ServiceType(service.spec.type)
+
+        if service_type == _ServiceType.CLUSTER_IP:
             return f"{self._host}:{port}"
-        elif service.spec.type == ServiceType.NODE_PORT.value:
+        elif service_type == _ServiceType.NODE_PORT:
             hosts = self._get_node_hosts()
 
             for p in service.spec.ports:
@@ -306,21 +309,22 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
                     node_port = p.nodePort
 
             return ",".join(sorted({f"{host}:{node_port}" for host in hosts}))
-        elif (
-            service.spec.type == ServiceType.LOAD_BALANCER.value
-            and service.status.loadBalancer.ingress
-        ):
-            return f"{service.status.loadBalancer.ingress[0].ip}:{port}"
+        elif service_type == _ServiceType.LOAD_BALANCER and service.status.loadBalancer.ingress:
+            hosts = set()
+            for ingress in service.status.loadBalancer.ingress:
+                hosts.add(ingress.ip)
+
+            return ",".join(sorted(f"{host}:{port}" for host in hosts))
 
         return ""
 
     @property
-    def _read_write_endpoint(self) -> str:
-        return self._get_host_port("rw")
+    def _read_write_endpoints(self) -> str:
+        return self._get_hosts_ports("rw")
 
     @property
-    def _read_only_endpoint(self) -> str:
-        return self._get_host_port("ro")
+    def _read_only_endpoints(self) -> str:
+        return self._get_hosts_ports("ro")
 
     @property
     def _exposed_read_write_endpoint(self) -> typing.Optional[str]:
@@ -357,8 +361,6 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
                 self.unit.open_port("tcp", port)
         if not self.unit.is_leader():
             return
-
-        self._apply_service(ServiceType.CLUSTER_IP)
 
     def _on_workload_container_pebble_ready(self, _) -> None:
         self.unit.set_workload_version(self.get_workload(event=None).version)

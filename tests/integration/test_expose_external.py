@@ -35,7 +35,7 @@ MODEL_CONFIG = {"logging-config": "<root>=INFO;unit=DEBUG"}
 TEST_DATABASE_NAME = "testdatabase"
 
 TLS_SETUP_SLEEP_TIME = 30
-if juju_.has_secrets:
+if juju_.is_3_or_higher:
     TLS_APP_NAME = "self-signed-certificates"
     if architecture.architecture == "arm64":
         TLS_CHANNEL = "latest/edge"

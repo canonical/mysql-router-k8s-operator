@@ -100,12 +100,12 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def _read_write_endpoint(self) -> str:
+    def _read_write_endpoints(self) -> str:
         """MySQL Router read-write endpoint"""
 
     @property
     @abc.abstractmethod
-    def _read_only_endpoint(self) -> str:
+    def _read_only_endpoints(self) -> str:
         """MySQL Router read-only endpoint"""
 
     @property
@@ -345,12 +345,25 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
                     self._reconcile_service()
                     self._database_provides.reconcile_users(
                         event=event,
-                        router_read_write_endpoint=self._read_write_endpoint,
-                        router_read_only_endpoint=self._read_only_endpoint,
+                        router_read_write_endpoints=self._read_write_endpoints,
+                        router_read_only_endpoints=self._read_only_endpoints,
                         exposed_read_write_endpoint=self._exposed_read_write_endpoint,
                         exposed_read_only_endpoint=self._exposed_read_only_endpoint,
                         shell=workload_.shell,
                     )
+                    # _ha_cluster only assigned a value in machine charms
+                    if self._ha_cluster:
+                        self._database_provides.update_endpoints(
+                            router_read_write_endpoints=self._read_write_endpoints,
+                            router_read_only_endpoints=self._read_only_endpoints,
+                            exposed_read_write_endpoint=self._exposed_read_write_endpoint,
+                            exposed_read_only_endpoint=self._exposed_read_only_endpoint,
+                        )
+                    else:
+                        self._database_provides.update_endpoints(
+                            router_read_write_endpoints=self._read_write_endpoints,
+                            router_read_only_endpoints=self._read_only_endpoints,
+                        )
 
             if workload_.container_ready:
                 workload_.reconcile(
@@ -372,21 +385,9 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
                 and not self._upgrade.in_progress
                 and isinstance(workload_, workload.AuthenticatedWorkload)
                 and workload_.container_ready
+                and isinstance(event, ops.ConfigChangedEvent)
             ):
-                # _ha_cluster only assigned a value in machine charms
-                if self._ha_cluster:
-                    self._database_provides.update_endpoints(
-                        router_read_write_endpoint=self._read_write_endpoint,
-                        router_read_only_endpoint=self._read_only_endpoint,
-                        exposed_read_write_endpoint=self._exposed_read_write_endpoint,
-                        exposed_read_only_endpoint=self._exposed_read_only_endpoint,
-                    )
-                else:
-                    self._wait_until_service_reconciled()
-                    self._database_provides.update_endpoints(
-                        router_read_write_endpoint=self._read_write_endpoint,
-                        router_read_only_endpoint=self._read_only_endpoint,
-                    )
+                self._wait_until_service_reconciled()
 
             # Empty waiting status means we're waiting for database requires relation before
             # starting workload
