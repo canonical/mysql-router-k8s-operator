@@ -97,6 +97,15 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         except upgrade.PeerRelationNotReady:
             pass
 
+    @property
+    def _status(self) -> ops.StatusBase:
+        if self.config.get("expose-external", "false") not in [
+            "false",
+            "nodeport",
+            "loadbalancer",
+        ]:
+            return ops.BlockedStatus("Invalid expose-external config value")
+
     def is_externally_accessible(self, *, event) -> typing.Optional[bool]:
         """No-op since this charm is exposed with node-port"""
 
@@ -181,7 +190,6 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         expose_external = self.config.get("expose-external", "false")
         if expose_external not in ["false", "nodeport", "loadbalancer"]:
             logger.warning(f"Invalid config value {expose_external=}")
-            self.app.status = ops.BlockedStatus("Invalid expose-external config value")
             return
 
         desired_service_type = {

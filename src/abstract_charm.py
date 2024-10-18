@@ -132,6 +132,14 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
         """
 
     @property
+    @abc.abstractmethod
+    def _status(self) -> ops.StatusBase:
+        """Status of the charm.
+
+        Only applies to Kubernetes charm
+        """
+
+    @property
     def _tls_certificate_saved(self) -> bool:
         """Whether a TLS certificate is available to use"""
         return self.tls.certificate_saved
@@ -208,6 +216,8 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
             # (Relations should not be modified during upgrade.)
             return upgrade_status
         statuses = []
+        if self._status:
+            statuses.append(self._status)
         for endpoint in (self._database_requires, self._database_provides):
             if status := endpoint.get_status(event):
                 statuses.append(status)
