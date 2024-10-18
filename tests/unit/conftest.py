@@ -70,8 +70,8 @@ def kubernetes_patch(monkeypatch):
         else "mysql-router-k8s-service.my-model.svc.cluster.local:6447",
     )
     monkeypatch.setattr(
-        "kubernetes_charm.KubernetesRouterCharm._wait_until_service_reconciled",
-        lambda *args, **kwargs: None,
+        "kubernetes_charm.KubernetesRouterCharm._check_service_connectivity",
+        lambda *args, **kwargs: True,
     )
     monkeypatch.setattr(
         "kubernetes_charm.KubernetesRouterCharm.get_all_k8s_node_hostnames_and_ips",

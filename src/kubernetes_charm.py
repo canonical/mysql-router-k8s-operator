@@ -181,6 +181,7 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         expose_external = self.config.get("expose-external", "false")
         if expose_external not in ["false", "nodeport", "loadbalancer"]:
             logger.warning(f"Invalid config value {expose_external=}")
+            self.app.status = ops.BlockedStatus("Invalid expose-external config value")
             return
 
         desired_service_type = {
@@ -193,34 +194,31 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         if not service or _ServiceType(service.spec.type) != desired_service_type:
             self._apply_service(desired_service_type, service is not None)
 
-    def _wait_until_service_reconciled(self) -> None:
+    def _check_service_connectivity(self) -> bool:
         if not self._get_service() or not isinstance(
             self.get_workload(event=None), workload.AuthenticatedWorkload
         ):
-            return
+            logger.debug("No service or unauthenticated workload")
+            return False
 
-        try:
-            for attempt in tenacity.Retrying(
-                reraise=True,
-                stop=tenacity.stop_after_delay(self._SERVICE_PATCH_TIMEOUT),
-                wait=tenacity.wait_fixed(15),
-            ):
-                with attempt:
-                    for endpoints in (
-                        self._read_write_endpoints,
-                        self._read_only_endpoints,
-                    ):
-                        assert endpoints != ""
-                        for endpoint in endpoints.split(","):
-                            if endpoint:
-                                with socket.socket() as s:
-                                    host, port = endpoint.split(":")
-                                    assert s.connect_ex((host, int(port))) == 0
-        except:
-            logger.exception("Unable to reconcile applied K8s service")
-            raise
-        else:
-            logger.debug("Applied K8s service is available")
+        for endpoints in (
+            self._read_write_endpoints,
+            self._read_only_endpoints,
+        ):
+            if endpoints == "":
+                logger.debug(
+                    f"Empty endpoints {self._read_write_endpoints=} {self._read_only_endpoints=}"
+                )
+                return False
+
+            for endpoint in endpoints.split(","):
+                with socket.socket() as s:
+                    host, port = endpoint.split(":")
+                    if s.connect_ex((host, int(port))) != 0:
+                        logger.info(f"Unable to connect to {endpoint=}")
+                        return False
+
+        return True
 
     def _reconcile_ports(self, *, event) -> None:
         """Needed for VM, so no-op"""
@@ -289,7 +287,7 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
     def _get_hosts_ports(self, port_type: str) -> str:
         """Gets the host and port for the endpoint depending of type of service."""
         if port_type not in ["rw", "ro"]:
-            return ""
+            raise ValueError("Invalid port type")
 
         service = self._get_service()
         if not service:
