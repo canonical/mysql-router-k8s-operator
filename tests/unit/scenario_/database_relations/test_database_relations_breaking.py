@@ -45,8 +45,8 @@ def test_breaking_requires_and_complete_provides(
             relation = relation.replace(
                 local_app_data={
                     "database": "foobar",
-                    "endpoints": "mysql-router-k8s.my-model.svc.cluster.local:6446",
-                    "read-only-endpoints": "mysql-router-k8s.my-model.svc.cluster.local:6447",
+                    "endpoints": "mysql-router-k8s-service.my-model.svc.cluster.local:6446",
+                    "read-only-endpoints": "mysql-router-k8s-service.my-model.svc.cluster.local:6447",
                     "secret-user": secret.id,
                 }
             )
@@ -55,8 +55,8 @@ def test_breaking_requires_and_complete_provides(
             relation = relation.replace(
                 local_app_data={
                     "database": "foobar",
-                    "endpoints": "mysql-router-k8s.my-model.svc.cluster.local:6446",
-                    "read-only-endpoints": "mysql-router-k8s.my-model.svc.cluster.local:6447",
+                    "endpoints": "mysql-router-k8s-service.my-model.svc.cluster.local:6446",
+                    "read-only-endpoints": "mysql-router-k8s-service.my-model.svc.cluster.local:6447",
                     "username": "foouser",
                     "password": "foobar",
                 }
@@ -96,8 +96,8 @@ def test_complete_requires_and_breaking_provides(
             relation = relation.replace(
                 local_app_data={
                     "database": "foobar",
-                    "endpoints": "mysql-router-k8s.my-model.svc.cluster.local:6446",
-                    "read-only-endpoints": "mysql-router-k8s.my-model.svc.cluster.local:6447",
+                    "endpoints": "mysql-router-k8s-service.my-model.svc.cluster.local:6446",
+                    "read-only-endpoints": "mysql-router-k8s-service.my-model.svc.cluster.local:6447",
                     "secret-user": secret.id,
                 }
             )
@@ -106,8 +106,8 @@ def test_complete_requires_and_breaking_provides(
             relation = relation.replace(
                 local_app_data={
                     "database": "foobar",
-                    "endpoints": "mysql-router-k8s.my-model.svc.cluster.local:6446",
-                    "read-only-endpoints": "mysql-router-k8s.my-model.svc.cluster.local:6447",
+                    "endpoints": "mysql-router-k8s-service.my-model.svc.cluster.local:6446",
+                    "read-only-endpoints": "mysql-router-k8s-service.my-model.svc.cluster.local:6447",
                     "username": "foouser",
                     "password": "foobar",
                 }
@@ -143,14 +143,14 @@ def test_complete_requires_and_breaking_provides(
             assert rev_contents == {"username": "foouser", "password": "foobar"}
             assert local_app_data == {
                 "database": "foobar",
-                "endpoints": "mysql-router-k8s.my-model.svc.cluster.local:6446",
-                "read-only-endpoints": "mysql-router-k8s.my-model.svc.cluster.local:6447",
+                "endpoints": "mysql-router-k8s-service.my-model.svc.cluster.local:6446",
+                "read-only-endpoints": "mysql-router-k8s-service.my-model.svc.cluster.local:6447",
             }
         else:
             assert relation.local_app_data == {
                 "database": "foobar",
-                "endpoints": "mysql-router-k8s.my-model.svc.cluster.local:6446",
-                "read-only-endpoints": "mysql-router-k8s.my-model.svc.cluster.local:6447",
+                "endpoints": "mysql-router-k8s-service.my-model.svc.cluster.local:6446",
+                "read-only-endpoints": "mysql-router-k8s-service.my-model.svc.cluster.local:6447",
                 "username": "foouser",
                 "password": "foobar",
             }
