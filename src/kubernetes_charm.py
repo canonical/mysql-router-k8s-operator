@@ -10,6 +10,7 @@ import logging
 import socket
 import typing
 
+import charm_refresh
 import lightkube
 import lightkube.models.core_v1
 import lightkube.models.meta_v1
@@ -20,13 +21,11 @@ from charms.tempo_coordinator_k8s.v0.charm_tracing import trace_charm
 
 import abstract_charm
 import kubernetes_logrotate
-import kubernetes_upgrade
 import logrotate
 import relations.cos
 import relations.database_provides
 import relations.database_requires
 import rock
-import upgrade
 import workload
 
 logger = logging.getLogger(__name__)
@@ -34,10 +33,34 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("httpcore").setLevel(logging.WARNING)
 
 
+class RouterRefresh(charm_refresh.CharmSpecific):
+    @staticmethod
+    def run_pre_refresh_checks_after_1_unit_refreshed() -> None:
+        raise charm_refresh.PrecheckFailed("Backup in progress")
+
+    @classmethod
+    def is_compatible(
+        cls,
+        *,
+        old_charm_version: charm_refresh.CharmVersion,
+        new_charm_version: charm_refresh.CharmVersion,
+        old_workload_version: str,
+        new_workload_version: str,
+    ) -> bool:
+        if not super().is_compatible(
+            old_charm_version=old_charm_version,
+            new_charm_version=new_charm_version,
+            old_workload_version=old_workload_version,
+            new_workload_version=new_workload_version,
+        ):
+            return False
+        # TODO: check workload version
+        return True
+
+
 @trace_charm(
     tracing_endpoint="tracing_endpoint",
     extra_types=(
-        kubernetes_upgrade.Upgrade,
         logrotate.LogRotate,
         relations.cos.COSRelation,
         relations.database_provides.RelationEndpoint,
@@ -59,7 +82,27 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         self.framework.observe(
             self.on[rock.CONTAINER_NAME].pebble_ready, self._on_workload_container_pebble_ready
         )
-        self.framework.observe(self.on.stop, self._on_stop)
+        try:
+            self.refresh = charm_refresh.Refresh(
+                RouterRefresh(
+                    cloud=charm_refresh.Cloud.KUBERNETES,
+                    workload_name="Router",
+                    refresh_user_docs_url="https://example.com",
+                    oci_resource_name="mysql-router-image",
+                )
+            )
+        except charm_refresh.UnitTearingDown:
+            # todo cleanup of mysql user for bootstrap?
+            self.unit.status = ops.MaintenanceStatus("Tearing down")
+            exit()
+        except charm_refresh.KubernetesJujuAppNotTrusted:
+            exit()
+        except charm_refresh.PeerRelationMissing:
+            self.unit.status = ops.MaintenanceStatus("Waiting for peer relation")
+            if self.unit.is_leader():
+                self.app.status = ops.MaintenanceStatus("Waiting for peer relation")
+            exit()
+        raise Exception
 
     @property
     def _subordinate_relation_endpoint_names(self) -> typing.Optional[typing.Iterable[str]]:
@@ -72,13 +115,6 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
     @property
     def _logrotate(self) -> logrotate.LogRotate:
         return kubernetes_logrotate.LogRotate(container_=self._container)
-
-    @property
-    def _upgrade(self) -> typing.Optional[kubernetes_upgrade.Upgrade]:
-        try:
-            return kubernetes_upgrade.Upgrade(self)
-        except upgrade.PeerRelationNotReady:
-            pass
 
     def is_externally_accessible(self, *, event) -> typing.Optional[bool]:
         """No-op since this charm is exposed with node-port"""
@@ -274,6 +310,7 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
 
     def _on_install(self, _) -> None:
         """Open ports & patch k8s service."""
+        # TODO fix this if fails because app not trusted and user runs `juju trust`
         if ops.JujuVersion.from_environ().supports_open_port_on_k8s:
             for port in (self._READ_WRITE_PORT, self._READ_ONLY_PORT, 6448, 6449):
                 self.unit.open_port("tcp", port)
@@ -287,25 +324,6 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
 
     def _on_workload_container_pebble_ready(self, _) -> None:
         self.unit.set_workload_version(self.get_workload(event=None).version)
-        self.reconcile()
-
-    def _on_stop(self, _) -> None:
-        # During the stop event, the unit could be upgrading, scaling down, or just restarting.
-        if self._unit_lifecycle.tearing_down_and_app_active:
-            # Unit is tearing down and 1+ other units are not tearing down (scaling down)
-            # The partition should never be greater than the highest unit number, since that will
-            # cause `juju refresh` to have no effect
-            return
-        unit_number = int(self.unit.name.split("/")[-1])
-        # Raise partition to prevent other units from restarting if an upgrade is in progress.
-        # If an upgrade is not in progress, the leader unit will reset the partition to 0.
-        if kubernetes_upgrade.partition.get(app_name=self.app.name) < unit_number:
-            kubernetes_upgrade.partition.set(app_name=self.app.name, value=unit_number)
-            logger.debug(f"Partition set to {unit_number} during stop event")
-        if not self._upgrade:
-            logger.debug("Peer relation missing during stop event")
-            return
-        self._upgrade.unit_state = upgrade.UnitState.RESTARTING
 
 
 if __name__ == "__main__":
