@@ -58,9 +58,6 @@ def kubernetes_patch(monkeypatch):
     monkeypatch.setattr("rock._Path.rmtree", lambda *args, **kwargs: None)
     monkeypatch.setattr("lightkube.Client", lambda *args, **kwargs: None)
     monkeypatch.setattr(
-        "kubernetes_charm.KubernetesRouterCharm._apply_service", lambda *args, **kwargs: None
-    )
-    monkeypatch.setattr(
         "kubernetes_charm.KubernetesRouterCharm._reconcile_service", lambda *args, **kwargs: None
     )
     monkeypatch.setattr(

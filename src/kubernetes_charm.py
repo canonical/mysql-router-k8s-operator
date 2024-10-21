@@ -62,7 +62,6 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
     """MySQL Router Kubernetes charm"""
 
     _PEER_RELATION_NAME = "mysql-router-peers"
-    _SERVICE_PATCH_TIMEOUT = 5 * 60
 
     def __init__(self, *args) -> None:
         super().__init__(*args)
@@ -143,11 +142,27 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
             namespace=self.model.name,
         )
 
-    def _apply_service(self, service_type: _ServiceType, service_exists: bool) -> None:
-        """Apply the service type provided."""
+    def _reconcile_service(self) -> None:
+        expose_external = self.config.get("expose-external", "false")
+        if expose_external not in ["false", "nodeport", "loadbalancer"]:
+            logger.warning(f"Invalid config value {expose_external=}")
+            return
+
+        desired_service_type = {
+            "false": _ServiceType.CLUSTER_IP,
+            "nodeport": _ServiceType.NODE_PORT,
+            "loadbalancer": _ServiceType.LOAD_BALANCER,
+        }[expose_external]
+
+        service = self._get_service()
+        service_exists = service is not None
+        service_type = _ServiceType(service.spec.type)
+        if service_exists and service_type == desired_service_type:
+            return
+
         pod0 = self._get_pod(f"{self.app.name}/0")
 
-        service = lightkube.resources.core_v1.Service(
+        desired_service = lightkube.resources.core_v1.Service(
             metadata=lightkube.models.meta_v1.ObjectMeta(
                 name=self.service_name,
                 namespace=self.model.name,
@@ -167,7 +182,7 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
                         targetPort=self._READ_ONLY_PORT,
                     ),
                 ],
-                type=service_type.value,
+                type=desired_service_type.value,
                 selector={"app.kubernetes.io/name": self.app.name},
             ),
         )
@@ -182,25 +197,9 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
             )
             logger.info(f"Deleted service {service_type=}")
 
-        logger.info(f"Applying service {service_type=}")
-        self._lightkube_client.apply(service, field_manager=self.app.name)
-        logger.info(f"Applied service {service_type=}")
-
-    def _reconcile_service(self) -> None:
-        expose_external = self.config.get("expose-external", "false")
-        if expose_external not in ["false", "nodeport", "loadbalancer"]:
-            logger.warning(f"Invalid config value {expose_external=}")
-            return
-
-        desired_service_type = {
-            "false": _ServiceType.CLUSTER_IP,
-            "nodeport": _ServiceType.NODE_PORT,
-            "loadbalancer": _ServiceType.LOAD_BALANCER,
-        }[expose_external]
-
-        service = self._get_service()
-        if not service or _ServiceType(service.spec.type) != desired_service_type:
-            self._apply_service(desired_service_type, service is not None)
+        logger.info(f"Applying desired service {desired_service_type=}")
+        self._lightkube_client.apply(desired_service, field_manager=self.app.name)
+        logger.info(f"Applied desired service  {desired_service_type=}")
 
     def _check_service_connectivity(self) -> bool:
         if not self._get_service() or not isinstance(
