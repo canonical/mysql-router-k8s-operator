@@ -146,7 +146,8 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
 
     def get_workload(self, *, event):
         """MySQL Router workload"""
-        if connection_info := self._database_requires.get_connection_info(event=event):
+        # todo: consider moving `self.refresh.workload_allowed_to_start` inside `workload._reconcile()`
+        if self.refresh.workload_allowed_to_start and (connection_info := self._database_requires.get_connection_info(event=event)):
             return self._authenticated_workload_type(
                 container_=self._container,
                 logrotate_=self._logrotate,
@@ -293,17 +294,18 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
                 ):
                     self._reconcile_ports(event=event)
 
-            if not workload_.status:
-                self.refresh.next_unit_allowed_to_refresh = True
-            # TODO add comment about unit started for scale up case since start event will fire after relation created
-            # TODO add checks to reconcile debug log
-            elif workload_.status == ops.WaitingStatus() and self._unit_started.exists():
-                if self._database_requires.does_relation_exist(event):
-                    # Waiting for relation-changed event before starting workload
-                    pass
-                else:
-                    # Waiting for database requires relation; refresh can continue
+            if self.refresh.workload_allowed_to_start:
+                if not workload_.status:
                     self.refresh.next_unit_allowed_to_refresh = True
+                # TODO add comment about unit started for scale up case since start event will fire after relation created
+                # TODO add checks to reconcile debug log
+                elif workload_.status == ops.WaitingStatus() and self._unit_started.exists():
+                    if self._database_requires.does_relation_exist(event):
+                        # Waiting for relation-changed event before starting workload
+                        pass
+                    else:
+                        # Waiting for database requires relation; refresh can continue
+                        self.refresh.next_unit_allowed_to_refresh = True
             self.set_status(event=event)
         except server_exceptions.Error as e:
             # If not for `unit=False`, another `server_exceptions.Error` could be thrown here
