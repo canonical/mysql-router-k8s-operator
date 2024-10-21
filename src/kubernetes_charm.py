@@ -156,7 +156,7 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
 
         service = self._get_service()
         service_exists = service is not None
-        service_type = _ServiceType(service.spec.type)
+        service_type = service_exists and _ServiceType(service.spec.type)
         if service_exists and service_type == desired_service_type:
             return
 
