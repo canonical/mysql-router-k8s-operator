@@ -10,6 +10,7 @@ import logging
 import socket
 import typing
 
+import charm
 import charm_refresh
 import lightkube
 import lightkube.models.core_v1
@@ -82,6 +83,11 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         self.framework.observe(
             self.on[rock.CONTAINER_NAME].pebble_ready, self._on_workload_container_pebble_ready
         )
+        # Remove ops log handler
+        root_logger = logging.getLogger()
+        for handler in root_logger.handlers:
+            root_logger.removeHandler(handler)
+        charm.set_up_logging()
         try:
             self.refresh = charm_refresh.Refresh(
                 RouterRefresh(
