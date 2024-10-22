@@ -11,6 +11,7 @@ import ops
 from charms.grafana_k8s.v0.grafana_dashboard import GrafanaDashboardProvider
 from charms.loki_k8s.v1.loki_push_api import LogProxyConsumer
 from charms.prometheus_k8s.v0.prometheus_scrape import MetricsEndpointProvider
+from charms.tempo_coordinator_k8s.v0.tracing import TracingEndpointRequirer
 
 import container
 import relations.secrets
@@ -46,6 +47,9 @@ class COSRelation:
     MONITORING_USERNAME = "monitoring"
     _MONITORING_PASSWORD_KEY = "monitoring-password"
 
+    _TRACING_RELATION_NAME = "tracing"
+    _TRACING_PROTOCOL = "otlp_http"
+
     def __init__(self, charm_: "abstract_charm.MySQLRouterCharm", container_: container.Container):
         self._grafana_dashboards = GrafanaDashboardProvider(charm_)
         self._metrics_endpoint = MetricsEndpointProvider(
@@ -61,6 +65,9 @@ class COSRelation:
                     "log-files": [self._ROUTER_LOG_FILES_TARGET],
                 },
             },
+        )
+        self._tracing = TracingEndpointRequirer(
+            charm_, relation_name=self._TRACING_RELATION_NAME, protocols=[self._TRACING_PROTOCOL]
         )
 
         self._charm = charm_
@@ -90,6 +97,12 @@ class COSRelation:
             password=self.get_monitoring_password(),
             listen_port=self._EXPORTER_PORT,
         )
+
+    @property
+    def tracing_endpoint(self) -> typing.Optional[str]:
+        """The tracing endpoint."""
+        if self._tracing.is_ready():
+            return self._tracing.get_endpoint(self._TRACING_PROTOCOL)
 
     @property
     def relation_exists(self) -> bool:
