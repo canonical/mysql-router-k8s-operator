@@ -278,7 +278,7 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
                         shell=workload_.shell,
                     )
             # todo: consider moving `self.refresh.workload_allowed_to_start` inside `workload._reconcile()`
-            if workload_.container_ready:
+            if workload_.container_ready and self.refresh.workload_allowed_to_start:
                 workload_.reconcile(
                     event=event,
                     tls=self._tls_certificate_saved,
