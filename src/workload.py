@@ -187,7 +187,7 @@ class Workload:
             return ops.WaitingStatus()
 
 
-class AuthenticatedWorkload(Workload):
+class RunningWorkload(Workload):
     """Workload with connection to MySQL cluster"""
 
     def __init__(
@@ -370,19 +370,6 @@ class AuthenticatedWorkload(Workload):
         certificate_authority: str = None,
     ) -> None:
         """Reconcile all workloads (router, exporter, tls)."""
-        if not workload_allowed_to_start:
-            super().reconcile(
-                event=event,
-                tls=tls,
-                unit_name=unit_name,
-                workload_allowed_to_start=workload_allowed_to_start,
-                exporter_config=exporter_config,
-                key=key,
-                certificate=certificate,
-                certificate_authority=certificate_authority,
-            )
-            return
-
         if tls and not (key and certificate and certificate_authority):
             raise ValueError(
                 "`key`, `certificate`, and `certificate_authority` arguments required when tls=True"

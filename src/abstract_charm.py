@@ -46,7 +46,7 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
         )
 
         self._workload_type = workload.Workload
-        self._authenticated_workload_type = workload.AuthenticatedWorkload
+        self._running_workload_type = workload.RunningWorkload
         self._database_requires = relations.database_requires.RelationEndpoint(self)
         self._database_provides = relations.database_provides.RelationEndpoint(self)
         self._cos_relation = relations.cos.COSRelation(self, self._container)
@@ -146,8 +146,10 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
 
     def get_workload(self, *, event):
         """MySQL Router workload"""
-        if connection_info := self._database_requires.get_connection_info(event=event):
-            return self._authenticated_workload_type(
+        if self.refresh.workload_allowed_to_start and (
+            connection_info := self._database_requires.get_connection_info(event=event)
+        ):
+            return self._running_workload_type(
                 container_=self._container,
                 logrotate_=self._logrotate,
                 connection_info=connection_info,
@@ -198,7 +200,7 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
         if workload_status:
             statuses.append(workload_status)
         refresh_lower_priority = self.refresh.unit_status_lower_priority(
-            workload_is_running=isinstance(workload_, workload.AuthenticatedWorkload)
+            workload_is_running=isinstance(workload_, workload.RunningWorkload)
         )
         if (not statuses or statuses == [ops.WaitingStatus()]) and refresh_lower_priority:
             return refresh_lower_priority
@@ -247,7 +249,7 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
         logger.debug(
             "State of reconcile "
             f"{self._unit_lifecycle.authorized_leader=}, "
-            f"{isinstance(workload_, workload.AuthenticatedWorkload)=}, "
+            f"{isinstance(workload_, workload.RunningWorkload)=}, "
             f"{workload_.container_ready=}, "
             f"{self.refresh.workload_allowed_to_start=}, "
             f"{self._database_requires.is_relation_breaking(event)=}, "
@@ -265,7 +267,7 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
                     self._database_provides.delete_all_databags()
                 elif (
                     not self.refresh.in_progress
-                    and isinstance(workload_, workload.AuthenticatedWorkload)
+                    and isinstance(workload_, workload.RunningWorkload)
                     and workload_.container_ready
                 ):
                     self._reconcile_node_port(event=event)
@@ -289,7 +291,7 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
                     certificate_authority=self._tls_certificate_authority,
                 )
                 if not self.refresh.in_progress and isinstance(
-                    workload_, workload.AuthenticatedWorkload
+                    workload_, workload.RunningWorkload
                 ):
                     self._reconcile_ports(event=event)
 

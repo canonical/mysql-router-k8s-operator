@@ -68,7 +68,7 @@ class RouterRefresh(charm_refresh.CharmSpecific):
         relations.database_requires.RelationEndpoint,
         relations.tls.RelationEndpoint,
         rock.Rock,
-        workload.AuthenticatedWorkload,
+        workload.RunningWorkload,
         workload.Workload,
     ),
 )
