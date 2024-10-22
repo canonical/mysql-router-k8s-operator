@@ -277,12 +277,12 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
                         exposed_read_only_endpoint=self._exposed_read_only_endpoint,
                         shell=workload_.shell,
                     )
-            # todo: consider moving `self.refresh.workload_allowed_to_start` inside `workload._reconcile()`
-            if workload_.container_ready and self.refresh.workload_allowed_to_start:
+            if workload_.container_ready:
                 workload_.reconcile(
                     event=event,
                     tls=self._tls_certificate_saved,
                     unit_name=self.unit.name,
+                    workload_allowed_to_start=self.refresh.workload_allowed_to_start,
                     exporter_config=self._cos_exporter_config(event),
                     key=self._tls_key,
                     certificate=self._tls_certificate,
@@ -297,7 +297,11 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
                 self.refresh.next_unit_allowed_to_refresh = True
             # TODO add comment about unit started for scale up case since start event will fire after relation created
             # TODO add checks to reconcile debug log
-            elif workload_.status == ops.WaitingStatus() and self._unit_started.exists():
+            elif (
+                self.refresh.workload_allowed_to_start
+                and workload_.status == ops.WaitingStatus()
+                and self._unit_started.exists()
+            ):
                 if self._database_requires.does_relation_exist(event):
                     # Waiting for relation-changed event before starting workload
                     pass
