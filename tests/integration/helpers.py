@@ -103,6 +103,18 @@ async def get_inserted_data_by_application(unit: Unit) -> Optional[str]:
     return (await run_action(unit, "get-inserted-data")).get("data")
 
 
+async def get_credentials(unit: Unit) -> Dict:
+    """Helper to run an action on data-integrator to get credentials.
+
+    Args:
+        unit: The data-integrator unit to run action against
+
+    Returns:
+        A dictionary with the credentials
+    """
+    return await run_action(unit, "get-credentials")
+
+
 async def get_unit_address(ops_test: OpsTest, unit_name: str) -> str:
     """Get unit IP address.
 
@@ -391,8 +403,9 @@ def is_connection_possible(credentials: Dict, **extra_opts) -> bool:
         with MySQLConnector(config) as cursor:
             cursor.execute("SELECT 1")
             return cursor.fetchone()[0] == 1
-    except (DatabaseError, InterfaceError, OperationalError, ProgrammingError):
+    except (DatabaseError, InterfaceError, OperationalError, ProgrammingError) as e:
         # Errors raised when the connection is not possible
+        logger.error(e)
         return False
 
 
