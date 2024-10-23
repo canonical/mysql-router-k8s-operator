@@ -1,0 +1,17 @@
+"DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
+"Test that the exporter endpoint works when related with TLS","199594","test_exporter_endpoint","tests.integration","Wed Oct 23 01:37:48 UTC 2024","passed","Wed Oct 23 01:41:07 UTC 2024","","test_exporter_with_tls","",""
+"Test the deployment of the charm.","905123","test_build_and_deploy","tests.integration","Wed Oct 23 01:38:56 UTC 2024","broken","Wed Oct 23 01:54:01 UTC 2024","","test_node_port","",""
+"Test encryption when backend database is using TLS.","21946","test_connected_encryption","tests.integration","Wed Oct 23 01:39:22 UTC 2024","passed","Wed Oct 23 01:39:44 UTC 2024","","test_tls","",""
+"Simple test to ensure that mysql, mysqlrouter and application charms deploy.","133422","test_deploy_edge","tests.integration","Wed Oct 23 01:38:04 UTC 2024","passed","Wed Oct 23 01:40:17 UTC 2024","","test_upgrade","",""
+"Test that exporter endpoint is functional.","164246","test_exporter_endpoint","tests.integration","Wed Oct 23 01:38:27 UTC 2024","passed","Wed Oct 23 01:41:11 UTC 2024","","test_exporter","",""
+"Test encryption when backend database is using TLS.","91803","test_build_deploy_and_relate","tests.integration","Wed Oct 23 01:37:51 UTC 2024","passed","Wed Oct 23 01:39:22 UTC 2024","","test_tls","",""
+"Upgrade to an invalid version and test rollback.
+
+    Relies on the charm built in the previous test (test_upgrade_from_edge).
+    ","233437","test_fail_and_rollback","tests.integration","Wed Oct 23 01:43:44 UTC 2024","passed","Wed Oct 23 01:47:37 UTC 2024","","test_upgrade","",""
+"Test the database relation.","271023","test_database_relation","tests.integration","Wed Oct 23 01:38:05 UTC 2024","passed","Wed Oct 23 01:42:36 UTC 2024","","test_charm","",""
+"Test log rotation.","108155","test_log_rotation","tests.integration","Wed Oct 23 01:38:15 UTC 2024","passed","Wed Oct 23 01:40:04 UTC 2024","","test_log_rotation","",""
+"Test the nodeport.","0","test_node_port_and_clusterip_setup","tests.integration","Wed Oct 23 01:54:02 UTC 2024","skipped","Wed Oct 23 01:54:02 UTC 2024","","test_node_port","",""
+"Test the database relation.","0","test_tls","tests.integration","Wed Oct 23 01:54:01 UTC 2024","skipped","Wed Oct 23 01:54:01 UTC 2024","","test_node_port","",""
+"Upgrade mysqlrouter while ensuring continuous writes incrementing.","206703","test_upgrade_from_edge","tests.integration","Wed Oct 23 01:40:17 UTC 2024","passed","Wed Oct 23 01:43:44 UTC 2024","","test_upgrade","",""
+"Test the nodeport.","0","test_data_integrator","tests.integration","Wed Oct 23 01:54:02 UTC 2024","skipped","Wed Oct 23 01:54:02 UTC 2024","","test_node_port","",""
