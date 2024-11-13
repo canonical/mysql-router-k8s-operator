@@ -1,0 +1,17 @@
+"DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
+"Simple test to ensure that mysql, mysqlrouter and application charms deploy.","136529","test_deploy_edge","tests.integration","Wed Nov 13 01:36:00 UTC 2024","passed","Wed Nov 13 01:38:17 UTC 2024","","test_upgrade","",""
+"Test the nodeport.","0","test_node_port_and_clusterip_setup","tests.integration","Wed Nov 13 01:51:15 UTC 2024","skipped","Wed Nov 13 01:51:15 UTC 2024","","test_node_port","",""
+"Test that the exporter endpoint works when related with TLS","223746","test_exporter_endpoint","tests.integration","Wed Nov 13 01:36:00 UTC 2024","passed","Wed Nov 13 01:39:44 UTC 2024","","test_exporter_with_tls","",""
+"Test log rotation.","111668","test_log_rotation","tests.integration","Wed Nov 13 01:35:55 UTC 2024","passed","Wed Nov 13 01:37:47 UTC 2024","","test_log_rotation","",""
+"Upgrade to an invalid version and test rollback.
+
+    Relies on the charm built in the previous test (test_upgrade_from_edge).
+    ","230995","test_fail_and_rollback","tests.integration","Wed Nov 13 01:41:44 UTC 2024","passed","Wed Nov 13 01:45:35 UTC 2024","","test_upgrade","",""
+"Test encryption when backend database is using TLS.","","test_connected_encryption","tests.integration","","unknown","","","test_tls","",""
+"Test the nodeport.","0","test_data_integrator","tests.integration","Wed Nov 13 01:51:15 UTC 2024","skipped","Wed Nov 13 01:51:15 UTC 2024","","test_node_port","",""
+"Upgrade mysqlrouter while ensuring continuous writes incrementing.","207097","test_upgrade_from_edge","tests.integration","Wed Nov 13 01:38:17 UTC 2024","passed","Wed Nov 13 01:41:44 UTC 2024","","test_upgrade","",""
+"Test that exporter endpoint is functional.","149629","test_exporter_endpoint","tests.integration","Wed Nov 13 01:36:23 UTC 2024","passed","Wed Nov 13 01:38:53 UTC 2024","","test_exporter","",""
+"Test the database relation.","283528","test_database_relation","tests.integration","Wed Nov 13 01:35:57 UTC 2024","passed","Wed Nov 13 01:40:41 UTC 2024","","test_charm","",""
+"Test encryption when backend database is using TLS.","","test_build_deploy_and_relate","tests.integration","","unknown","","","test_tls","",""
+"Test the deployment of the charm.","905564","test_build_and_deploy","tests.integration","Wed Nov 13 01:36:09 UTC 2024","broken","Wed Nov 13 01:51:15 UTC 2024","","test_node_port","",""
+"Test the database relation.","0","test_tls","tests.integration","Wed Nov 13 01:51:15 UTC 2024","skipped","Wed Nov 13 01:51:15 UTC 2024","","test_node_port","",""
