@@ -25,6 +25,15 @@ parts:
       - poetry-deps
     poetry-with:
       - charm-libs
+    build-snaps:
+      - rustup
+    build-packages:
+      - libffi-dev
+      - libssl-dev
+      - pkg-config
+    override-build: |
+      rustup default stable
+      craftctl default
 
 #
 #  files:
