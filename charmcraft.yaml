@@ -34,6 +34,7 @@ parts:
     override-build: |
       rustup default stable
       craftctl default
+    charm-entrypoint: src/kubernetes_charm.py
 
 #
 #  files:
