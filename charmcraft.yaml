@@ -23,8 +23,8 @@ parts:
     source: .
     after:
       - poetry-deps
-    override-build: |
-      poetry export --only main,charm-libs --output requirements.txt
+    poetry-with:
+      - charm-libs
 
 #
 #  files:
