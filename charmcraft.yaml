@@ -25,7 +25,6 @@ parts:
       - poetry-deps
     override-build: |
       poetry export --only main,charm-libs --output requirements.txt
-      craftctl default
 
 #
 #  files:
