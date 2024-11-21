@@ -35,6 +35,7 @@ parts:
     build-snaps:
       - rustup
     build-packages:
+      - libyaml-dev  # for PyYAML C bindings
       - libffi-dev
       - libssl-dev
       - pkg-config
