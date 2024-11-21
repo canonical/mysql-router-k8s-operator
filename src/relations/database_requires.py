@@ -109,10 +109,8 @@ class RelationEndpoint:
             database_name="mysql_innodb_cluster_metadata",
             extra_user_roles="mysqlrouter",
         )
-        charm_.framework.observe(charm_.on[self._NAME].relation_created, charm_.reconcile)
         charm_.framework.observe(self._interface.on.database_created, charm_.reconcile)
         charm_.framework.observe(self._interface.on.endpoints_changed, charm_.reconcile)
-        charm_.framework.observe(charm_.on[self._NAME].relation_broken, charm_.reconcile)
 
     def get_connection_info(self, *, event) -> typing.Optional[CompleteConnectionInformation]:
         """Information for connection to MySQL cluster"""
@@ -137,3 +135,12 @@ class RelationEndpoint:
             CompleteConnectionInformation(interface=self._interface, event=event)
         except (_MissingRelation, remote_databag.IncompleteDatabag) as exception:
             return exception.status
+
+    def does_relation_exist(self, event) -> bool:
+        try:
+            CompleteConnectionInformation(interface=self._interface, event=event)
+        except _MissingRelation:
+            return False
+        except remote_databag.IncompleteDatabag:
+            pass
+        return True

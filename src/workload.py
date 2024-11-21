@@ -160,6 +160,7 @@ class Workload:
         event,
         tls: bool,
         unit_name: str,
+        workload_allowed_to_start: bool,
         exporter_config: "relations.cos.ExporterConfig",
         key: str = None,
         certificate: str = None,
@@ -186,7 +187,7 @@ class Workload:
             return ops.WaitingStatus()
 
 
-class AuthenticatedWorkload(Workload):
+class RunningWorkload(Workload):
     """Workload with connection to MySQL cluster"""
 
     def __init__(
@@ -362,6 +363,7 @@ class AuthenticatedWorkload(Workload):
         event,
         tls: bool,
         unit_name: str,
+        workload_allowed_to_start: bool,
         exporter_config: "relations.cos.ExporterConfig",
         key: str = None,
         certificate: str = None,
