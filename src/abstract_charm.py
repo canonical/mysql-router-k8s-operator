@@ -258,9 +258,12 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
         Only applies to Kubernetes charm
         """
 
-    @abc.abstractmethod
     def _check_service_connectivity(self) -> bool:
-        """Check if the service is available (connectable with a socket)"""
+        """Check if the service is available (connectable with a socket).
+
+        Returns false if Machine charm. Overridden in Kubernetes charm.
+        """
+        return False
 
     @abc.abstractmethod
     def _reconcile_ports(self, *, event) -> None:
@@ -268,6 +271,10 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
 
         Only applies to Machine charm
         """
+
+    @abc.abstractmethod
+    def _update_endpoints(self) -> None:
+        """Update the endpoints in the provider relation if necessary."""
 
     # =======================
     #  Handlers
@@ -361,19 +368,7 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
                         exposed_read_only_endpoint=self._exposed_read_only_endpoint,
                         shell=workload_.shell,
                     )
-                    # _ha_cluster only assigned a value in machine charms
-                    if self._ha_cluster:
-                        self._database_provides.update_endpoints(
-                            router_read_write_endpoints=self._read_write_endpoints,
-                            router_read_only_endpoints=self._read_only_endpoints,
-                            exposed_read_write_endpoint=self._exposed_read_write_endpoint,
-                            exposed_read_only_endpoint=self._exposed_read_only_endpoint,
-                        )
-                    elif self._check_service_connectivity():
-                        self._database_provides.update_endpoints(
-                            router_read_write_endpoints=self._read_write_endpoints,
-                            router_read_only_endpoints=self._read_only_endpoints,
-                        )
+                    self._update_endpoints()
 
             if workload_.container_ready:
                 workload_.reconcile(

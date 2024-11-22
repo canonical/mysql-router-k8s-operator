@@ -8,6 +8,7 @@
 
 import enum
 import functools
+import json
 import logging
 import socket
 import typing
@@ -27,6 +28,7 @@ import logrotate
 import relations.cos
 import relations.database_provides
 import relations.database_requires
+import relations.secrets
 import rock
 import upgrade
 import workload
@@ -63,12 +65,18 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
 
     _PEER_RELATION_NAME = "mysql-router-peers"
 
+    _K8S_SERVICE_CONNECTION_TIMEOUT = 3
+    _K8S_SERVICE_INITIALIZED_KEY = "k8s-service-initialized"
+    _K8S_SERVICE_CREATING_KEY = "k8s-service-creating"
+
     def __init__(self, *args) -> None:
         super().__init__(*args)
         self._namespace = self.model.name
 
         self.service_name = f"{self.app.name}-service"
         self._lightkube_client = lightkube.Client()
+
+        self._peer_data = relations.secrets.RelationSecrets(self, self._PEER_RELATION_NAME)
 
         self.framework.observe(self.on.install, self._on_install)
         self.framework.observe(self.on.config_changed, self.reconcile)
@@ -104,6 +112,18 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
             "loadbalancer",
         ]:
             return ops.BlockedStatus("Invalid expose-external config value")
+        if (
+            self._peer_data.get_value(
+                relations.secrets.APP_SCOPE, self._K8S_SERVICE_INITIALIZED_KEY
+            )
+            and not self._check_service_connectivity()
+        ):
+            if self._peer_data.get_value(
+                relations.secrets.APP_SCOPE, self._K8S_SERVICE_CREATING_KEY
+            ):
+                return ops.MaintenanceStatus("Waiting for K8s service connectivity")
+            else:
+                return ops.BlockedStatus("K8s service not connectible")
 
     def is_externally_accessible(self, *, event) -> typing.Optional[bool]:
         """No-op since this charm is exposed with node-port"""
@@ -162,12 +182,19 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
 
         pod0 = self._get_pod(f"{self.app.name}/0")
 
+        annotations = (
+            json.loads(self.config.get("loadbalancer-extra-annotations", "{}"))
+            if desired_service_type == _ServiceType.LOAD_BALANCER
+            else {}
+        )
+
         desired_service = lightkube.resources.core_v1.Service(
             metadata=lightkube.models.meta_v1.ObjectMeta(
                 name=self.service_name,
                 namespace=self.model.name,
                 ownerReferences=pod0.metadata.ownerReferences,  # the stateful set
                 labels={"app.kubernetes.io/name": self.app.name},
+                annotations=annotations,
             ),
             spec=lightkube.models.core_v1.ServiceSpec(
                 ports=[
@@ -189,17 +216,39 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
 
         # Delete and re-create until https://bugs.launchpad.net/juju/+bug/2084711 resolved
         if service_exists:
-            logger.info(f"Deleting service {service_type=}")
+            logger.info(f"Issuing delete service {service_type=}")
             self._lightkube_client.delete(
                 res=lightkube.resources.core_v1.Service,
                 name=self.service_name,
                 namespace=self.model.name,
             )
-            logger.info(f"Deleted service {service_type=}")
+            logger.info(f"Deleting service {service_type=}")
 
-        logger.info(f"Applying desired service {desired_service_type=}")
+            try:
+                for attempt in tenacity.Retrying(
+                    reraise=True,
+                    stop=tenacity.stop_after_delay(10),
+                    wait=tenacity.wait_fixed(1),
+                ):
+                    with attempt:
+                        assert self._get_service() is not None
+            except AssertionError:
+                logger.warning("Deletion of service took longer than expected")
+                return
+            else:
+                logger.debug(f"Deleted service {service_type=}")
+
+        logger.info(f"Creating desired service {desired_service_type=}")
         self._lightkube_client.apply(desired_service, field_manager=self.app.name)
-        logger.info(f"Applied desired service  {desired_service_type=}")
+
+        self._peer_data.set_value(
+            relations.secrets.APP_SCOPE, self._K8S_SERVICE_CREATING_KEY, "true"
+        )
+        self._peer_data.set_value(
+            relations.secrets.APP_SCOPE, self._K8S_SERVICE_INITIALIZED_KEY, "true"
+        )
+
+        logger.info(f"Request to create desired service {desired_service_type=} dispatched")
 
     def _check_service_connectivity(self) -> bool:
         if not self._get_service() or not isinstance(
@@ -220,8 +269,18 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
 
             for endpoint in endpoints.split(","):
                 with socket.socket() as s:
+                    s.settimeout(self._K8S_SERVICE_CONNECTION_TIMEOUT)
+
                     host, port = endpoint.split(":")
-                    if s.connect_ex((host, int(port))) != 0:
+
+                    try:
+                        socket_connect_code = s.connect_ex((host, int(port)))
+                    except socket.gaierror:
+                        # Sometimes, it may take LB hostname record to propagate
+                        logger.info(f"Unable to resolve {endpoint=}")
+                        return False
+
+                    if socket_connect_code != 0:
                         logger.info(f"Unable to connect to {endpoint=}")
                         return False
 
@@ -229,6 +288,13 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
 
     def _reconcile_ports(self, *, event) -> None:
         """Needed for VM, so no-op"""
+
+    def _update_endpoints(self) -> None:
+        if self._check_service_connectivity():
+            self._database_provides.update_endpoints(
+                router_read_write_endpoints=self._read_write_endpoints,
+                router_read_only_endpoints=self._read_only_endpoints,
+            )
 
     def wait_until_mysql_router_ready(self, *, event=None) -> None:
         logger.debug("Waiting until MySQL Router is ready")
@@ -291,7 +357,7 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
             hosts.add(_get_node_address(node))
         return hosts
 
-    def _get_hosts_ports(self, port_type: str) -> str:
+    def _get_hosts_ports(self, port_type: str) -> str:  # noqa: C901
         """Gets the host and port for the endpoint depending of type of service."""
         if port_type not in ["rw", "ro"]:
             raise ValueError("Invalid port type")
@@ -315,11 +381,15 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
 
             return ",".join(sorted({f"{host}:{node_port}" for host in hosts}))
         elif service_type == _ServiceType.LOAD_BALANCER and service.status.loadBalancer.ingress:
-            hosts = set()
-            for ingress in service.status.loadBalancer.ingress:
-                hosts.add(ingress.ip)
+            if len(service.status.loadBalancer.ingress) != 0:
+                ip = service.status.loadBalancer.ingress[0].ip
+                hostname = service.status.loadBalancer.ingress[0].hostname
 
-            return ",".join(sorted(f"{host}:{port}" for host in hosts))
+            if ip:
+                return f"{ip}:{port}"
+
+            if hostname:
+                return f"{hostname}:{port}"
 
         return ""
 
