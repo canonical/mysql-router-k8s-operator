@@ -18,7 +18,7 @@ def output_state(
     context = scenario.Context(kubernetes_charm.KubernetesRouterCharm)
     container = scenario.Container("mysql-router", can_connect=True)
     input_state = scenario.State(
-        relations=[*relations, scenario.PeerRelation(endpoint="upgrade-version-a")],
+        relations=[*relations, scenario.PeerRelation(endpoint="mysql-router-peers"),  scenario.PeerRelation(endpoint="upgrade-version-a")],
         containers=[container],
         secrets=secrets,
         leader=True,
