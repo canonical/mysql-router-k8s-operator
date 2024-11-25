@@ -1,0 +1,57 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:734 Connecting to existing model microk8s-localhost:test on unspecified cloud
+[32mINFO    [0m integration.test_exporter_with_tls:test_exporter_with_tls.py:63 Deploying all the applications
+[32mINFO    [0m juju.model:model.py:2098 Deploying ch:amd64/jammy/grafana-agent-k8s-45
+[32mINFO    [0m juju.model:model.py:2098 Deploying ch:amd64/jammy/mysql-k8s-208
+[32mINFO    [0m juju.model:model.py:2098 Deploying ch:amd64/jammy/mysql-test-app-63
+[32mINFO    [0m juju.model:model.py:2098 Deploying local:mysql-router-k8s-0
+[32mINFO    [0m integration.test_exporter_with_tls:test_exporter_with_tls.py:100 Waiting for mysqlrouter to be in BlockedStatus
+[32mINFO    [0m integration.test_exporter_with_tls:test_exporter_with_tls.py:106 Relating mysql, mysqlrouter and application
+[33mWARNING [0m juju.model:model.py:1564 relate is deprecated and will be removed. Use integrate instead.
+[33mWARNING [0m juju.model:model.py:1564 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  mysql-router-k8s/0 [executing] waiting: 
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  mysql-router-k8s/0 [idle] waiting: 
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  mysql-router-k8s/0 [idle] active: 
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  mysql-k8s/0 [idle] active: Primary
+  mysql-router-k8s/0 [idle] active: 
+  mysql-test-app/0 [idle] active: Last written value=78
+[32mINFO    [0m integration.test_exporter_with_tls:test_exporter_with_tls.py:138 Deploying self-signed-certificates
+[32mINFO    [0m juju.model:model.py:2098 Deploying ch:amd64/jammy/self-signed-certificates-155
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  self-signed-certificates/0 [allocating] waiting: installing agent
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  self-signed-certificates/0 [idle] active: 
+[32mINFO    [0m integration.test_exporter_with_tls:test_exporter_with_tls.py:149 Relating mysqlrouter with self-signed-certificates
+[33mWARNING [0m juju.model:model.py:1564 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m integration.test_exporter_with_tls:test_exporter_with_tls.py:172 Relating mysqlrouter with grafana agent
+[33mWARNING [0m juju.model:model.py:1564 relate is deprecated and will be removed. Use integrate instead.
+[33mWARNING [0m juju.model:model.py:1564 relate is deprecated and will be removed. Use integrate instead.
+[33mWARNING [0m juju.model:model.py:1564 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m integration.test_exporter_with_tls:test_exporter_with_tls.py:213 Removing relation between mysqlrouter and grafana agent
+[32mINFO    [0m integration.test_exporter_with_tls:test_exporter_with_tls.py:233 Removing relation between mysqlrouter and self-signed-certificates
+[32mINFO    [0m pytest_operator.plugin:plugin.py:862 Model status:
+
+Model  Controller          Cloud/Region        Version  SLA          Timestamp
+test   microk8s-localhost  microk8s/localhost  3.5.4    unsupported  01:41:58Z
+
+App                       Version                  Status   Scale  Charm                     Channel        Rev  Address         Exposed  Message
+grafana-agent-k8s         0.32.1                   blocked      1  grafana-agent-k8s         latest/stable   45  10.152.183.197  no       grafana-cloud-config: off, grafana-dashboards-provider: off
+mysql-k8s                 8.0.37-0ubuntu0.22.04.3  active       1  mysql-k8s                 8.0/edge       208  10.152.183.145  no       
+mysql-router-k8s          8.0.37-0ubuntu0.22.04.3  active       1  mysql-router-k8s                           0  10.152.183.186  no       
+mysql-test-app            0.0.2                    active       1  mysql-test-app            latest/edge     63  10.152.183.193  no       Last written value=78
+self-signed-certificates                           active       1  self-signed-certificates  latest/stable  155  10.152.183.243  no       
+
+Unit                         Workload  Agent  Address      Ports  Message
+grafana-agent-k8s/0*         blocked   idle   10.1.206.9          grafana-cloud-config: off, grafana-dashboards-provider: off
+mysql-k8s/0*                 active    idle   10.1.206.12         Primary
+mysql-router-k8s/0*          active    idle   10.1.206.13         
+mysql-test-app/0*            active    idle   10.1.206.11         Last written value=78
+self-signed-certificates/0*  active    idle   10.1.206.14         
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:868 Juju error logs:
+
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:947 Forgetting model main...
