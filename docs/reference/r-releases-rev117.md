@@ -1,7 +1,8 @@
 >Reference > Release Notes > [All revisions](/t/12201) > Revision 117  
-# Revision 117 (`8.0/candidate` only)
 
-<sub>TODO: DD, MM, YYYY</sub>
+# Revision 117
+
+<sub>Aug 20, 2024</sub>
 
 Dear community,
 
@@ -38,7 +39,7 @@ Canonical Data issues are now public on both [Jira](https://warthogs.atlassian.n
 * Charmed MySQL Router K8s ships MySQL Router `8.0.36-0ubuntu0.22.04.1`
 * CLI mysql-shell version is `8.0.36+dfsg-0ubuntu0.22.04.1~ppa4`
 * The Prometheus `mysql-router-exporter` is `5.0.1-0ubuntu0.22.04.1~ppa1`
-* K8s charms based on our [ROCK OCI](https://github.com/canonical/charmed-mysql-rock) (Ubuntu LTS `22.04.4`), snap revision `103`
+* K8s charms based on our [ROCK OCI](https://github.com/canonical/charmed-mysql-rock) ([resource-revision 53](https://github.com/canonical/mysql-router-k8s-operator/releases/tag/rev117), based on Ubuntu LTS `22.04.4`), snap revision `103`
 * Principal charms supports the latest LTS series 22.04 only
 
 ## Technical notes

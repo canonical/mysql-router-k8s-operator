@@ -116,9 +116,12 @@ class _Relation:
         extra_hosts, extra_ips = self._charm.get_all_k8s_node_hostnames_and_ips()
         return tls_certificates.generate_csr(
             private_key=key,
-            subject=socket.getfqdn(),
+            # X.509 CommonName has a limit of 64 characters
+            # (https://github.com/pyca/cryptography/issues/10553)
+            subject=socket.getfqdn()[:64],
             organization=self._charm.app.name,
             sans_dns=[
+                socket.getfqdn(),
                 unit_name,
                 f"{unit_name}.{self._charm.app.name}-endpoints",
                 f"{unit_name}.{self._charm.app.name}-endpoints.{self._charm.model_service_domain}",

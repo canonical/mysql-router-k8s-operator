@@ -19,9 +19,9 @@ requests = "^2.32.3"
 ops = ">=2.0.0"
 # loki-k8s/v1/loki_push_api.py and prometheus_k8s/v0/prometheus_scrape.py
 cosl = "*"
-# tempo_k8s/v1/charm_tracing.py
+# tempo_coordinator_k8s/v0/charm_tracing.py
 opentelemetry-exporter-otlp-proto-http = "1.21.0"
-# tempo_k8s/v2/tracing.py
+# tempo_coordinator_k8s/v0/tracing.py
 pydantic = "*"
 # tls_certificates_interface/v1/tls_certificates.py
 cryptography = "*"
@@ -51,14 +51,14 @@ ops = "^2.9.0"
 [tool.poetry.group.integration.dependencies]
 pytest = "^8.2.2"
 pytest-operator = "^0.35.0"
-pytest-operator-cache = {git = "https://github.com/canonical/data-platform-workflows", tag = "v20.0.2", subdirectory = "python/pytest_plugins/pytest_operator_cache"}
-pytest-operator-groups = {git = "https://github.com/canonical/data-platform-workflows", tag = "v20.0.2", subdirectory = "python/pytest_plugins/pytest_operator_groups"}
-juju = "^3.2.2"
+pytest-operator-cache = {git = "https://github.com/canonical/data-platform-workflows", tag = "v23.0.2", subdirectory = "python/pytest_plugins/pytest_operator_cache"}
+pytest-operator-groups = {git = "https://github.com/canonical/data-platform-workflows", tag = "v23.0.2", subdirectory = "python/pytest_plugins/pytest_operator_groups"}
+juju = "^3.5.2.0"
 mysql-connector-python = "~8.0.33"
 pyyaml = "^6.0.1"
 tenacity = "^8.5.0"
 allure-pytest = "^2.13.5"
-allure-pytest-collection-report = {git = "https://github.com/canonical/data-platform-workflows", tag = "v20.0.2", subdirectory = "python/pytest_plugins/allure_pytest_collection_report"}
+allure-pytest-collection-report = {git = "https://github.com/canonical/data-platform-workflows", tag = "v23.0.2", subdirectory = "python/pytest_plugins/allure_pytest_collection_report"}
 
 
 [tool.coverage.run]
