@@ -341,7 +341,7 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         """Return the node ports of nodes where units of this app are scheduled."""
         peer_relation = self.model.get_relation(self._PEER_RELATION_NAME)
         if not peer_relation:
-            return []
+            return set()
 
         def _get_node_address(node) -> str:
             # OpenStack will return an internal hostname, not externally accessible
