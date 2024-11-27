@@ -6,6 +6,9 @@
 
 """MySQL Router Kubernetes charm"""
 
+import enum
+import functools
+import json
 import logging
 import socket
 import typing
@@ -25,6 +28,7 @@ import logrotate
 import relations.cos
 import relations.database_provides
 import relations.database_requires
+import relations.secrets
 import rock
 import upgrade
 import workload
@@ -32,6 +36,14 @@ import workload
 logger = logging.getLogger(__name__)
 logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("httpcore").setLevel(logging.WARNING)
+
+
+class _ServiceType(enum.Enum):
+    """Supported K8s service types"""
+
+    CLUSTER_IP = "ClusterIP"
+    NODE_PORT = "NodePort"
+    LOAD_BALANCER = "LoadBalancer"
 
 
 @trace_charm(
@@ -51,11 +63,23 @@ logging.getLogger("httpcore").setLevel(logging.WARNING)
 class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
     """MySQL Router Kubernetes charm"""
 
+    _PEER_RELATION_NAME = "mysql-router-peers"
+
+    _K8S_SERVICE_CONNECTION_TIMEOUT = 3
+    _K8S_SERVICE_INITIALIZED_KEY = "k8s-service-initialized"
+    _K8S_SERVICE_CREATING_KEY = "k8s-service-creating"
+
     def __init__(self, *args) -> None:
         super().__init__(*args)
         self._namespace = self.model.name
 
+        self.service_name = f"{self.app.name}-service"
+        self._lightkube_client = lightkube.Client()
+
+        self._peer_data = relations.secrets.RelationSecrets(self, self._PEER_RELATION_NAME)
+
         self.framework.observe(self.on.install, self._on_install)
+        self.framework.observe(self.on.config_changed, self.reconcile)
         self.framework.observe(
             self.on[rock.CONTAINER_NAME].pebble_ready, self._on_workload_container_pebble_ready
         )
@@ -80,14 +104,197 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         except upgrade.PeerRelationNotReady:
             pass
 
+    @property
+    def _status(self) -> ops.StatusBase:
+        if self.config.get("expose-external", "false") not in [
+            "false",
+            "nodeport",
+            "loadbalancer",
+        ]:
+            return ops.BlockedStatus("Invalid expose-external config value")
+        if (
+            self._peer_data.get_value(
+                relations.secrets.APP_SCOPE, self._K8S_SERVICE_INITIALIZED_KEY
+            )
+            and not self._check_service_connectivity()
+        ):
+            if self._peer_data.get_value(
+                relations.secrets.APP_SCOPE, self._K8S_SERVICE_CREATING_KEY
+            ):
+                return ops.MaintenanceStatus("Waiting for K8s service connectivity")
+            else:
+                return ops.BlockedStatus("K8s service not connectible")
+
     def is_externally_accessible(self, *, event) -> typing.Optional[bool]:
         """No-op since this charm is exposed with node-port"""
 
-    def _reconcile_node_port(self, *, event) -> None:
-        self._patch_service(event)
+    def _get_service(self) -> typing.Optional[lightkube.resources.core_v1.Service]:
+        """Get the managed k8s service."""
+        try:
+            service = self._lightkube_client.get(
+                res=lightkube.resources.core_v1.Service,
+                name=self.service_name,
+                namespace=self.model.name,
+            )
+        except lightkube.core.exceptions.ApiError as e:
+            if e.status.code == 404:
+                return None
+            raise
+
+        return service
+
+    @functools.cache
+    def _get_pod(self, unit_name: str) -> lightkube.resources.core_v1.Pod:
+        """Get the pod for the provided unit name."""
+        return self._lightkube_client.get(
+            res=lightkube.resources.core_v1.Pod,
+            name=unit_name.replace("/", "-"),
+            namespace=self.model.name,
+        )
+
+    @functools.cache
+    def _get_node(self, unit_name: str) -> lightkube.resources.core_v1.Node:
+        """Return the node for the provided unit name."""
+        node_name = self._get_pod(unit_name).spec.nodeName
+        return self._lightkube_client.get(
+            res=lightkube.resources.core_v1.Node,
+            name=node_name,
+            namespace=self.model.name,
+        )
+
+    def _reconcile_service(self) -> None:
+        expose_external = self.config.get("expose-external", "false")
+        if expose_external not in ["false", "nodeport", "loadbalancer"]:
+            logger.warning(f"Invalid config value {expose_external=}")
+            return
+
+        desired_service_type = {
+            "false": _ServiceType.CLUSTER_IP,
+            "nodeport": _ServiceType.NODE_PORT,
+            "loadbalancer": _ServiceType.LOAD_BALANCER,
+        }[expose_external]
+
+        service = self._get_service()
+        service_exists = service is not None
+        service_type = service_exists and _ServiceType(service.spec.type)
+        if service_exists and service_type == desired_service_type:
+            return
+
+        pod0 = self._get_pod(f"{self.app.name}/0")
+
+        annotations = (
+            json.loads(self.config.get("loadbalancer-extra-annotations", "{}"))
+            if desired_service_type == _ServiceType.LOAD_BALANCER
+            else {}
+        )
+
+        desired_service = lightkube.resources.core_v1.Service(
+            metadata=lightkube.models.meta_v1.ObjectMeta(
+                name=self.service_name,
+                namespace=self.model.name,
+                ownerReferences=pod0.metadata.ownerReferences,  # the stateful set
+                labels={"app.kubernetes.io/name": self.app.name},
+                annotations=annotations,
+            ),
+            spec=lightkube.models.core_v1.ServiceSpec(
+                ports=[
+                    lightkube.models.core_v1.ServicePort(
+                        name="mysql-rw",
+                        port=self._READ_WRITE_PORT,
+                        targetPort=self._READ_WRITE_PORT,
+                    ),
+                    lightkube.models.core_v1.ServicePort(
+                        name="mysql-ro",
+                        port=self._READ_ONLY_PORT,
+                        targetPort=self._READ_ONLY_PORT,
+                    ),
+                ],
+                type=desired_service_type.value,
+                selector={"app.kubernetes.io/name": self.app.name},
+            ),
+        )
+
+        # Delete and re-create until https://bugs.launchpad.net/juju/+bug/2084711 resolved
+        if service_exists:
+            logger.info(f"Issuing delete service {service_type=}")
+            self._lightkube_client.delete(
+                res=lightkube.resources.core_v1.Service,
+                name=self.service_name,
+                namespace=self.model.name,
+            )
+            logger.info(f"Deleting service {service_type=}")
+
+            try:
+                for attempt in tenacity.Retrying(
+                    reraise=True,
+                    stop=tenacity.stop_after_delay(10),
+                    wait=tenacity.wait_fixed(1),
+                ):
+                    with attempt:
+                        assert self._get_service() is not None
+            except AssertionError:
+                logger.warning("Deletion of service took longer than expected")
+                return
+            else:
+                logger.debug(f"Deleted service {service_type=}")
+
+        logger.info(f"Creating desired service {desired_service_type=}")
+        self._lightkube_client.apply(desired_service, field_manager=self.app.name)
+
+        self._peer_data.set_value(
+            relations.secrets.APP_SCOPE, self._K8S_SERVICE_CREATING_KEY, "true"
+        )
+        self._peer_data.set_value(
+            relations.secrets.APP_SCOPE, self._K8S_SERVICE_INITIALIZED_KEY, "true"
+        )
+
+        logger.info(f"Request to create desired service {desired_service_type=} dispatched")
+
+    def _check_service_connectivity(self) -> bool:
+        if not self._get_service() or not isinstance(
+            self.get_workload(event=None), workload.AuthenticatedWorkload
+        ):
+            logger.debug("No service or unauthenticated workload")
+            return False
+
+        for endpoints in (
+            self._read_write_endpoints,
+            self._read_only_endpoints,
+        ):
+            if endpoints == "":
+                logger.debug(
+                    f"Empty endpoints {self._read_write_endpoints=} {self._read_only_endpoints=}"
+                )
+                return False
+
+            for endpoint in endpoints.split(","):
+                with socket.socket() as s:
+                    s.settimeout(self._K8S_SERVICE_CONNECTION_TIMEOUT)
+
+                    host, port = endpoint.split(":")
+
+                    try:
+                        socket_connect_code = s.connect_ex((host, int(port)))
+                    except socket.gaierror:
+                        # Sometimes, it may take LB hostname record to propagate
+                        logger.info(f"Unable to resolve {endpoint=}")
+                        return False
+
+                    if socket_connect_code != 0:
+                        logger.info(f"Unable to connect to {endpoint=}")
+                        return False
+
+        return True
 
     def _reconcile_ports(self, *, event) -> None:
         """Needed for VM, so no-op"""
+
+    def _update_endpoints(self) -> None:
+        if self._check_service_connectivity():
+            self._database_provides.update_endpoints(
+                router_read_write_endpoints=self._read_write_endpoints,
+                router_read_only_endpoints=self._read_only_endpoints,
+            )
 
     def wait_until_mysql_router_ready(self, *, event=None) -> None:
         logger.debug("Waiting until MySQL Router is ready")
@@ -127,97 +334,88 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
     @property
     def _host(self) -> str:
         """K8s service hostname for MySQL Router"""
-        # Example: mysql-router-k8s.my-model.svc.cluster.local
-        return f"{self.app.name}.{self.model_service_domain}"
+        # Example: mysql-router-k8s-service.my-model.svc.cluster.local
+        return f"{self.service_name}.{self.model_service_domain}"
+
+    def _get_node_hosts(self) -> set[str]:
+        """Return the node ports of nodes where units of this app are scheduled."""
+        peer_relation = self.model.get_relation(self._PEER_RELATION_NAME)
+        if not peer_relation:
+            return set()
+
+        def _get_node_address(node) -> str:
+            # OpenStack will return an internal hostname, not externally accessible
+            # Preference: ExternalIP > InternalIP > Hostname
+            for typ in ["ExternalIP", "InternalIP", "Hostname"]:
+                for address in node.status.addresses:
+                    if address.type == typ:
+                        return address.address
+
+        hosts = set()
+        for unit in peer_relation.units | {self.model.unit}:
+            node = self._get_node(unit.name)
+            hosts.add(_get_node_address(node))
+        return hosts
+
+    def _get_hosts_ports(self, port_type: str) -> str:  # noqa: C901
+        """Gets the host and port for the endpoint depending of type of service."""
+        if port_type not in ["rw", "ro"]:
+            raise ValueError("Invalid port type")
+
+        service = self._get_service()
+        if not service:
+            return ""
+
+        port = self._READ_WRITE_PORT if port_type == "rw" else self._READ_ONLY_PORT
+
+        service_type = _ServiceType(service.spec.type)
+
+        if service_type == _ServiceType.CLUSTER_IP:
+            return f"{self._host}:{port}"
+        elif service_type == _ServiceType.NODE_PORT:
+            hosts = self._get_node_hosts()
+
+            for p in service.spec.ports:
+                if p.name == f"mysql-{port_type}":
+                    node_port = p.nodePort
+
+            return ",".join(sorted({f"{host}:{node_port}" for host in hosts}))
+        elif service_type == _ServiceType.LOAD_BALANCER and service.status.loadBalancer.ingress:
+            if len(service.status.loadBalancer.ingress) != 0:
+                ip = service.status.loadBalancer.ingress[0].ip
+                hostname = service.status.loadBalancer.ingress[0].hostname
+
+            if ip:
+                return f"{ip}:{port}"
+
+            if hostname:
+                return f"{hostname}:{port}"
+
+        return ""
 
     @property
-    def _read_write_endpoint(self) -> str:
-        return f"{self._host}:{self._READ_WRITE_PORT}"
+    def _read_write_endpoints(self) -> str:
+        return self._get_hosts_ports("rw")
 
     @property
-    def _read_only_endpoint(self) -> str:
-        return f"{self._host}:{self._READ_ONLY_PORT}"
+    def _read_only_endpoints(self) -> str:
+        return self._get_hosts_ports("ro")
 
     @property
-    def _exposed_read_write_endpoint(self) -> str:
-        return f"{self._node_ip}:{self._node_port('rw')}"
+    def _exposed_read_write_endpoint(self) -> typing.Optional[str]:
+        """Only applies to VM charm, so no-op."""
+        pass
 
     @property
-    def _exposed_read_only_endpoint(self) -> str:
-        return f"{self._node_ip}:{self._node_port('ro')}"
-
-    def _patch_service(self, event=None) -> None:
-        """Patch Juju-created k8s service.
-
-        The k8s service will be tied to pod-0 so that the service is auto cleaned by
-        k8s when the last pod is scaled down.
-        """
-        logger.debug("Patching k8s service")
-        client = lightkube.Client()
-        pod0 = client.get(
-            res=lightkube.resources.core_v1.Pod,
-            name=self.app.name + "-0",
-            namespace=self.model.name,
-        )
-        service = lightkube.resources.core_v1.Service(
-            metadata=lightkube.models.meta_v1.ObjectMeta(
-                name=self.app.name,
-                namespace=self.model.name,
-                ownerReferences=pod0.metadata.ownerReferences,
-                labels={
-                    "app.kubernetes.io/name": self.app.name,
-                },
-            ),
-            spec=lightkube.models.core_v1.ServiceSpec(
-                ports=[
-                    lightkube.models.core_v1.ServicePort(
-                        name="mysql-rw",
-                        port=self._READ_WRITE_PORT,
-                        targetPort=self._READ_WRITE_PORT,  # Value ignored if NodePort
-                    ),
-                    lightkube.models.core_v1.ServicePort(
-                        name="mysql-ro",
-                        port=self._READ_ONLY_PORT,
-                        targetPort=self._READ_ONLY_PORT,  # Value ignored if NodePort
-                    ),
-                ],
-                type=(
-                    "NodePort"
-                    if self._database_provides.external_connectivity(event)
-                    else "ClusterIP"
-                ),
-                selector={"app.kubernetes.io/name": self.app.name},
-            ),
-        )
-        client.patch(
-            res=lightkube.resources.core_v1.Service,
-            obj=service,
-            name=service.metadata.name,
-            namespace=service.metadata.namespace,
-            force=True,
-            field_manager=self.app.name,
-        )
-        logger.debug("Patched k8s service")
-
-    @property
-    def _node_name(self) -> str:
-        """Return the node name for this unit's pod ip."""
-        pod = lightkube.Client().get(
-            lightkube.resources.core_v1.Pod,
-            name=self.unit.name.replace("/", "-"),
-            namespace=self._namespace,
-        )
-        return pod.spec.nodeName
+    def _exposed_read_only_endpoint(self) -> typing.Optional[str]:
+        """Only applies to VM charm, so no-op."""
+        pass
 
     def get_all_k8s_node_hostnames_and_ips(
         self,
     ) -> typing.Tuple[typing.List[str], typing.List[str]]:
         """Return all node hostnames and IPs registered in k8s."""
-        node = lightkube.Client().get(
-            lightkube.resources.core_v1.Node,
-            name=self._node_name,
-            namespace=self._namespace,
-        )
+        node = self._get_node(self.unit.name)
         hostnames = []
         ips = []
         for a in node.status.addresses:
@@ -226,47 +424,6 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
             elif a.type == "Hostname":
                 hostnames.append(a.address)
         return hostnames, ips
-
-    @property
-    def _node_ip(self) -> typing.Optional[str]:
-        """Return node IP."""
-        node = lightkube.Client().get(
-            lightkube.resources.core_v1.Node,
-            name=self._node_name,
-            namespace=self._namespace,
-        )
-        # [
-        #    NodeAddress(address='192.168.0.228', type='InternalIP'),
-        #    NodeAddress(address='example.com', type='Hostname')
-        # ]
-        # Remember that OpenStack, for example, will return an internal hostname, which is not
-        # accessible from the outside. Give preference to ExternalIP, then InternalIP first
-        # Separated, as we want to give preference to ExternalIP, InternalIP and then Hostname
-        for typ in ["ExternalIP", "InternalIP", "Hostname"]:
-            for a in node.status.addresses:
-                if a.type == typ:
-                    return a.address
-
-    def _node_port(self, port_type: str) -> int:
-        """Return node port."""
-        service = lightkube.Client().get(
-            lightkube.resources.core_v1.Service, self.app.name, namespace=self._namespace
-        )
-        if not service or not service.spec.type == "NodePort":
-            return -1
-        # svc.spec.ports
-        # [ServicePort(port=3306, appProtocol=None, name=None, nodePort=31438, protocol='TCP', targetPort=3306)]
-        if port_type == "rw":
-            port = self._READ_WRITE_PORT
-        elif port_type == "ro":
-            port = self._READ_ONLY_PORT
-        else:
-            raise ValueError(f"Invalid {port_type=}")
-        logger.debug(f"Looking for NodePort for {port_type} in {service.spec.ports}")
-        for svc_port in service.spec.ports:
-            if svc_port.port == port:
-                return svc_port.nodePort
-        raise Exception(f"NodePort not found for {port_type}")
 
     # =======================
     #  Handlers
@@ -279,11 +436,6 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
                 self.unit.open_port("tcp", port)
         if not self.unit.is_leader():
             return
-        try:
-            self._patch_service()
-        except lightkube.ApiError:
-            logger.exception("Failed to patch k8s service")
-            raise
 
     def _on_workload_container_pebble_ready(self, _) -> None:
         self.unit.set_workload_version(self.get_workload(event=None).version)

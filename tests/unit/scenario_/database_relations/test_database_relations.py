@@ -19,6 +19,12 @@ def model_service_domain(monkeypatch, request):
     monkeypatch.setattr(
         "kubernetes_charm.KubernetesRouterCharm.model_service_domain", request.param
     )
+    monkeypatch.setattr(
+        "kubernetes_charm.KubernetesRouterCharm._get_hosts_ports",
+        lambda _, port_type: f"mysql-router-k8s-service.{request.param}:6446"
+        if port_type == "rw"
+        else f"mysql-router-k8s-service.{request.param}:6447",
+    )
     return request.param
 
 
@@ -32,7 +38,11 @@ def output_states(*, relations: list[scenario.Relation]) -> typing.Iterable[scen
     context = scenario.Context(kubernetes_charm.KubernetesRouterCharm)
     container = scenario.Container("mysql-router", can_connect=True)
     input_state = scenario.State(
-        relations=[*relations, scenario.PeerRelation(endpoint="upgrade-version-a")],
+        relations=[
+            *relations,
+            scenario.PeerRelation(endpoint="mysql-router-peers"),
+            scenario.PeerRelation(endpoint="upgrade-version-a"),
+        ],
         containers=[container],
         leader=True,
     )
@@ -76,8 +86,8 @@ def assert_complete_local_app_databag(
         )
     assert local_app_data == {
         "database": provides.remote_app_data["database"],
-        "endpoints": f"mysql-router-k8s.{model_service_domain}:6446",
-        "read-only-endpoints": f"mysql-router-k8s.{model_service_domain}:6447",
+        "endpoints": f"mysql-router-k8s-service.{model_service_domain}:6446",
+        "read-only-endpoints": f"mysql-router-k8s-service.{model_service_domain}:6447",
     }
 
 

@@ -112,6 +112,7 @@ class _Relation:
 
     def _generate_csr(self, key: bytes) -> bytes:
         """Generate certificate signing request (CSR)."""
+        service_name = self._charm.service_name
         unit_name = self._charm.unit.name.replace("/", "-")
         extra_hosts, extra_ips = self._charm.get_all_k8s_node_hostnames_and_ips()
         return tls_certificates.generate_csr(
@@ -122,13 +123,22 @@ class _Relation:
             organization=self._charm.app.name,
             sans_dns=[
                 socket.getfqdn(),
+                service_name,
                 unit_name,
+                f"{service_name}.{self._charm.app.name}-endpoints",
                 f"{unit_name}.{self._charm.app.name}-endpoints",
+                f"{self._charm.app.name}.{self._charm.app.name}-endpoints",
+                f"{service_name}.{self._charm.app.name}-endpoints.{self._charm.model_service_domain}",
                 f"{unit_name}.{self._charm.app.name}-endpoints.{self._charm.model_service_domain}",
+                f"{self._charm.app.name}.{self._charm.app.name}-endpoints.{self._charm.model_service_domain}",
                 f"{self._charm.app.name}-endpoints",
                 f"{self._charm.app.name}-endpoints.{self._charm.model_service_domain}",
+                f"{service_name}.{self._charm.app.name}",
                 f"{unit_name}.{self._charm.app.name}",
+                f"{self._charm.app.name}.{self._charm.app.name}",
+                f"{service_name}.{self._charm.app.name}.{self._charm.model_service_domain}",
                 f"{unit_name}.{self._charm.app.name}.{self._charm.model_service_domain}",
+                f"{self._charm.app.name}.{self._charm.app.name}.{self._charm.model_service_domain}",
                 self._charm.app.name,
                 f"{self._charm.app.name}.{self._charm.model_service_domain}",
                 *extra_hosts,
