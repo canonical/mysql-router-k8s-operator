@@ -232,10 +232,12 @@ class Upgrade(upgrade.Upgrade):
                 # also applicable `if not force`, but is unlikely to happen since all units are
                 # healthy `if not force`.
                 message = f"Attempting to upgrade unit {self._partition}"
+                action_event.set_results({"result": message})
+                logger.warning(f"Resume upgrade event succeeded: {message}")
             else:
                 message = f"Upgrade resumed. Unit {self._partition} is upgrading next"
-            action_event.set_results({"result": message})
-            logger.debug(f"Resume upgrade event succeeded: {message}")
+                action_event.set_results({"result": message})
+                logger.debug(f"Resume upgrade event succeeded: {message}")
 
     @property
     def authorized(self) -> bool:
