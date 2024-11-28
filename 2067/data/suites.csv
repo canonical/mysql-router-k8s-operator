@@ -1,0 +1,15 @@
+"DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
+"Test that the exporter endpoint works when related with TLS","213640","test_exporter_endpoint","tests.integration","Thu Nov 28 01:44:42 UTC 2024","passed","Thu Nov 28 01:48:15 UTC 2024","","test_exporter_with_tls","",""
+"Test endpoints when mysql-router-k8s is related to a TLS operator.","545369","test_expose_external_with_tls","tests.integration","Thu Nov 28 01:50:02 UTC 2024","passed","Thu Nov 28 01:59:08 UTC 2024","","test_expose_external","",""
+"Test log rotation.","104712","test_log_rotation","tests.integration","Thu Nov 28 01:45:05 UTC 2024","passed","Thu Nov 28 01:46:50 UTC 2024","","test_log_rotation","",""
+"Test the database relation.","1023350","test_database_relation","tests.integration","Thu Nov 28 01:45:11 UTC 2024","broken","Thu Nov 28 02:02:14 UTC 2024","","test_charm","",""
+"Test the expose-external config option.","306602","test_expose_external","tests.integration","Thu Nov 28 01:44:56 UTC 2024","passed","Thu Nov 28 01:50:02 UTC 2024","","test_expose_external","",""
+"Test that exporter endpoint is functional.","151111","test_exporter_endpoint","tests.integration","Thu Nov 28 01:45:07 UTC 2024","passed","Thu Nov 28 01:47:38 UTC 2024","","test_exporter","",""
+"Upgrade mysqlrouter while ensuring continuous writes incrementing.","217145","test_upgrade_from_edge","tests.integration","Thu Nov 28 01:47:23 UTC 2024","passed","Thu Nov 28 01:51:00 UTC 2024","","test_upgrade","",""
+"Simple test to ensure that mysql, mysqlrouter and application charms deploy.","126882","test_deploy_edge","tests.integration","Thu Nov 28 01:45:16 UTC 2024","passed","Thu Nov 28 01:47:23 UTC 2024","","test_upgrade","",""
+"Upgrade to an invalid version and test rollback.
+
+    Relies on the charm built in the previous test (test_upgrade_from_edge).
+    ","232581","test_fail_and_rollback","tests.integration","Thu Nov 28 01:51:00 UTC 2024","passed","Thu Nov 28 01:54:53 UTC 2024","","test_upgrade","",""
+"Test encryption when backend database is using TLS.","100466","test_build_deploy_and_relate","tests.integration","Thu Nov 28 01:44:45 UTC 2024","passed","Thu Nov 28 01:46:25 UTC 2024","","test_tls","",""
+"Test encryption when backend database is using TLS.","21877","test_connected_encryption","tests.integration","Thu Nov 28 01:46:25 UTC 2024","passed","Thu Nov 28 01:46:47 UTC 2024","","test_tls","",""
