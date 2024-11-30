@@ -1,0 +1,38 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:734 Connecting to existing model microk8s-localhost:test on unspecified cloud
+[32mINFO    [0m integration.test_log_rotation:test_log_rotation.py:49 Deploying mysql, mysqlrouter and application
+[32mINFO    [0m juju.model:model.py:2098 Deploying ch:amd64/jammy/mysql-test-app-63
+[32mINFO    [0m juju.model:model.py:2098 Deploying ch:amd64/jammy/mysql-k8s-208
+[32mINFO    [0m juju.model:model.py:2098 Deploying local:mysql-router-k8s-0
+[32mINFO    [0m integration.test_log_rotation:test_log_rotation.py:80 Waiting for mysqlrouter to be in BlockedStatus
+[32mINFO    [0m integration.test_log_rotation:test_log_rotation.py:86 Relating mysql, mysqlrouter and application
+[33mWARNING [0m juju.model:model.py:1564 relate is deprecated and will be removed. Use integrate instead.
+[33mWARNING [0m juju.model:model.py:1564 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m integration.test_log_rotation:test_log_rotation.py:107 Stopping the logrotate executor pebble service
+[32mINFO    [0m integration.test_log_rotation:test_log_rotation.py:110 Stopping any running logrotate jobs
+[32mINFO    [0m integration.test_log_rotation:test_log_rotation.py:113 Removing existing archive directory
+[32mINFO    [0m integration.test_log_rotation:test_log_rotation.py:120 Writing some data mysqlrouter log file
+[32mINFO    [0m integration.test_log_rotation:test_log_rotation.py:124 Ensuring only log files exist
+[32mINFO    [0m integration.test_log_rotation:test_log_rotation.py:133 Executing logrotate
+[32mINFO    [0m integration.test_log_rotation:test_log_rotation.py:136 Ensuring log files and archive directories exist
+[32mINFO    [0m integration.test_log_rotation:test_log_rotation.py:148 Ensuring log files was rotated
+[32mINFO    [0m pytest_operator.plugin:plugin.py:862 Model status:
+
+Model  Controller          Cloud/Region        Version  SLA          Timestamp
+test   microk8s-localhost  microk8s/localhost  3.5.4    unsupported  01:40:59Z
+
+App               Version                  Status   Scale  Charm             Channel      Rev  Address         Exposed  Message
+mysql-k8s         8.0.37-0ubuntu0.22.04.3  waiting      3  mysql-k8s         8.0/edge     208  10.152.183.193  no       installing agent
+mysql-router-k8s  8.0.37-0ubuntu0.22.04.3  active       1  mysql-router-k8s                 0  10.152.183.23   no       
+mysql-test-app    0.0.2                    active       1  mysql-test-app    latest/edge   63  10.152.183.78   no       
+
+Unit                 Workload  Agent      Address       Ports  Message
+mysql-k8s/0          active    executing  10.1.146.144         
+mysql-k8s/1*         active    executing  10.1.146.143         Primary
+mysql-k8s/2          waiting   executing  10.1.146.142         waiting to join the cluster
+mysql-router-k8s/0*  active    idle       10.1.146.138         
+mysql-test-app/0*    active    idle       10.1.146.137         
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:868 Juju error logs:
+
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:947 Forgetting model main...
