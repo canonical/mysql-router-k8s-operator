@@ -1,0 +1,15 @@
+"DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
+"Test encryption when backend database is using TLS.","21924","test_connected_encryption","tests.integration","Mon Dec 02 01:41:57 UTC 2024","passed","Mon Dec 02 01:42:19 UTC 2024","","test_tls","",""
+"Test log rotation.","107801","test_log_rotation","tests.integration","Mon Dec 02 01:40:20 UTC 2024","passed","Mon Dec 02 01:42:07 UTC 2024","","test_log_rotation","",""
+"Test that exporter endpoint is functional.","144621","test_exporter_endpoint","tests.integration","Mon Dec 02 01:39:45 UTC 2024","passed","Mon Dec 02 01:42:10 UTC 2024","","test_exporter","",""
+"Test endpoints when mysql-router-k8s is related to a TLS operator.","456736","test_expose_external_with_tls","tests.integration","Mon Dec 02 01:43:14 UTC 2024","passed","Mon Dec 02 01:50:51 UTC 2024","","test_expose_external","",""
+"Simple test to ensure that mysql, mysqlrouter and application charms deploy.","126176","test_deploy_edge","tests.integration","Mon Dec 02 01:39:38 UTC 2024","passed","Mon Dec 02 01:41:44 UTC 2024","","test_upgrade","",""
+"Upgrade mysqlrouter while ensuring continuous writes incrementing.","942211","test_upgrade_from_edge","tests.integration","Mon Dec 02 01:41:44 UTC 2024","broken","Mon Dec 02 01:57:26 UTC 2024","","test_upgrade","",""
+"Test encryption when backend database is using TLS.","99660","test_build_deploy_and_relate","tests.integration","Mon Dec 02 01:40:18 UTC 2024","passed","Mon Dec 02 01:41:57 UTC 2024","","test_tls","",""
+"Test the expose-external config option.","203935","test_expose_external","tests.integration","Mon Dec 02 01:39:50 UTC 2024","passed","Mon Dec 02 01:43:14 UTC 2024","","test_expose_external","",""
+"Test the database relation.","1035200","test_database_relation","tests.integration","Mon Dec 02 01:39:44 UTC 2024","broken","Mon Dec 02 01:56:59 UTC 2024","","test_charm","",""
+"Upgrade to an invalid version and test rollback.
+
+    Relies on the charm built in the previous test (test_upgrade_from_edge).
+    ","0","test_fail_and_rollback","tests.integration","Mon Dec 02 01:57:26 UTC 2024","skipped","Mon Dec 02 01:57:26 UTC 2024","","test_upgrade","",""
+"Test that the exporter endpoint works when related with TLS","214827","test_exporter_endpoint","tests.integration","Mon Dec 02 01:40:08 UTC 2024","passed","Mon Dec 02 01:43:43 UTC 2024","","test_exporter_with_tls","",""
