@@ -126,7 +126,7 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
                 return ops.BlockedStatus("K8s service not connectible")
 
     def is_externally_accessible(self, *, event) -> typing.Optional[bool]:
-        """No-op since this charm is exposed with node-port"""
+        """No-op since this charm is exposed with the expose-external config."""
 
     def _get_service(self) -> typing.Optional[lightkube.resources.core_v1.Service]:
         """Get the managed k8s service."""
@@ -251,6 +251,7 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         logger.info(f"Request to create desired service {desired_service_type=} dispatched")
 
     def _check_service_connectivity(self) -> bool:
+        """Check if the service is available (connectable with a socket)."""
         if not self._get_service() or not isinstance(
             self.get_workload(event=None), workload.AuthenticatedWorkload
         ):
@@ -402,12 +403,12 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         return self._get_hosts_ports("ro")
 
     @property
-    def _exposed_read_write_endpoint(self) -> typing.Optional[str]:
+    def _exposed_read_write_endpoints(self) -> typing.Optional[str]:
         """Only applies to VM charm, so no-op."""
         pass
 
     @property
-    def _exposed_read_only_endpoint(self) -> typing.Optional[str]:
+    def _exposed_read_only_endpoints(self) -> typing.Optional[str]:
         """Only applies to VM charm, so no-op."""
         pass
 
