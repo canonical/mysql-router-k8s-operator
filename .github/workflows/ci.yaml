@@ -66,6 +66,18 @@ jobs:
     name: Build charm
     uses: canonical/data-platform-workflows/.github/workflows/build_charm.yaml@beta-charmcraftst124
 
+  release:
+    name: Release charm
+    needs:
+      - build
+    uses: canonical/data-platform-workflows/.github/workflows/release_charm.yaml@beta-charmcraftst124
+    with:
+      channel: 8.0/edge/test-charmcraftst124
+      artifact-prefix: ${{ needs.build.outputs.artifact-prefix }}
+      create-github-release: false
+    secrets:
+      charmhub-token: ${{ secrets.CHARMHUB_TOKEN }}
+
   integration-test:
     strategy:
       fail-fast: false
