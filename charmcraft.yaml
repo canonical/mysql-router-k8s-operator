@@ -10,6 +10,8 @@ bases:
     channel: "22.04"
     architectures: [arm64]
 parts:
+  # "poetry-deps" part name is a magic constant
+  # https://github.com/canonical/craft-parts/pull/901
   poetry-deps:
     plugin: nil
     build-packages:
