@@ -52,9 +52,11 @@ parts:
 
       craftctl default
     prime:
+      - LICENSE
       - charm_version
       - workload_version
       - scripts
+      - templates
 
 #  charm:
 #    build-snaps:
