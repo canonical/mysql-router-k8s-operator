@@ -110,7 +110,7 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def _exposed_read_write_endpoint(self) -> typing.Optional[str]:
+    def _exposed_read_write_endpoints(self) -> typing.Optional[str]:
         """The exposed read-write endpoint.
 
         Only defined in vm charm.
@@ -118,7 +118,7 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def _exposed_read_only_endpoint(self) -> typing.Optional[str]:
+    def _exposed_read_only_endpoints(self) -> typing.Optional[str]:
         """The exposed read-only endpoint.
 
         Only defined in vm charm.
@@ -134,10 +134,7 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
     @property
     @abc.abstractmethod
     def _status(self) -> ops.StatusBase:
-        """Status of the charm.
-
-        Only applies to Kubernetes charm
-        """
+        """Status of the charm."""
 
     @property
     def _tls_certificate_saved(self) -> bool:
@@ -258,13 +255,6 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
         Only applies to Kubernetes charm
         """
 
-    def _check_service_connectivity(self) -> bool:
-        """Check if the service is available (connectable with a socket).
-
-        Returns false if Machine charm. Overridden in Kubernetes charm.
-        """
-        return False
-
     @abc.abstractmethod
     def _reconcile_ports(self, *, event) -> None:
         """Reconcile exposed ports.
@@ -364,8 +354,8 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
                         event=event,
                         router_read_write_endpoints=self._read_write_endpoints,
                         router_read_only_endpoints=self._read_only_endpoints,
-                        exposed_read_write_endpoint=self._exposed_read_write_endpoint,
-                        exposed_read_only_endpoint=self._exposed_read_only_endpoint,
+                        exposed_read_write_endpoints=self._exposed_read_write_endpoints,
+                        exposed_read_only_endpoints=self._exposed_read_only_endpoints,
                         shell=workload_.shell,
                     )
                     self._update_endpoints()
