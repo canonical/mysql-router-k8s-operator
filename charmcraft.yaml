@@ -24,7 +24,9 @@ parts:
       python3 -m pip install --upgrade pip==24.3.1
       curl -sSL https://install.python-poetry.org | python3 - --version 1.8.4
       ln -sf $HOME/.local/bin/poetry /usr/local/bin/poetry
-  foo:
+  # "charm-poetry" part name is arbitrary; use for consistency
+  # Avoid using "charm" part name since that has special meaning to charmcraft
+  charm-poetry:
     plugin: poetry
     source: .
     after:
@@ -40,6 +42,7 @@ parts:
     override-build: |
       rustup default stable
       craftctl default
+  # "files" part name is arbitrary; use for consistency
   files:
     plugin: dump
     source: .
@@ -59,25 +62,3 @@ parts:
       - workload_version
       - scripts
       - templates
-
-#  charm:
-#    build-snaps:
-#      - rustup
-#    build-packages:
-#      - libffi-dev
-#      - libssl-dev
-#      - pkg-config
-#    override-build: |
-#      rustup default stable
-#
-#      # Convert subset of poetry.lock to requirements.txt
-#      curl -sSL https://install.python-poetry.org | python3 -
-#      /root/.local/bin/poetry export --only main,charm-libs --output requirements.txt
-#
-#      craftctl default
-#    stage:
-#      # Exclude charm_version file during staging
-#      - -charm_version
-#    charm-strict-dependencies: true
-#    charm-requirements: [requirements.txt]
-#    charm-entrypoint: src/kubernetes_charm.py
