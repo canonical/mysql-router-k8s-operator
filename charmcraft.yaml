@@ -29,9 +29,6 @@ parts:
       - poetry-deps
     poetry-with:
       - charm-libs
-    build-environment:
-      # `poetry` plugin sets `PIP_NO_BINARY` to `:all:`
-      - PIP_ONLY_BINARY: mysql-connector-python
     build-snaps:
       - rustup
     build-packages:
