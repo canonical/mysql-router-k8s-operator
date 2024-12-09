@@ -222,6 +222,7 @@ class Upgrade(upgrade.Upgrade):
                 action_event.fail(message)
                 return
             if force:
+                logger.warning(f"Resume upgrade action ran with {force=}")
                 # If a unit was unhealthy and the upgrade was forced, only the next unit will
                 # upgrade. As long as 1 or more units are unhealthy, the upgrade will need to be
                 # forced for each unit.
