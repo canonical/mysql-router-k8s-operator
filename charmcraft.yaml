@@ -31,7 +31,7 @@ parts:
     override-build: |
       python3 -m pip install --upgrade pip==24.3.1
       curl -sSL https://install.python-poetry.org | python3 - --version 1.8.4
-      ln -sf $HOME/.local/bin/poetry /usr/local/bin/poetry
+      ln -sf "$HOME/.local/bin/poetry" /usr/local/bin/poetry
   # "charm-poetry" part name is arbitrary; use for consistency
   # Avoid using "charm" part name since that has special meaning to charmcraft
   charm-poetry:
@@ -58,7 +58,7 @@ parts:
       rustup default stable
       craftctl default
       # Include requirements.txt in *.charm artifact for easier debugging
-      cp requirements.txt $CRAFT_PART_INSTALL/requirements.txt
+      cp requirements.txt "$CRAFT_PART_INSTALL/requirements.txt"
       # Remove venv/bin/ (included because `poetry-keep-bins: true`) except for venv/bin/activate
       shopt -s extglob
       rm -r "$CRAFT_PART_INSTALL/venv/bin/!(activate)"
