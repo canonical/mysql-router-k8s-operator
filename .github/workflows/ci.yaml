@@ -64,9 +64,22 @@ jobs:
 
   build:
     name: Build charm
-    uses: canonical/data-platform-workflows/.github/workflows/build_charm.yaml@v23.1.1
+    uses: canonical/data-platform-workflows/.github/workflows/build_charm.yaml@beta-charmcraftst124
     with:
-      cache: true
+      charmcraft-snap-channel: 3.x/edge
+
+  release:
+    name: Release charm
+    needs:
+      - build
+    uses: canonical/data-platform-workflows/.github/workflows/release_charm.yaml@beta-charmcraftst124
+    with:
+      channel: 8.0/edge/test-cc-poetry-plugin-2
+      artifact-prefix: ${{ needs.build.outputs.artifact-prefix }}
+      create-github-release: false
+      charmcraft-snap-channel: 3.x/edge
+    secrets:
+      charmhub-token: ${{ secrets.CHARMHUB_TOKEN }}
 
   integration-test:
     strategy:
