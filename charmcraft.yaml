@@ -9,8 +9,6 @@ type: charm
 # all of our charms [even those that aren't multi base] for consistency and to simplify CI/CD
 # maintenance & tooling)
 platforms:
-  ubuntu@20.04:amd64:
-  ubuntu@20.04:arm64:
   ubuntu@22.04:amd64:
   ubuntu@22.04:arm64:
 # Files implicitly created by charmcraft without a part:
@@ -47,13 +45,13 @@ parts:
       - poetry-deps
     poetry-with:
       - charm-libs
+    poetry-keep-bins: true
     build-snaps:
       - rustup
     build-packages:
       - libffi-dev
       - libssl-dev
       - pkg-config
-    poetry-keep-bins: true
     override-build: |
       rustup default stable
       craftctl default
@@ -64,6 +62,7 @@ parts:
       rm -r "$CRAFT_PART_INSTALL/venv/bin/"!(activate)
       # Replace hard-coded path in `venv/bin/activate` with portable path
       # "\&" is escape for sed
+      # Value of `VIRTUAL_ENV` derived from https://stackoverflow.com/a/246128
       sed -i 's#^VIRTUAL_ENV=.*$#VIRTUAL_ENV="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )/.." \&> /dev/null \&\& pwd )"#' "$CRAFT_PART_INSTALL/venv/bin/activate"
   # "files" part name is arbitrary; use for consistency
   files:
