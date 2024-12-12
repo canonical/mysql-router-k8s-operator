@@ -61,7 +61,7 @@ parts:
       cp requirements.txt "$CRAFT_PART_INSTALL/requirements.txt"
       # Remove venv/bin/ (included because `poetry-keep-bins: true`) except for venv/bin/activate
       shopt -s extglob
-      rm -r "$CRAFT_PART_INSTALL/venv/bin/!(activate)"
+      rm -r "$CRAFT_PART_INSTALL/venv/bin/"!(activate)
       # Replace hard-coded path in `venv/bin/activate` with portable path
       # "\&" is escape for sed
       sed -i 's#^VIRTUAL_ENV=.*$#VIRTUAL_ENV="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )/.." \&> /dev/null \&\& pwd )"#' "$CRAFT_PART_INSTALL/venv/bin/activate"
