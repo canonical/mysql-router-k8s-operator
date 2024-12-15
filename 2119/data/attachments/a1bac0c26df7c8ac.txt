@@ -1,0 +1,46 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:734 Connecting to existing model microk8s-localhost:test on unspecified cloud
+[32mINFO    [0m integration.test_exporter:test_exporter.py:47 Deploying all the applications
+[32mINFO    [0m juju.model:model.py:2098 Deploying ch:amd64/jammy/mysql-test-app-63
+[32mINFO    [0m juju.model:model.py:2098 Deploying ch:amd64/jammy/mysql-k8s-210
+[32mINFO    [0m juju.model:model.py:2098 Deploying ch:amd64/jammy/grafana-agent-k8s-80
+[32mINFO    [0m juju.model:model.py:2098 Deploying local:mysql-router-k8s-0
+[32mINFO    [0m integration.test_exporter:test_exporter.py:86 Waiting for mysqlrouter to be in BlockedStatus
+[32mINFO    [0m integration.test_exporter:test_exporter.py:92 Relating mysql, mysqlrouter and application
+[33mWARNING [0m juju.model:model.py:1564 relate is deprecated and will be removed. Use integrate instead.
+[33mWARNING [0m juju.model:model.py:1564 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  mysql-router-k8s/0 [executing] waiting: 
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  mysql-router-k8s/0 [idle] waiting: 
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  mysql-router-k8s/0 [idle] active: 
+[32mINFO    [0m juju.model:model.py:2972 Waiting for model:
+  mysql-k8s/0 [idle] active: Primary
+  mysql-router-k8s/0 [idle] active: 
+  mysql-test-app/0 [idle] active: 
+[32mINFO    [0m integration.test_exporter:test_exporter.py:121 Relating mysqlrouter with grafana agent
+[33mWARNING [0m juju.model:model.py:1564 relate is deprecated and will be removed. Use integrate instead.
+[33mWARNING [0m juju.model:model.py:1564 relate is deprecated and will be removed. Use integrate instead.
+[33mWARNING [0m juju.model:model.py:1564 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m integration.test_exporter:test_exporter.py:147 Removing relation between mysqlrouter and grafana agent
+[32mINFO    [0m pytest_operator.plugin:plugin.py:862 Model status:
+
+Model  Controller          Cloud/Region        Version  SLA          Timestamp
+test   microk8s-localhost  microk8s/localhost  3.5.4    unsupported  01:45:38Z
+
+App                Version                  Status   Scale  Charm              Channel        Rev  Address         Exposed  Message
+grafana-agent-k8s  0.40.4                   blocked      1  grafana-agent-k8s  latest/stable   80  10.152.183.159  no       Missing ['grafana-cloud-config']|['grafana-dashboards-provider'] for grafana-dashboards-consumer; ['grafana-cloud-con...
+mysql-k8s          8.0.39-0ubuntu0.22.04.1  active       1  mysql-k8s          8.0/edge       210  10.152.183.98   no       
+mysql-router-k8s   8.0.39-0ubuntu0.22.04.1  active       1  mysql-router-k8s                    0  10.152.183.213  no       
+mysql-test-app     0.0.2                    active       1  mysql-test-app     latest/edge     63  10.152.183.226  no       Last written value=2630
+
+Unit                  Workload  Agent      Address     Ports  Message
+grafana-agent-k8s/0*  blocked   idle       10.1.86.78         Missing ['grafana-cloud-config']|['grafana-dashboards-provider'] for grafana-dashboards-consumer; ['grafana-cloud-con...
+mysql-k8s/0*          active    idle       10.1.86.76         Primary
+mysql-router-k8s/0*   active    executing  10.1.86.75         
+mysql-test-app/0*     active    idle       10.1.86.73         Last written value=2630
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:868 Juju error logs:
+
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:947 Forgetting model main...
