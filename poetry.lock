@@ -1741,7 +1741,7 @@ pyyaml = "*"
 type = "git"
 url = "https://github.com/canonical/data-platform-workflows"
 reference = "charmcraftst124"
-resolved_reference = "32c64bccc1a9cf6b05f426dfadb1a66cf40ee4ab"
+resolved_reference = "ebd79be3dbff37d3f597cf62bba30b8148c09d0f"
 subdirectory = "python/pytest_plugins/pytest_operator_cache"
 
 [[package]]
