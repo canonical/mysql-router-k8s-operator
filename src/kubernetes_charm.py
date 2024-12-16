@@ -6,6 +6,13 @@
 
 """MySQL Router Kubernetes charm"""
 
+import ops
+
+from architecture import WrongArchitectureWarningCharm, is_wrong_architecture
+
+if is_wrong_architecture() and __name__ == "__main__":
+    ops.main.main(WrongArchitectureWarningCharm)
+
 import enum
 import functools
 import json
