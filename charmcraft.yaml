@@ -57,6 +57,7 @@ parts:
       craftctl default
       # Include requirements.txt in *.charm artifact for easier debugging
       cp requirements.txt "$CRAFT_PART_INSTALL/requirements.txt"
+      # TODO: remove once https://github.com/canonical/charmcraft/pull/2036 merged
       # Remove files in venv/bin/ (included because `poetry-keep-bins: true`) except for venv/bin/activate
       shopt -s extglob
       rm -r "$CRAFT_PART_INSTALL/venv/bin/"!(activate)
