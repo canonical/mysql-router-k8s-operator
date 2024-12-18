@@ -74,7 +74,7 @@ jobs:
       - build
     uses: canonical/data-platform-workflows/.github/workflows/release_charm.yaml@charmcraftst124
     with:
-      channel: 8.0/edge/test-cc-poetry-plugin-2
+      channel: 8.0/edge/test-cc-poetry-plugin-3
       artifact-prefix: ${{ needs.build.outputs.artifact-prefix }}
       create-github-release: false
       charmcraft-snap-channel: 3.x/edge
