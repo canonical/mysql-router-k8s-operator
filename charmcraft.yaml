@@ -44,6 +44,7 @@ parts:
     after:
       - poetry-deps
     poetry-export-extra-args: ['--only', 'main,charm-libs']
+    poetry-pip-extra-args: ['--only-binary', 'mysql-connector-python']
     build-snaps:
       - rustup
     build-packages:
