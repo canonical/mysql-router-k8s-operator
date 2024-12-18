@@ -43,8 +43,7 @@ parts:
     source: .
     after:
       - poetry-deps
-    poetry-with:
-      - charm-libs
+    poetry-export-extra-args: ['--only', 'main,charm-libs']
     build-snaps:
       - rustup
     build-packages:
