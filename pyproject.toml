@@ -14,7 +14,6 @@ jinja2 = "^3.1.4"
 poetry-core = "^1.9.0"
 requests = "^2.32.3"
 mysql-connector-python = "~8.0.33"
-charm-api = {git = "https://github.com/canonical/charm-api"}
 
 [tool.poetry.group.charm-libs.dependencies]
 # data_platform_libs/v0/data_interfaces.py

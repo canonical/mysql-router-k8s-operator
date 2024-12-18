@@ -269,21 +269,6 @@ files = [
 pycparser = "*"
 
 [[package]]
-name = "charm-api"
-version = "0.1.0"
-description = ""
-optional = false
-python-versions = ">=3.8"
-files = []
-develop = false
-
-[package.source]
-type = "git"
-url = "https://github.com/canonical/charm-api"
-reference = "HEAD"
-resolved_reference = "5866f0ae723f0f56f356ade784372c3eb69166b0"
-
-[[package]]
 name = "charset-normalizer"
 version = "3.3.2"
 description = "The Real First Universal Charset Detector. Open, modern and actively maintained alternative to Chardet."
@@ -2430,4 +2415,4 @@ test = ["big-O", "importlib-resources", "jaraco.functools", "jaraco.itertools", 
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "46ddbb24619cffa8fe26d560d48754036d3817e9e060b5c76f700e58cd875cac"
+content-hash = "a5995926242660605337a7fc05b4ea21cbc3436abc8688dbb1aad84e9a4b52e0"
