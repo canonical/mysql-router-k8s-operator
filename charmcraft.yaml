@@ -23,7 +23,7 @@ parts:
     build-packages:
       - curl
     override-build: |
-      python3 -m pip install --upgrade pip==24.3.1 --break-system-packages  # renovate: charmcraft-pip-latest
+      PIP_BREAK_SYSTEM_PACKAGES=true python3 -m pip install --upgrade pip==24.3.1  # renovate: charmcraft-pip-latest
       curl -sSL https://install.python-poetry.org | python3 - --version 1.8.4  # renovate: charmcraft-poetry-latest
       ln -sf "$HOME/.local/bin/poetry" /usr/local/bin/poetry
   # "charm-poetry" part name is arbitrary; use for consistency
