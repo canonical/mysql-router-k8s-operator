@@ -27,6 +27,9 @@ class _Path(container.Path):
         path._container = container_
         return path
 
+    def __init__(self, *args, container_: ops.Container):
+        super().__init__(*args)
+
     def __truediv__(self, other):
         return type(self)(self, other, container_=self._container)
 
