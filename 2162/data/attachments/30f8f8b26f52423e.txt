@@ -1,0 +1,28 @@
+[32mINFO    [0m integration.helpers:helpers.py:564 Ensure continuous writes are incrementing
+[32mINFO    [0m integration.helpers:helpers.py:516 Retrieving primary unit
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:104 Build charm locally
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:111 Update workload version and snap revision in the charm
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:114 Refresh the charm
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:117 Wait for the first unit to be refreshed and the app to move to blocked status
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:137 Running resume-upgrade on the mysql router leader unit
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:140 Waiting for upgrade to complete on all units
+[32mINFO    [0m juju.model:model.py:3211 Waiting for model:
+  mysql-router-k8s/0 [idle] active: Router 8.0.39 running (restart pending); Charmed operator 1.2+ebeb3cd
+  mysql-router-k8s/1 [executing] maintenance: stopping charm software
+  mysql-router-k8s/2 [idle] active: Router 8.0.39+testupgrade running; Charmed operator 1.2+c4f8162
+[32mINFO    [0m juju.model:model.py:3211 Waiting for model:
+  mysql-router-k8s/0 [executing] maintenance: 
+  mysql-router-k8s/1 [executing] active: Router 8.0.39+testupgrade running; Charmed operator 1.2+c4f8162
+  mysql-router-k8s/2 [idle] active: Router 8.0.39+testupgrade running; Charmed operator 1.2+c4f8162
+[32mINFO    [0m juju.model:model.py:3211 Waiting for model:
+  mysql-router-k8s/0 [executing] active: 
+  mysql-router-k8s/1 [idle] active: 
+  mysql-router-k8s/2 [idle] active: 
+[32mINFO    [0m juju.model:model.py:3211 Waiting for model:
+  mysql-router-k8s/0 [idle] active: 
+[32mINFO    [0m integration.helpers:helpers.py:564 Ensure continuous writes are incrementing
+[32mINFO    [0m integration.helpers:helpers.py:516 Retrieving primary unit
+[32mINFO    [0m juju.model:model.py:3211 Waiting for model:
+  mysql-router-k8s/0 [idle] active: 
+  mysql-router-k8s/1 [idle] active: 
+  mysql-router-k8s/2 [idle] active:

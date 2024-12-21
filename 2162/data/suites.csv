@@ -1,0 +1,17 @@
+"DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
+"Simple test to ensure that mysql, mysqlrouter and application charms deploy.","140408","test_deploy_edge","tests.integration","Sat Dec 21 01:39:57 UTC 2024","passed","Sat Dec 21 01:42:17 UTC 2024","","test_upgrade","",""
+"Test that the exporter endpoint works when related with TLS","201956","test_exporter_endpoint","tests.integration","Sat Dec 21 01:39:33 UTC 2024","passed","Sat Dec 21 01:42:55 UTC 2024","","test_exporter_with_tls","",""
+"Tries deploying an arm64 charm on amd64 host.","52378","test_arm_charm_on_amd_host","tests.integration","Sat Dec 21 01:39:55 UTC 2024","passed","Sat Dec 21 01:40:48 UTC 2024","","test_architecture","",""
+"Test the database relation.","513800","test_database_relation","tests.integration","Sat Dec 21 01:40:01 UTC 2024","passed","Sat Dec 21 01:48:34 UTC 2024","","test_charm","",""
+"Test encryption when backend database is using TLS.","21950","test_connected_encryption","tests.integration","Sat Dec 21 01:41:43 UTC 2024","passed","Sat Dec 21 01:42:05 UTC 2024","","test_tls","",""
+"Tries deploying an amd64 charm on arm64 host.","0","test_amd_charm_on_arm_host","tests.integration","Sat Dec 21 01:40:48 UTC 2024","skipped","Sat Dec 21 01:40:48 UTC 2024","","test_architecture","",""
+"Test the expose-external config option.","311395","test_expose_external","tests.integration","Sat Dec 21 01:39:32 UTC 2024","passed","Sat Dec 21 01:44:43 UTC 2024","","test_expose_external","",""
+"Test encryption when backend database is using TLS.","94859","test_build_deploy_and_relate","tests.integration","Sat Dec 21 01:40:08 UTC 2024","passed","Sat Dec 21 01:41:43 UTC 2024","","test_tls","",""
+"Test endpoints when mysql-router-k8s is related to a TLS operator.","567171","test_expose_external_with_tls","tests.integration","Sat Dec 21 01:44:43 UTC 2024","passed","Sat Dec 21 01:54:10 UTC 2024","","test_expose_external","",""
+"Test that exporter endpoint is functional.","139494","test_exporter_endpoint","tests.integration","Sat Dec 21 01:39:37 UTC 2024","passed","Sat Dec 21 01:41:57 UTC 2024","","test_exporter","",""
+"Test log rotation.","119654","test_log_rotation","tests.integration","Sat Dec 21 01:39:31 UTC 2024","passed","Sat Dec 21 01:41:31 UTC 2024","","test_log_rotation","",""
+"Upgrade to an invalid version and test rollback.
+
+    Relies on the charm built in the previous test (test_upgrade_from_edge).
+    ","202512","test_fail_and_rollback","tests.integration","Sat Dec 21 01:45:19 UTC 2024","passed","Sat Dec 21 01:48:42 UTC 2024","","test_upgrade","",""
+"Upgrade mysqlrouter while ensuring continuous writes incrementing.","182070","test_upgrade_from_edge","tests.integration","Sat Dec 21 01:42:17 UTC 2024","passed","Sat Dec 21 01:45:19 UTC 2024","","test_upgrade","",""
