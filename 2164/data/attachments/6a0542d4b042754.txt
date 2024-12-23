@@ -1,0 +1,21 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:862 Model status:
+
+Model  Controller          Cloud/Region        Version  SLA          Timestamp
+test   microk8s-localhost  microk8s/localhost  3.6.1    unsupported  01:44:13Z
+
+App               Version                  Status   Scale  Charm             Channel      Rev  Address         Exposed  Message
+mysql-k8s         8.0.39-0ubuntu0.22.04.1  active       1  mysql-k8s         8.0/edge     210  10.152.183.197  no       
+mysql-router-k8s  8.0.39-0ubuntu0.22.04.1  blocked      3  mysql-router-k8s                 0  10.152.183.248  no       Upgrading. Verify highest unit is healthy & run `resume-upgrade` action. To rollback, `juju refresh` to last revision
+mysql-test-app    0.0.2                    active       1  mysql-test-app    latest/edge   63  10.152.183.56   no       
+
+Unit                 Workload     Agent      Address      Ports  Message
+mysql-k8s/0*         active       idle       10.1.75.142         Primary
+mysql-router-k8s/0   active       idle       10.1.75.138         Router 8.0.39 running (restart pending); Charmed operator 1.2+ebeb3cd
+mysql-router-k8s/1*  maintenance  executing  10.1.75.140         (stop) stopping charm software
+mysql-router-k8s/2   active       idle       10.1.75.143         Router 8.0.39+testupgrade running; Charmed operator 1.2+c4f8162
+mysql-test-app/0*    active       idle       10.1.75.137         
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:868 Juju error logs:
+
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:947 Forgetting model main...
