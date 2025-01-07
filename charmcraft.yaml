@@ -22,9 +22,13 @@ parts:
       - curl
     override-build: |
       python3 -m pip install --upgrade pip==24.3.1  # renovate: charmcraft-pip-latest
-      curl -sSL https://install.python-poetry.org | python3 - --version 2.0.0  # renovate: charmcraft-poetry-latest
+
+      # Use uv to install poetry so that a newer version of Python can be installed if needed by poetry
+      curl --proto '=https' --tlsv1.2 -LsSf https://github.com/astral-sh/uv/releases/download/0.5.15/uv-installer.sh | sh  # renovate: charmcraft-uv-latest
+      # poetry 2.0.0 requires Python >=3.9
+      "$HOME/.local/bin/uv" tool install -v --python '>=3.9' poetry==2.0.0 --with poetry-plugin-export==1.8.0  # renovate: charmcraft-poetry-latest
+
       ln -sf "$HOME/.local/bin/poetry" /usr/local/bin/poetry
-      "$HOME/.local/bin/poetry" self add poetry-plugin-export==1.8.0  # renovate: charmcraft-poetry-plugin-export-latest
   # "charm-poetry" part name is arbitrary; use for consistency
   # Avoid using "charm" part name since that has special meaning to charmcraft
   charm-poetry:
