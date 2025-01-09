@@ -9,18 +9,16 @@ import ops
 import pytest
 import scenario
 
-import kubernetes_charm
+import charm
 
 from . import combinations
 
 
 @pytest.fixture(params=["my-model.svc.cluster.local", "foo.svc.cluster.local"])
 def model_service_domain(monkeypatch, request):
+    monkeypatch.setattr("charm.KubernetesRouterCharm.model_service_domain", request.param)
     monkeypatch.setattr(
-        "kubernetes_charm.KubernetesRouterCharm.model_service_domain", request.param
-    )
-    monkeypatch.setattr(
-        "kubernetes_charm.KubernetesRouterCharm._get_hosts_ports",
+        "charm.KubernetesRouterCharm._get_hosts_ports",
         lambda _, port_type: f"mysql-router-k8s-service.{request.param}:6446"
         if port_type == "rw"
         else f"mysql-router-k8s-service.{request.param}:6447",
@@ -35,7 +33,7 @@ def output_states(*, relations: list[scenario.Relation]) -> typing.Iterable[scen
 
     The output state of each test should be identical for all events.
     """
-    context = scenario.Context(kubernetes_charm.KubernetesRouterCharm)
+    context = scenario.Context(charm.KubernetesRouterCharm)
     container = scenario.Container("mysql-router", can_connect=True)
     input_state = scenario.State(
         relations=[
