@@ -5,7 +5,7 @@ import ops
 import pytest
 import scenario
 
-import kubernetes_charm
+import charm
 
 
 @pytest.mark.parametrize(
@@ -14,7 +14,7 @@ import kubernetes_charm
 )
 @pytest.mark.parametrize("leader", [False, True])
 def test_start_sets_status_if_no_relations(leader, can_connect, unit_status):
-    context = scenario.Context(kubernetes_charm.KubernetesRouterCharm)
+    context = scenario.Context(charm.KubernetesRouterCharm)
     input_state = scenario.State(
         containers=[scenario.Container("mysql-router", can_connect=can_connect)],
         leader=leader,

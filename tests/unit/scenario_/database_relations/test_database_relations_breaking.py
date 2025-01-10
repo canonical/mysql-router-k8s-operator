@@ -7,7 +7,7 @@ import ops
 import pytest
 import scenario
 
-import kubernetes_charm
+import charm
 
 from . import combinations
 
@@ -15,7 +15,7 @@ from . import combinations
 def output_state(
     *, relations: list[scenario.Relation], secrets: list[scenario.Secret], event: scenario.Event
 ) -> scenario.State:
-    context = scenario.Context(kubernetes_charm.KubernetesRouterCharm)
+    context = scenario.Context(charm.KubernetesRouterCharm)
     container = scenario.Container("mysql-router", can_connect=True)
     input_state = scenario.State(
         relations=[

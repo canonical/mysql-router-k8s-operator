@@ -28,7 +28,7 @@ def disable_tenacity_retry(monkeypatch):
 @pytest.fixture(autouse=True)
 def patch(monkeypatch):
     monkeypatch.setattr(
-        "kubernetes_charm.KubernetesRouterCharm.wait_until_mysql_router_ready",
+        "charm.KubernetesRouterCharm.wait_until_mysql_router_ready",
         lambda *args, **kwargs: None,
     )
     monkeypatch.setattr("workload.AuthenticatedWorkload._router_username", "")
@@ -45,7 +45,7 @@ def patch(monkeypatch):
 @pytest.fixture(autouse=True)
 def kubernetes_patch(monkeypatch):
     monkeypatch.setattr(
-        "kubernetes_charm.KubernetesRouterCharm.model_service_domain", "my-model.svc.cluster.local"
+        "charm.KubernetesRouterCharm.model_service_domain", "my-model.svc.cluster.local"
     )
     monkeypatch.setattr(
         "rock.Rock._run_command",
@@ -58,20 +58,20 @@ def kubernetes_patch(monkeypatch):
     monkeypatch.setattr("rock._Path.rmtree", lambda *args, **kwargs: None)
     monkeypatch.setattr("lightkube.Client", lambda *args, **kwargs: None)
     monkeypatch.setattr(
-        "kubernetes_charm.KubernetesRouterCharm._reconcile_service", lambda *args, **kwargs: None
+        "charm.KubernetesRouterCharm._reconcile_service", lambda *args, **kwargs: None
     )
     monkeypatch.setattr(
-        "kubernetes_charm.KubernetesRouterCharm._get_hosts_ports",
+        "charm.KubernetesRouterCharm._get_hosts_ports",
         lambda _, port_type: "mysql-router-k8s-service.my-model.svc.cluster.local:6446"
         if port_type == "rw"
         else "mysql-router-k8s-service.my-model.svc.cluster.local:6447",
     )
     monkeypatch.setattr(
-        "kubernetes_charm.KubernetesRouterCharm._check_service_connectivity",
+        "charm.KubernetesRouterCharm._check_service_connectivity",
         lambda *args, **kwargs: True,
     )
     monkeypatch.setattr(
-        "kubernetes_charm.KubernetesRouterCharm.get_all_k8s_node_hostnames_and_ips",
+        "charm.KubernetesRouterCharm.get_all_k8s_node_hostnames_and_ips",
         lambda *args, **kwargs: None,
     )
     monkeypatch.setattr("kubernetes_upgrade._Partition.get", lambda *args, **kwargs: 0)

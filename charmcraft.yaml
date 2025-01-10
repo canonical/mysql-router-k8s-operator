@@ -52,4 +52,4 @@ parts:
       - -charm_version
     charm-strict-dependencies: true
     charm-requirements: [requirements.txt]
-    charm-entrypoint: src/kubernetes_charm.py
+    charm-entrypoint: src/charm.py
