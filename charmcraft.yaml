@@ -1,7 +1,7 @@
 # Copyright 2022 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-type: charm
+type: charms
 platforms:
   ubuntu@22.04:amd64:
   ubuntu@22.04:arm64:
