@@ -70,6 +70,19 @@ jobs:
       cache: true
       charmcraft-snap-channel: latest/beta/data-platform  # TODO: remove after charmcraft 3.3 stable release
 
+  release:
+    name: Release charm
+    needs:
+      - build
+    uses: canonical/data-platform-workflows/.github/workflows/release_charm.yaml@multi-charm-repos
+    with:
+      channel: 8.0/edge/test-dpw-2
+      create-git-tags: false
+      charmcraft-snap-channel: latest/candidate
+      artifact-prefix: ${{ needs.build.outputs.artifact-prefix }}
+    secrets:
+      charmhub-token: ${{ secrets.CHARMHUB_TOKEN }}
+
   integration-test:
     strategy:
       fail-fast: false
