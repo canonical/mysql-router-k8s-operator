@@ -1,0 +1,94 @@
+[32mINFO    [0m integration.test_tls:test_tls.py:131 Relating TLS with mysqlrouter
+[33mWARNING [0m juju.model:model.py:1666 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m integration.test_tls:test_tls.py:134 Getting certificate issuer after relating with tls operator
+[32mINFO    [0m integration.test_tls:test_tls.py:151 Removing relation TLS with mysqlrouter
+[32mINFO    [0m pytest_operator.plugin:plugin.py:862 Model status:
+
+Model  Controller          Cloud/Region        Version  SLA          Timestamp
+test   microk8s-localhost  microk8s/localhost  3.6.1    unsupported  01:41:38Z
+
+App                       Version                  Status       Scale  Charm                     Channel        Rev  Address         Exposed  Message
+mysql-k8s                 8.0.39-0ubuntu0.22.04.1  active           1  mysql-k8s                 8.0/edge       214  10.152.183.160  no       
+mysql-router-k8s          8.0.39-0ubuntu0.22.04.1  maintenance      1  mysql-router-k8s                           0  10.152.183.159  no       Waiting for K8s service connectivity
+mysql-test-app            0.0.2                    active           1  mysql-test-app            latest/edge     63  10.152.183.229  no       Last written value=1115
+self-signed-certificates                           active           1  self-signed-certificates  latest/stable  155  10.152.183.97   no       
+
+Unit                         Workload  Agent  Address     Ports  Message
+mysql-k8s/0*                 active    idle   10.1.85.75         Primary
+mysql-router-k8s/0*          active    idle   10.1.85.77         
+mysql-test-app/0*            active    idle   10.1.85.76         Last written value=1115
+self-signed-certificates/0*  active    idle   10.1.85.74         
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:868 Juju error logs:
+
+unit-mysql-router-k8s-0: 01:40:07 ERROR unit.mysql-router-k8s/0.juju-log certificates:9: Unable to connect to MySQL Router
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-mysql-router-k8s-0/charm/src/charm.py", line 311, in wait_until_mysql_router_ready
+    for attempt in tenacity.Retrying(
+  File "/var/lib/juju/agents/unit-mysql-router-k8s-0/charm/venv/lib/python3.10/site-packages/tenacity/__init__.py", line 443, in __iter__
+    do = self.iter(retry_state=retry_state)
+  File "/var/lib/juju/agents/unit-mysql-router-k8s-0/charm/venv/lib/python3.10/site-packages/tenacity/__init__.py", line 376, in iter
+    result = action(retry_state)
+  File "/var/lib/juju/agents/unit-mysql-router-k8s-0/charm/venv/lib/python3.10/site-packages/tenacity/__init__.py", line 418, in exc_check
+    raise retry_exc.reraise()
+  File "/var/lib/juju/agents/unit-mysql-router-k8s-0/charm/venv/lib/python3.10/site-packages/tenacity/__init__.py", line 185, in reraise
+    raise self.last_attempt.result()
+  File "/usr/lib/python3.10/concurrent/futures/_base.py", line 451, in result
+    return self.__get_result()
+  File "/usr/lib/python3.10/concurrent/futures/_base.py", line 403, in __get_result
+    raise self._exception
+  File "/var/lib/juju/agents/unit-mysql-router-k8s-0/charm/src/charm.py", line 324, in wait_until_mysql_router_ready
+    assert s.connect_ex(("localhost", port)) == 0
+AssertionError
+unit-mysql-router-k8s-0: 01:40:07 ERROR unit.mysql-router-k8s/0.juju-log certificates:9: Uncaught exception while in charm code:
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-mysql-router-k8s-0/charm/src/charm.py", line 472, in <module>
+    ops.main.main(KubernetesRouterCharm)
+  File "/var/lib/juju/agents/unit-mysql-router-k8s-0/charm/venv/lib/python3.10/site-packages/ops/main.py", line 436, in main
+    _emit_charm_event(charm, dispatcher.event_name)
+  File "/var/lib/juju/agents/unit-mysql-router-k8s-0/charm/venv/lib/python3.10/site-packages/ops/main.py", line 144, in _emit_charm_event
+    event_to_emit.emit(*args, **kwargs)
+  File "/var/lib/juju/agents/unit-mysql-router-k8s-0/charm/venv/lib/python3.10/site-packages/ops/framework.py", line 351, in emit
+    framework._emit(event)
+  File "/var/lib/juju/agents/unit-mysql-router-k8s-0/charm/venv/lib/python3.10/site-packages/ops/framework.py", line 853, in _emit
+    self._reemit(event_path)
+  File "/var/lib/juju/agents/unit-mysql-router-k8s-0/charm/venv/lib/python3.10/site-packages/ops/framework.py", line 942, in _reemit
+    custom_handler(event)
+  File "/var/lib/juju/agents/unit-mysql-router-k8s-0/charm/lib/charms/tempo_coordinator_k8s/v0/charm_tracing.py", line 735, in wrapped_function
+    return callable(*args, **kwargs)  # type: ignore
+  File "/var/lib/juju/agents/unit-mysql-router-k8s-0/charm/src/relations/tls.py", line 297, in _on_tls_relation_broken
+    self._charm.reconcile(event=None)
+  File "/var/lib/juju/agents/unit-mysql-router-k8s-0/charm/lib/charms/tempo_coordinator_k8s/v0/charm_tracing.py", line 735, in wrapped_function
+    return callable(*args, **kwargs)  # type: ignore
+  File "/var/lib/juju/agents/unit-mysql-router-k8s-0/charm/src/abstract_charm.py", line 364, in reconcile
+    workload_.reconcile(
+  File "/var/lib/juju/agents/unit-mysql-router-k8s-0/charm/lib/charms/tempo_coordinator_k8s/v0/charm_tracing.py", line 735, in wrapped_function
+    return callable(*args, **kwargs)  # type: ignore
+  File "/var/lib/juju/agents/unit-mysql-router-k8s-0/charm/src/workload.py", line 396, in reconcile
+    self._restart(event=event, tls=tls)
+  File "/var/lib/juju/agents/unit-mysql-router-k8s-0/charm/lib/charms/tempo_coordinator_k8s/v0/charm_tracing.py", line 735, in wrapped_function
+    return callable(*args, **kwargs)  # type: ignore
+  File "/var/lib/juju/agents/unit-mysql-router-k8s-0/charm/src/workload.py", line 323, in _restart
+    self._charm.wait_until_mysql_router_ready(event=event)
+  File "/var/lib/juju/agents/unit-mysql-router-k8s-0/charm/lib/charms/tempo_coordinator_k8s/v0/charm_tracing.py", line 735, in wrapped_function
+    return callable(*args, **kwargs)  # type: ignore
+  File "/var/lib/juju/agents/unit-mysql-router-k8s-0/charm/src/charm.py", line 311, in wait_until_mysql_router_ready
+    for attempt in tenacity.Retrying(
+  File "/var/lib/juju/agents/unit-mysql-router-k8s-0/charm/venv/lib/python3.10/site-packages/tenacity/__init__.py", line 443, in __iter__
+    do = self.iter(retry_state=retry_state)
+  File "/var/lib/juju/agents/unit-mysql-router-k8s-0/charm/venv/lib/python3.10/site-packages/tenacity/__init__.py", line 376, in iter
+    result = action(retry_state)
+  File "/var/lib/juju/agents/unit-mysql-router-k8s-0/charm/venv/lib/python3.10/site-packages/tenacity/__init__.py", line 418, in exc_check
+    raise retry_exc.reraise()
+  File "/var/lib/juju/agents/unit-mysql-router-k8s-0/charm/venv/lib/python3.10/site-packages/tenacity/__init__.py", line 185, in reraise
+    raise self.last_attempt.result()
+  File "/usr/lib/python3.10/concurrent/futures/_base.py", line 451, in result
+    return self.__get_result()
+  File "/usr/lib/python3.10/concurrent/futures/_base.py", line 403, in __get_result
+    raise self._exception
+  File "/var/lib/juju/agents/unit-mysql-router-k8s-0/charm/src/charm.py", line 324, in wait_until_mysql_router_ready
+    assert s.connect_ex(("localhost", port)) == 0
+AssertionError
+unit-mysql-router-k8s-0: 01:40:08 ERROR juju.worker.uniter.operation hook "certificates-relation-broken" (via hook dispatching script: dispatch) failed: exit status 1
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:947 Forgetting model main...
