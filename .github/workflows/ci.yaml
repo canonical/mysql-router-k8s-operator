@@ -95,7 +95,7 @@ jobs:
       - lint
       - unit-test
       - build
-    uses: canonical/data-platform-workflows/.github/workflows/integration_test_charm.yaml@v29.0.0
+    uses: canonical/data-platform-workflows/.github/workflows/integration_test_charm.yaml@debug-snap-download
     with:
       artifact-prefix: ${{ needs.build.outputs.artifact-prefix }}
       architecture: ${{ matrix.architecture }}
