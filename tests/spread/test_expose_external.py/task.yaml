@@ -1,0 +1,5 @@
+summary: test_expose_external.py
+environment:
+  TEST_MODULE: test_expose_external.py
+execute: |
+  tox run -e integration -- "tests/integration/$TEST_MODULE" --model test
