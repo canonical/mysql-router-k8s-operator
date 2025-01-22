@@ -1,0 +1,41 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:734 Connecting to existing model microk8s-localhost:test on unspecified cloud
+[32mINFO    [0m integration.test_expose_external:test_expose_external.py:107 Building mysql-router-k8s charm
+[32mINFO    [0m integration.test_expose_external:test_expose_external.py:115 Deploying mysql-k8s, mysql-router-k8s and data-integrator
+[32mINFO    [0m juju.model:model.py:2284 Deploying ch:amd64/jammy/data-integrator-80
+[32mINFO    [0m juju.model:model.py:2284 Deploying ch:amd64/jammy/mysql-k8s-217
+[32mINFO    [0m juju.model:model.py:2284 Deploying local:mysql-router-k8s-0
+[32mINFO    [0m integration.test_expose_external:test_expose_external.py:144 Relating mysql-k8s, mysql-router-k8s and data-integrator
+[33mWARNING [0m juju.model:model.py:1666 relate is deprecated and will be removed. Use integrate instead.
+[33mWARNING [0m juju.model:model.py:1666 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m juju.model:model.py:3211 Waiting for model:
+  mysql-k8s/0 [allocating] waiting: installing agent
+  mysql-router-k8s/0 [allocating] waiting: installing agent
+  data-integrator/0 [allocating] waiting: installing agent
+[32mINFO    [0m juju.model:model.py:3211 Waiting for model:
+  mysql-k8s/0 [allocating] waiting: agent initialising
+  mysql-router-k8s/0 [executing] waiting: 
+  data-integrator/0 [idle] blocked: Please relate the data-integrator with the desired product
+[32mINFO    [0m juju.model:model.py:3211 Waiting for model:
+  mysql-k8s/0 [executing] active: Primary
+  mysql-router-k8s/0 [idle] waiting: 
+  data-integrator/0 [idle] blocked: Please relate the data-integrator with the desired product
+[32mINFO    [0m juju.model:model.py:3211 Waiting for model:
+  mysql-k8s/0 [idle] active: Primary
+  mysql-router-k8s/0 [idle] active: 
+  data-integrator/0 [idle] active: 
+[32mINFO    [0m integration.test_expose_external:test_expose_external.py:159 Testing endpoint when expose-external=false (default)
+[32mINFO    [0m integration.test_expose_external:test_expose_external.py:162 Testing endpoint when expose-external=nodeport
+[32mINFO    [0m juju.model:model.py:3211 Waiting for model:
+  mysql-router-k8s/0 [idle] active: 
+[32mINFO    [0m juju.model:model.py:3211 Waiting for model:
+  mysql-router-k8s/0 [idle] active: 
+[32mINFO    [0m juju.model:model.py:3211 Waiting for model:
+  mysql-router-k8s/0 [idle] active: 
+[32mINFO    [0m mysql.connector:authentication.py:66 package: mysql.connector.plugins
+[32mINFO    [0m mysql.connector:authentication.py:67 plugin_name: caching_sha2_password
+[32mINFO    [0m mysql.connector:authentication.py:71 AUTHENTICATION_PLUGIN_CLASS: MySQLCachingSHA2PasswordAuthPlugin
+[32mINFO    [0m integration.test_expose_external:test_expose_external.py:174 Testing endpoint when expose-external=loadbalancer
+[32mINFO    [0m juju.model:model.py:3211 Waiting for model:
+  mysql-router-k8s/0 [idle] active: 
+[32mINFO    [0m juju.model:model.py:3211 Waiting for model:
+  mysql-router-k8s/0 [idle] active:
