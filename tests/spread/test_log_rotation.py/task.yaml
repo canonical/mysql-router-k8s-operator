@@ -2,4 +2,4 @@ summary: test_log_rotation.py
 environment:
   TEST_MODULE: test_log_rotation.py
 execute: |
-  tox run -e integration -- "tests/integration/$TEST_MODULE" --model test
+  tox run -e integration -- "tests/integration/$TEST_MODULE" --model testing

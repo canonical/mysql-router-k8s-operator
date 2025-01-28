@@ -118,7 +118,8 @@ jobs:
         id: juju-switch
         run: |
           # sudo needed since spread runs scripts as root
-          sudo juju switch test
+          # "testing" is default model created by concierge
+          sudo juju switch testing
           mkdir ~/logs/
       - name: juju status
         timeout-minutes: 1

@@ -2,4 +2,4 @@ summary: test_upgrade.py
 environment:
   TEST_MODULE: test_upgrade.py
 execute: |
-  tox run -e integration -- "tests/integration/$TEST_MODULE" --model test
+  tox run -e integration -- "tests/integration/$TEST_MODULE" --model testing
