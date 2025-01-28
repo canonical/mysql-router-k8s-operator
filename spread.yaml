@@ -55,8 +55,8 @@ backends:
       # Revert python-libjuju version override
       git restore pyproject.toml poetry.lock
 
-      juju destroy-model --force --no-wait --destroy-storage --no-prompt test
-      juju kill-controller --no-prompt concierge-microk8s
+      # In case next spread job uses a different Juju version
+      concierge restore --trace
     restore: |
       rm -rf "$SPREAD_PATH"
 
@@ -120,7 +120,6 @@ prepare-each: |
   # `concierge prepare` needs to be run for each spread job in case Juju version changed
   concierge prepare --trace
 
-  juju add-model test
   # Unable to set constraint on all models because of Juju bug:
   # https://bugs.launchpad.net/juju/+bug/2065050
   juju set-model-constraints arch="$(dpkg --print-architecture)"
