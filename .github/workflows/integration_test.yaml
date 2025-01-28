@@ -87,6 +87,11 @@ jobs:
       - name: Set up environment
         timeout-minutes: 5
         run: sudo snap install charmcraft --classic --channel latest/candidate
+      # TODO: remove when https://github.com/canonical/charmcraft/issues/2105 and
+      # https://github.com/canonical/charmcraft/issues/2130 fixed
+      - run: |
+          sudo snap install go --classic
+          go install github.com/snapcore/spread/cmd/spread@latest
       - name: Download packed charm(s)
         timeout-minutes: 5
         uses: actions/download-artifact@v4
@@ -96,7 +101,10 @@ jobs:
       - name: Run spread job
         timeout-minutes: 180
         id: spread
-        run: charmcraft test '${{ matrix.job.spread_job }}'
+        # TODO: replace with `charmcraft test` when
+        # https://github.com/canonical/charmcraft/issues/2105 and
+        # https://github.com/canonical/charmcraft/issues/2130 fixed
+        run: ~/go/bin/spread -vv '${{ matrix.job.spread_job }}'
       - timeout-minutes: 1
         if: ${{ success() || (failure() && steps.spread.outcome == 'failure') }}
         run: snap list
