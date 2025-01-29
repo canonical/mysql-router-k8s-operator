@@ -55,8 +55,11 @@ backends:
       # Revert python-libjuju version override
       git restore pyproject.toml poetry.lock
 
-      # In case next spread job uses a different Juju version
-      concierge restore --trace
+      # Use instead of `concierge restore` to save time between tests
+      # For example, with microk8s, using `concierge restore` takes twice as long as this (e.g. 6
+      # min instead of 3 min between every spread job)
+      juju destroy-model --force --no-wait --destroy-storage --no-prompt testing
+      juju kill-controller --no-prompt concierge-microk8s
     restore: |
       rm -rf "$SPREAD_PATH"
 
