@@ -79,3 +79,5 @@ jobs:
     uses: ./.github/workflows/integration_test.yaml
     with:
       artifact-prefix: ${{ needs.build.outputs.artifact-prefix }}
+    permissions:
+      contents: write  # Needed for Allure Report

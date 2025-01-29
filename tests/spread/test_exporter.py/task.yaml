@@ -2,6 +2,8 @@ summary: test_exporter.py
 environment:
   TEST_MODULE: test_exporter.py
 execute: |
-  tox run -e integration -- "tests/integration/$TEST_MODULE" --model testing
+  tox run -e integration -- "tests/integration/$TEST_MODULE" --model testing --alluredir="$SPREAD_TASK/allure-results"
+artifacts:
+  - allure-results
 systems:
   - -ubuntu-24.04-arm

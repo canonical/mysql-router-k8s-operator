@@ -2,4 +2,6 @@ summary: test_log_rotation.py
 environment:
   TEST_MODULE: test_log_rotation.py
 execute: |
-  tox run -e integration -- "tests/integration/$TEST_MODULE" --model testing
+  tox run -e integration -- "tests/integration/$TEST_MODULE" --model testing --alluredir="$SPREAD_TASK/allure-results"
+artifacts:
+  - allure-results
