@@ -100,7 +100,6 @@ async def confirm_endpoint_connectivity(ops_test: OpsTest) -> None:
             ), "Connection not possible through endpoints"
 
 
-@pytest.mark.group(1)
 @pytest.mark.abort_on_fail
 async def test_expose_external(ops_test, charm) -> None:
     """Test the expose-external config option."""
@@ -180,7 +179,6 @@ async def test_expose_external(ops_test, charm) -> None:
         await confirm_endpoint_connectivity(ops_test)
 
 
-@pytest.mark.group(1)
 @pytest.mark.abort_on_fail
 async def test_expose_external_with_tls(ops_test: OpsTest) -> None:
     """Test endpoints when mysql-router-k8s is related to a TLS operator."""

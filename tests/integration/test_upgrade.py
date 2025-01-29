@@ -40,7 +40,6 @@ APPLICATION_APP_NAME = APPLICATION_DEFAULT_APP_NAME
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 
 
-@pytest.mark.group(1)
 @pytest.mark.abort_on_fail
 async def test_deploy_edge(ops_test: OpsTest) -> None:
     """Simple test to ensure that mysql, mysqlrouter and application charms deploy."""
@@ -90,7 +89,6 @@ async def test_deploy_edge(ops_test: OpsTest) -> None:
     )
 
 
-@pytest.mark.group(1)
 @pytest.mark.abort_on_fail
 async def test_upgrade_from_edge(ops_test: OpsTest, charm) -> None:
     """Upgrade mysqlrouter while ensuring continuous writes incrementing."""
@@ -157,7 +155,6 @@ async def test_upgrade_from_edge(ops_test: OpsTest, charm) -> None:
     )
 
 
-@pytest.mark.group(1)
 @pytest.mark.abort_on_fail
 async def test_fail_and_rollback(ops_test: OpsTest, charm, continuous_writes) -> None:
     """Upgrade to an invalid version and test rollback.

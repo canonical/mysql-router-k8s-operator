@@ -34,7 +34,6 @@ SLOW_TIMEOUT = 15 * 60
 MODEL_CONFIG = {"logging-config": "<root>=INFO;unit=DEBUG"}
 
 
-@pytest.mark.group(1)
 @pytest.mark.abort_on_fail
 async def test_log_rotation(ops_test: OpsTest, charm):
     """Test log rotation."""
