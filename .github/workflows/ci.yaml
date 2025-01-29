@@ -68,7 +68,7 @@ jobs:
 
   build:
     name: Build charm
-    uses: canonical/data-platform-workflows/.github/workflows/build_charm.yaml@v29.0.0
+    uses: canonical/data-platform-workflows/.github/workflows/build_charm.yaml@gh-arm-runner
 
   integration-test:
     strategy:
