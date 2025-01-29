@@ -48,7 +48,6 @@ else:
     tls_config = {"generate-self-signed-certificates": "true", "ca-common-name": "Test CA"}
 
 
-@pytest.mark.group(1)
 # TODO: remove after https://github.com/canonical/grafana-agent-k8s-operator/issues/309 fixed
 @markers.amd64_only
 @pytest.mark.abort_on_fail
