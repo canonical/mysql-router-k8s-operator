@@ -3,3 +3,5 @@ environment:
   TEST_MODULE: test_architecture.py
 execute: |
   tox run -e integration -- "tests/integration/$TEST_MODULE" --model testing
+backends:
+  - -lxd-vm  # This task requires charm built on different architecture from host
