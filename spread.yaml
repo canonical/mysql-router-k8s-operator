@@ -40,7 +40,6 @@ backends:
     environment:
       CONCIERGE_EXTRA_SNAPS: charmcraft
       CONCIERGE_EXTRA_DEBS: pipx
-      CI: true  # TODO remove
     systems:
       - ubuntu-24.04:
           username: runner

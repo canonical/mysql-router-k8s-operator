@@ -52,10 +52,8 @@ else:
 # TODO: remove after https://github.com/canonical/grafana-agent-k8s-operator/issues/309 fixed
 @markers.amd64_only
 @pytest.mark.abort_on_fail
-async def test_exporter_endpoint(ops_test: OpsTest) -> None:
+async def test_exporter_endpoint(ops_test: OpsTest, charm) -> None:
     """Test that the exporter endpoint works when related with TLS"""
-    # Build and deploy applications
-    mysqlrouter_charm = await ops_test.build_charm(".")
     mysqlrouter_resources = {
         "mysql-router-image": METADATA["resources"]["mysql-router-image"]["upstream-source"]
     }
@@ -73,7 +71,7 @@ async def test_exporter_endpoint(ops_test: OpsTest) -> None:
             trust=True,
         ),
         ops_test.model.deploy(
-            mysqlrouter_charm,
+            charm,
             application_name=MYSQL_ROUTER_APP_NAME,
             base="ubuntu@22.04",
             resources=mysqlrouter_resources,
