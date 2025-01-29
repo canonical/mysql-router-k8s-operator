@@ -102,10 +102,8 @@ async def confirm_endpoint_connectivity(ops_test: OpsTest) -> None:
 
 @pytest.mark.group(1)
 @pytest.mark.abort_on_fail
-async def test_expose_external(ops_test) -> None:
+async def test_expose_external(ops_test, charm) -> None:
     """Test the expose-external config option."""
-    logger.info("Building mysql-router-k8s charm")
-    mysql_router_charm = await ops_test.build_charm(".")
     await ops_test.model.set_config(MODEL_CONFIG)
 
     mysql_router_resources = {
@@ -124,7 +122,7 @@ async def test_expose_external(ops_test) -> None:
             trust=True,
         ),
         ops_test.model.deploy(
-            mysql_router_charm,
+            charm,
             application_name=MYSQL_ROUTER_APP_NAME,
             base="ubuntu@22.04",
             resources=mysql_router_resources,

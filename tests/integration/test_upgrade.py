@@ -92,7 +92,7 @@ async def test_deploy_edge(ops_test: OpsTest) -> None:
 
 @pytest.mark.group(1)
 @pytest.mark.abort_on_fail
-async def test_upgrade_from_edge(ops_test: OpsTest) -> None:
+async def test_upgrade_from_edge(ops_test: OpsTest, charm) -> None:
     """Upgrade mysqlrouter while ensuring continuous writes incrementing."""
     await ensure_all_units_continuous_writes_incrementing(ops_test)
 
@@ -101,9 +101,6 @@ async def test_upgrade_from_edge(ops_test: OpsTest) -> None:
 
     old_workload_version = await get_workload_version(ops_test, mysql_router_unit.name)
 
-    logger.info("Build charm locally")
-    global charm
-    charm = await ops_test.build_charm(".")
     global temporary_charm
     temporary_charm = "./upgrade.charm"
     shutil.copy(charm, temporary_charm)
@@ -162,7 +159,7 @@ async def test_upgrade_from_edge(ops_test: OpsTest) -> None:
 
 @pytest.mark.group(1)
 @pytest.mark.abort_on_fail
-async def test_fail_and_rollback(ops_test: OpsTest, continuous_writes) -> None:
+async def test_fail_and_rollback(ops_test: OpsTest, charm, continuous_writes) -> None:
     """Upgrade to an invalid version and test rollback.
 
     Relies on the charm built in the previous test (test_upgrade_from_edge).

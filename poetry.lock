@@ -1833,26 +1833,6 @@ pytest-asyncio = "<0.23"
 pyyaml = "*"
 
 [[package]]
-name = "pytest-operator-cache"
-version = "0.1.0"
-description = ""
-optional = false
-python-versions = ">=3.8"
-groups = ["integration"]
-files = []
-develop = false
-
-[package.dependencies]
-pyyaml = "*"
-
-[package.source]
-type = "git"
-url = "https://github.com/canonical/data-platform-workflows"
-reference = "v29.0.5"
-resolved_reference = "0e591badc29bcde5039e6bd58da26f34ef065c0f"
-subdirectory = "python/pytest_plugins/pytest_operator_cache"
-
-[[package]]
 name = "pytest-operator-groups"
 version = "0.1.0"
 description = ""
@@ -2544,4 +2524,4 @@ test = ["big-O", "importlib-resources", "jaraco.functools", "jaraco.itertools", 
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.10"
-content-hash = "9e816359bdba252ffa40d222fb6c1e47982f2def0436f4b7ed875792a19156f2"
+content-hash = "d7e38ff91c5992879134162da3e9f413fa7b08729c179c728d2c327be5e8dffb"
