@@ -32,13 +32,13 @@ jsonschema = "*"
 optional = true
 
 [tool.poetry.group.format.dependencies]
-ruff = "^0.4.5"
+ruff = "^0.9.3"
 
 [tool.poetry.group.lint]
 optional = true
 
 [tool.poetry.group.lint.dependencies]
-ruff = "^0.4.5"
+ruff = "^0.9.3"
 codespell = "^2.3.0"
 
 [tool.poetry.group.unit.dependencies]

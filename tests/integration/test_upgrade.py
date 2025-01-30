@@ -118,9 +118,9 @@ async def test_upgrade_from_edge(ops_test: OpsTest) -> None:
     await ops_test.model.block_until(
         lambda: mysql_router_application.status == "blocked", timeout=TIMEOUT
     )
-    assert (
-        "resume-upgrade" in mysql_router_application.status_message
-    ), "mysql router application status not indicating that user should resume upgrade"
+    assert "resume-upgrade" in mysql_router_application.status_message, (
+        "mysql router application status not indicating that user should resume upgrade"
+    )
 
     for attempt in tenacity.Retrying(
         reraise=True,
@@ -128,9 +128,9 @@ async def test_upgrade_from_edge(ops_test: OpsTest) -> None:
         wait=tenacity.wait_fixed(10),
     ):
         with attempt:
-            assert "+testupgrade" in get_juju_status(
-                ops_test.model.name
-            ), "None of the units are upgraded"
+            assert "+testupgrade" in get_juju_status(ops_test.model.name), (
+                "None of the units are upgraded"
+            )
 
     mysql_router_leader_unit = await get_leader_unit(ops_test, MYSQL_ROUTER_APP_NAME)
 
@@ -187,9 +187,9 @@ async def test_fail_and_rollback(ops_test: OpsTest, continuous_writes) -> None:
         wait=tenacity.wait_fixed(10),
     ):
         with attempt:
-            assert "Upgrade incompatible" in get_juju_status(
-                ops_test.model.name
-            ), "mysql router application status not indicating faulty charm incompatible"
+            assert "Upgrade incompatible" in get_juju_status(ops_test.model.name), (
+                "mysql router application status not indicating faulty charm incompatible"
+            )
 
     logger.info("Ensure continuous writes while in failure state")
     await ensure_all_units_continuous_writes_incrementing(ops_test)
