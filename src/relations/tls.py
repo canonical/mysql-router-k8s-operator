@@ -11,9 +11,9 @@ import re
 import socket
 import typing
 
-import charms.tls_certificates_interface.v2.tls_certificates as tls_certificates
 import ops
 
+import charms.tls_certificates_interface.v2.tls_certificates as tls_certificates
 import relations.secrets
 
 if typing.TYPE_CHECKING:

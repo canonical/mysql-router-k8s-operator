@@ -6,9 +6,9 @@
 import logging
 import typing
 
-import charms.data_platform_libs.v0.data_interfaces as data_interfaces
 import ops
 
+import charms.data_platform_libs.v0.data_interfaces as data_interfaces
 import mysql_shell
 import relations.remote_databag as remote_databag
 import status_exception

@@ -8,13 +8,13 @@ import typing
 from dataclasses import dataclass
 
 import ops
-from charms.grafana_k8s.v0.grafana_dashboard import GrafanaDashboardProvider
-from charms.loki_k8s.v1.loki_push_api import LogProxyConsumer
-from charms.prometheus_k8s.v0.prometheus_scrape import MetricsEndpointProvider
 
 import container
 import relations.secrets
 import utils
+from charms.grafana_k8s.v0.grafana_dashboard import GrafanaDashboardProvider
+from charms.loki_k8s.v1.loki_push_api import LogProxyConsumer
+from charms.prometheus_k8s.v0.prometheus_scrape import MetricsEndpointProvider
 from rock import CONTAINER_NAME
 
 if typing.TYPE_CHECKING:
