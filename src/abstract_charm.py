@@ -8,7 +8,6 @@ import logging
 import typing
 
 import ops
-from charms.tempo_coordinator_k8s.v0.tracing import TracingEndpointRequirer
 
 import container
 import lifecycle
@@ -21,6 +20,7 @@ import relations.tls
 import server_exceptions
 import upgrade
 import workload
+from charms.tempo_coordinator_k8s.v0.tracing import TracingEndpointRequirer
 
 logger = logging.getLogger(__name__)
 

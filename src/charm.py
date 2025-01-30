@@ -26,7 +26,6 @@ import lightkube.models.meta_v1
 import lightkube.resources.core_v1
 import ops
 import tenacity
-from charms.tempo_coordinator_k8s.v0.charm_tracing import trace_charm
 
 import abstract_charm
 import kubernetes_logrotate
@@ -39,6 +38,7 @@ import relations.secrets
 import rock
 import upgrade
 import workload
+from charms.tempo_coordinator_k8s.v0.charm_tracing import trace_charm
 
 logger = logging.getLogger(__name__)
 logging.getLogger("httpx").setLevel(logging.WARNING)
