@@ -174,7 +174,7 @@ jobs:
   allure-report:
     # TODO future improvement: use concurrency group for job
     name: Publish Allure report
-    if: ${{ !cancelled() && github.event_name == 'schedule' && github.run_attempt == '1'}}
+    if: ${{ !cancelled() && github.event_name == 'schedule' && github.run_attempt == '1' }}
     needs:
       - integration-test
     runs-on: ubuntu-latest
