@@ -84,7 +84,7 @@ jobs:
     needs:
       - collect-integration-tests
     runs-on: ${{ matrix.job.runner }}
-    timeout-minutes: 200 # TODO
+    timeout-minutes: 217  # Sum of steps `timeout-minutes` + 5
     steps:
       - name: Free up disk space
         timeout-minutes: 1
