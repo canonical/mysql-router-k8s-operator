@@ -12,6 +12,6 @@ providers:
 host:
   snaps:
     jhack:
-      channel: latest/stable
+      channel: latest/edge
       connections:
         - jhack:dot-local-share-juju snapd
