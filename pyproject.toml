@@ -57,7 +57,7 @@ mysql-connector-python = "~8.0.33"
 pyyaml = "^6.0.1"
 tenacity = "^8.5.0"
 allure-pytest = "^2.13.5"
-allure-pytest-collection-report = {git = "https://github.com/canonical/data-platform-workflows", tag = "v29.0.5", subdirectory = "python/pytest_plugins/allure_pytest_collection_report"}
+allure-pytest-default-results = "^0.1.2"
 
 [tool.coverage.run]
 branch = true
