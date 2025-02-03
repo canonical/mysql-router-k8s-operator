@@ -68,7 +68,7 @@ jobs:
 
   build:
     name: Build charm
-    uses: canonical/data-platform-workflows/.github/workflows/build_charm.yaml@v29.0.5
+    uses: canonical/data-platform-workflows/.github/workflows/build_charm.yaml@deprecate-integration-test
 
   integration-test:
     strategy:
@@ -92,7 +92,7 @@ jobs:
       - lint
       - unit-test
       - build
-    uses: canonical/data-platform-workflows/.github/workflows/integration_test_charm.yaml@v29.0.5
+    uses: canonical/data-platform-workflows/.github/workflows/integration_test_charm.yaml@deprecate-integration-test
     with:
       artifact-prefix: ${{ needs.build.outputs.artifact-prefix }}
       architecture: ${{ matrix.architecture }}
