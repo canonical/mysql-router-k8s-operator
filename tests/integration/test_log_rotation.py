@@ -34,12 +34,9 @@ SLOW_TIMEOUT = 15 * 60
 MODEL_CONFIG = {"logging-config": "<root>=INFO;unit=DEBUG"}
 
 
-@pytest.mark.group(1)
 @pytest.mark.abort_on_fail
-async def test_log_rotation(ops_test: OpsTest):
+async def test_log_rotation(ops_test: OpsTest, charm):
     """Test log rotation."""
-    # Build and deploy applications
-    mysqlrouter_charm = await ops_test.build_charm(".")
     await ops_test.model.set_config(MODEL_CONFIG)
 
     mysqlrouter_resources = {
@@ -58,7 +55,7 @@ async def test_log_rotation(ops_test: OpsTest):
             trust=True,  # Necessary after a6f1f01: Fix/endpoints as k8s services (#142)
         ),
         ops_test.model.deploy(
-            mysqlrouter_charm,
+            charm,
             application_name=MYSQL_ROUTER_APP_NAME,
             base="ubuntu@22.04",
             resources=mysqlrouter_resources,

@@ -6,10 +6,18 @@ import logging
 import pytest
 from pytest_operator.plugin import OpsTest
 
-from . import juju_
+from . import architecture, juju_
 from .helpers import APPLICATION_DEFAULT_APP_NAME, get_application_name
 
 logger = logging.getLogger(__name__)
+
+
+@pytest.fixture
+def charm():
+    # Return str instead of pathlib.Path since python-libjuju's model.deploy(), juju deploy, and
+    # juju bundle files expect local charms to begin with `./` or `/` to distinguish them from
+    # Charmhub charms.
+    return f"./mysql-router-k8s_ubuntu@22.04-{architecture.architecture}.charm"
 
 
 @pytest.fixture
