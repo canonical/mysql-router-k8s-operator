@@ -130,7 +130,7 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
             ):
                 return ops.MaintenanceStatus("Waiting for K8s service connectivity")
             else:
-                return ops.BlockedStatus("K8s service not connectible")
+                return ops.BlockedStatus("K8s service not connectable")
 
     def is_externally_accessible(self, *, event) -> typing.Optional[bool]:
         """No-op since this charm is exposed with the expose-external config."""
@@ -220,30 +220,6 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
                 selector={"app.kubernetes.io/name": self.app.name},
             ),
         )
-
-        # Delete and re-create until https://bugs.launchpad.net/juju/+bug/2084711 resolved
-        if service_exists:
-            logger.info(f"Issuing delete service {service_type=}")
-            self._lightkube_client.delete(
-                res=lightkube.resources.core_v1.Service,
-                name=self.service_name,
-                namespace=self.model.name,
-            )
-            logger.info(f"Deleting service {service_type=}")
-
-            try:
-                for attempt in tenacity.Retrying(
-                    reraise=True,
-                    stop=tenacity.stop_after_delay(10),
-                    wait=tenacity.wait_fixed(1),
-                ):
-                    with attempt:
-                        assert self._get_service() is not None
-            except AssertionError:
-                logger.warning("Deletion of service took longer than expected")
-                return
-            else:
-                logger.debug(f"Deleted service {service_type=}")
 
         logger.info(f"Creating desired service {desired_service_type=}")
         self._lightkube_client.apply(desired_service, field_manager=self.app.name)
