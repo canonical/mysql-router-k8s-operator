@@ -1,0 +1,21 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:862 Model status:
+
+Model    Controller          Cloud/Region        Version  SLA          Timestamp
+testing  concierge-microk8s  microk8s/localhost  3.6.2    unsupported  01:46:45Z
+
+App               Version  Status   Scale  Charm             Channel      Rev  Address         Exposed  Message
+mysql-k8s                  error        1  mysql-k8s         8.0/edge     232  10.152.183.92   no       hook failed: "update-status"
+mysql-router-k8s           waiting      3  mysql-router-k8s  8.0/edge     593  10.152.183.111  no       Waiting for mysql-k8s app on backend-database endpoint
+mysql-test-app    0.0.2    waiting      1  mysql-test-app    latest/edge   63  10.152.183.188  no       
+
+Unit                 Workload     Agent  Address       Ports  Message
+mysql-k8s/0*         error        idle   10.1.105.205         hook failed: "update-status"
+mysql-router-k8s/0   maintenance  idle   10.1.105.201         Waiting for container
+mysql-router-k8s/1   maintenance  idle   10.1.105.203         Waiting for container
+mysql-router-k8s/2*  maintenance  idle   10.1.105.202         Waiting for container
+mysql-test-app/0*    waiting      idle   10.1.105.206         
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:868 Juju error logs:
+
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:947 Forgetting model main...
