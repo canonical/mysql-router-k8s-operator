@@ -266,7 +266,7 @@ class AuthenticatedWorkload(Workload):
 
         command = self._get_bootstrap_command(event=event, connection_info=self._connection_info)
         try:
-            self._container.run_mysql_router(command, timeout=30)
+            self._container.run_mysql_router(command)
         except container.CalledProcessError as e:
             # Original exception contains password
             # Re-raising would log the password to Juju's debug log
