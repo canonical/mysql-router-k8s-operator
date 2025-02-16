@@ -1,0 +1,25 @@
+[32mINFO    [0m integration.test_tls:test_tls.py:126 Relating TLS with mysqlrouter
+[33mWARNING [0m juju.model:model.py:1666 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m integration.test_tls:test_tls.py:129 Getting certificate issuer after relating with tls operator
+[32mINFO    [0m integration.test_tls:test_tls.py:146 Removing relation TLS with mysqlrouter
+[32mINFO    [0m pytest_operator.plugin:plugin.py:862 Model status:
+
+Model    Controller          Cloud/Region        Version  SLA          Timestamp
+testing  concierge-microk8s  microk8s/localhost  3.6.2    unsupported  01:43:18Z
+
+App                       Version                  Status  Scale  Charm                     Channel        Rev  Address         Exposed  Message
+mysql-k8s                 8.0.41-0ubuntu0.22.04.1  active      1  mysql-k8s                 8.0/edge       234  10.152.183.164  no       
+mysql-router-k8s          8.0.41-0ubuntu0.22.04.1  active      1  mysql-router-k8s                           0  10.152.183.81   no       
+mysql-test-app            0.0.2                    active      1  mysql-test-app            latest/edge     69  10.152.183.187  no       Last written value=1199
+self-signed-certificates                           active      1  self-signed-certificates  latest/stable  155  10.152.183.115  no       
+
+Unit                         Workload  Agent  Address       Ports  Message
+mysql-k8s/0*                 active    idle   10.1.229.203         Primary
+mysql-router-k8s/0*          active    idle   10.1.229.202         
+mysql-test-app/0*            active    idle   10.1.229.204         Last written value=1199
+self-signed-certificates/0*  active    idle   10.1.229.205         
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:868 Juju error logs:
+
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:947 Forgetting model main...
