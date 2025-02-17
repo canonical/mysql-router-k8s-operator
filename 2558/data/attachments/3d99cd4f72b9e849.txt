@@ -1,0 +1,39 @@
+[32mINFO    [0m integration.test_expose_external:test_expose_external.py:187 Resetting expose-external=false
+[32mINFO    [0m juju.model:model.py:3211 Waiting for model:
+  mysql-router-k8s/0 [idle] active: 
+[32mINFO    [0m integration.test_expose_external:test_expose_external.py:195 Deploying TLS operator
+[32mINFO    [0m juju.model:model.py:2284 Deploying ch:amd64/jammy/self-signed-certificates-155
+[32mINFO    [0m juju.model:model.py:3211 Waiting for model:
+  self-signed-certificates/0 [allocating] waiting: installing agent
+[32mINFO    [0m juju.model:model.py:3211 Waiting for model:
+  self-signed-certificates/0 [idle] active: 
+[32mINFO    [0m integration.test_expose_external:test_expose_external.py:209 Relate mysql-router-k8s with TLS operator
+[33mWARNING [0m juju.model:model.py:1666 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m integration.test_expose_external:test_expose_external.py:214 Testing endpoint when expose-external=false(default)
+[32mINFO    [0m integration.test_expose_external:test_expose_external.py:217 Testing endpoint when expose-external=nodeport
+[32mINFO    [0m juju.model:model.py:3211 Waiting for model:
+  mysql-router-k8s/0 [idle] active: 
+[32mINFO    [0m integration.test_expose_external:test_expose_external.py:227 Testing endpoint when expose-external=loadbalancer
+[32mINFO    [0m juju.model:model.py:3211 Waiting for model:
+  mysql-router-k8s/0 [idle] active:
+[32mINFO    [0m pytest_operator.plugin:plugin.py:862 Model status:
+
+Model    Controller          Cloud/Region        Version  SLA          Timestamp
+testing  concierge-microk8s  microk8s/localhost  3.6.2    unsupported  01:57:45Z
+
+App                       Version                  Status  Scale  Charm                     Channel        Rev  Address         Exposed  Message
+data-integrator                                    active      1  data-integrator           latest/edge     99  10.152.183.152  no       
+mysql-k8s                 8.0.41-0ubuntu0.22.04.1  active      1  mysql-k8s                 8.0/edge       234  10.152.183.113  no       
+mysql-router-k8s          8.0.41-0ubuntu0.22.04.1  active      1  mysql-router-k8s                           0  10.152.183.57   no       
+self-signed-certificates                           active      1  self-signed-certificates  latest/stable  155  10.152.183.165  no       
+
+Unit                         Workload  Agent  Address      Ports  Message
+data-integrator/0*           active    idle   10.1.192.9          
+mysql-k8s/0*                 active    idle   10.1.192.12         Primary
+mysql-router-k8s/0*          active    idle   10.1.192.11         
+self-signed-certificates/0*  active    idle   10.1.192.13         
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:868 Juju error logs:
+
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:947 Forgetting model main...
