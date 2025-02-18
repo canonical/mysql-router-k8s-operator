@@ -235,7 +235,7 @@ class Rock(container.Container):
         self,
         command: typing.List[str],
         *,
-        timeout: typing.Optional[int],
+        timeout: typing.Optional[int] = 15,
         input: str = None,  # noqa: A002 Match subprocess.run()
     ) -> str:
         try:
