@@ -17,7 +17,7 @@ import ops
 import relations.secrets
 
 if typing.TYPE_CHECKING:
-    import kubernetes_charm
+    import charm
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +48,7 @@ def _generate_private_key() -> str:
 class _Relation:
     """Relation to TLS certificate provider"""
 
-    _charm: "kubernetes_charm.KubernetesRouterCharm"
+    _charm: "charm.KubernetesRouterCharm"
     _interface: tls_certificates.TLSCertificatesRequiresV2
     _secrets: relations.secrets.RelationSecrets
 
@@ -112,6 +112,7 @@ class _Relation:
 
     def _generate_csr(self, key: bytes) -> bytes:
         """Generate certificate signing request (CSR)."""
+        service_name = self._charm.service_name
         unit_name = self._charm.unit.name.replace("/", "-")
         extra_hosts, extra_ips = self._charm.get_all_k8s_node_hostnames_and_ips()
         return tls_certificates.generate_csr(
@@ -122,14 +123,16 @@ class _Relation:
             organization=self._charm.app.name,
             sans_dns=[
                 socket.getfqdn(),
+                service_name,
+                f"{service_name}.{self._charm.model_service_domain}",
                 unit_name,
                 f"{unit_name}.{self._charm.app.name}-endpoints",
                 f"{unit_name}.{self._charm.app.name}-endpoints.{self._charm.model_service_domain}",
+                self._charm.app.name,
+                f"{self._charm.app.name}.{self._charm.app.name}-endpoints",
+                f"{self._charm.app.name}.{self._charm.app.name}-endpoints.{self._charm.model_service_domain}"
                 f"{self._charm.app.name}-endpoints",
                 f"{self._charm.app.name}-endpoints.{self._charm.model_service_domain}",
-                f"{unit_name}.{self._charm.app.name}",
-                f"{unit_name}.{self._charm.app.name}.{self._charm.model_service_domain}",
-                self._charm.app.name,
                 f"{self._charm.app.name}.{self._charm.model_service_domain}",
                 *extra_hosts,
             ],
@@ -171,7 +174,7 @@ class RelationEndpoint(ops.Object):
 
     NAME = "certificates"
 
-    def __init__(self, charm_: "kubernetes_charm.KubernetesRouterCharm") -> None:
+    def __init__(self, charm_: "charm.KubernetesRouterCharm") -> None:
         super().__init__(charm_, self.NAME)
         self._charm = charm_
         self._interface = tls_certificates.TLSCertificatesRequiresV2(self._charm, self.NAME)

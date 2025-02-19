@@ -9,9 +9,13 @@ concurrency:
 on:
   pull_request:
   schedule:
-    - cron: '53 0 * * *' # Daily at 00:53 UTC
+    - cron: '53 0 * * *'  # Daily at 00:53 UTC
   # Triggered on push to branch "main" by .github/workflows/release.yaml
   workflow_call:
+    outputs:
+      artifact-prefix:
+        description: build_charm.yaml `artifact-prefix` output
+        value: ${{ jobs.build.outputs.artifact-prefix }}
 
 jobs:
   lint:
@@ -30,7 +34,7 @@ jobs:
 
   unit-test:
     name: Unit test charm
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04  # TODO: use ubuntu-latest after fixing pathlib issue on python 3.12
     timeout-minutes: 20
     steps:
       - name: Checkout
@@ -42,69 +46,18 @@ jobs:
       - name: Run tests
         run: tox run -e unit
 
-  lib-check:
-    name: Check libraries
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - run: |
-          # Workaround for https://github.com/canonical/charmcraft/issues/1389#issuecomment-1880921728
-          touch requirements.txt
-      - name: Check libs
-        uses: canonical/charming-actions/check-libraries@2.6.3
-        with:
-          credentials: "${{ secrets.CHARMHUB_TOKEN }}"
-          github-token: "${{ secrets.GITHUB_TOKEN }}"
-          use-labels: false
-          fail-build: ${{ github.event_name == 'pull_request' }}
-
   build:
     name: Build charm
-    uses: canonical/data-platform-workflows/.github/workflows/build_charm.yaml@v23.0.2
-    with:
-      cache: true
+    uses: canonical/data-platform-workflows/.github/workflows/build_charm.yaml@v30.0.2
 
   integration-test:
-    strategy:
-      fail-fast: false
-      matrix:
-        juju:
-          - agent: 2.9.51  # renovate: juju-agent-pin-minor
-            libjuju: ^2
-            allure_on_amd64: false
-          - agent: 3.5.4  # renovate: juju-agent-pin-minor
-            allure_on_amd64: true
-          - snap_channel: 3.6/beta
-            allure_on_amd64: false
-        architecture:
-          - amd64
-        include:
-          - juju:
-              agent: 3.5.4  # renovate: juju-agent-pin-minor
-              allure_on_amd64: true
-            architecture: arm64
-          - juju:
-              snap_channel: 3.6/beta
-              allure_on_amd64: false
-            architecture: arm64
-    name: Integration | ${{ matrix.juju.agent || matrix.juju.snap_channel }} | ${{ matrix.architecture }}
+    name: Integration test charm
     needs:
       - lint
       - unit-test
       - build
-    uses: canonical/data-platform-workflows/.github/workflows/integration_test_charm.yaml@v23.0.2
+    uses: ./.github/workflows/integration_test.yaml
     with:
       artifact-prefix: ${{ needs.build.outputs.artifact-prefix }}
-      architecture: ${{ matrix.architecture }}
-      cloud: microk8s
-      microk8s-snap-channel: 1.31-strict/stable  # renovate: latest microk8s
-      juju-agent-version: ${{ matrix.juju.agent }}
-      juju-snap-channel: ${{ matrix.juju.snap_channel }}
-      libjuju-version-constraint: ${{ matrix.juju.libjuju }}
-      _beta_allure_report: ${{ matrix.juju.allure_on_amd64 && matrix.architecture == 'amd64' }}
     permissions:
-      contents: write  # Needed for Allure Report beta
+      contents: write  # Needed for Allure Report

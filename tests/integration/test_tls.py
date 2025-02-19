@@ -44,9 +44,8 @@ else:
     tls_config = {"generate-self-signed-certificates": "true", "ca-common-name": "Test CA"}
 
 
-@pytest.mark.group(1)
 @pytest.mark.abort_on_fail
-async def test_build_deploy_and_relate(ops_test: OpsTest) -> None:
+async def test_deploy_and_relate(ops_test: OpsTest, charm) -> None:
     """Test encryption when backend database is using TLS."""
     mysqlrouter_resources = {
         "mysql-router-image": METADATA["resources"]["mysql-router-image"]["upstream-source"]
@@ -65,13 +64,10 @@ async def test_build_deploy_and_relate(ops_test: OpsTest) -> None:
             trust=True,
         )
 
-        # ROUTER
-        mysqlrouter_charm = await ops_test.build_charm(".")
-
         # tls, test app and router
         await asyncio.gather(
             ops_test.model.deploy(
-                mysqlrouter_charm,
+                charm,
                 application_name=MYSQL_ROUTER_APP_NAME,
                 base="ubuntu@22.04",
                 resources=mysqlrouter_resources,
@@ -106,7 +102,6 @@ async def test_build_deploy_and_relate(ops_test: OpsTest) -> None:
         await ops_test.model.wait_for_idle([TEST_APP_NAME], status="active", timeout=SLOW_TIMEOUT)
 
 
-@pytest.mark.group(1)
 @pytest.mark.abort_on_fail
 async def test_connected_encryption(ops_test: OpsTest) -> None:
     """Test encryption when backend database is using TLS."""

@@ -56,6 +56,7 @@ This MySQL Router K8s charm is an official distribution of MySQL Router. It’s 
 | 2 | h-contribute | [Contribute](/t/14528) |
 | 1 | reference | [Reference]() |
 | 2 | r-releases-group | [Release Notes](/t/12201) |
+| 3 | r-releases-rev531 | [Revision 530/531](/t/16134) |
 | 3 | r-releases-rev155 | [Revision 154/155](/t/15354) |
 | 3 | r-releases-rev117 | [Revision 117](/t/14074) |
 | 3 | r-releases-rev96 | [Revision 96](/t/13523) |
@@ -70,7 +71,6 @@ This MySQL Router K8s charm is an official distribution of MySQL Router. It’s 
 | 2 | e-juju-details | [Juju](/t/12273) |
 
 [/details]
-
 
 
 # Redirects
