@@ -18,8 +18,8 @@ requests = "^2.32.3"
 [tool.poetry.group.charm-libs.dependencies]
 # data_platform_libs/v0/data_interfaces.py
 ops = ">=2.0.0"
-# loki-k8s/v1/loki_push_api.py and prometheus_k8s/v0/prometheus_scrape.py
-cosl = "*"
+# grafana_k8s/grafana_dashboard.py
+cosl = ">= 0.0.50"
 # tempo_coordinator_k8s/v0/charm_tracing.py
 opentelemetry-exporter-otlp-proto-http = "1.21.0"
 # tempo_coordinator_k8s/v0/tracing.py
