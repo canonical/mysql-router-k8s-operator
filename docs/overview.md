@@ -47,21 +47,12 @@ This MySQL Router K8s charm is an official distribution of MySQL Router. It’s 
 | 2 | h-monitor | [Monitor (COS)]() |
 | 3 | h-enable-monitoring | [Enable monitoring](/t/14101) |
 | 3 | h-enable-tracing | [Enable tracing](/t/14553) |
-| 2 | h-upgrade | [Upgrade]() |
-| 3 | h-upgrade-intro | [Intro](/t/12235) |
-| 3 | h-upgrade-major | [Major upgrade](/t/12236) |
-| 3 | h-rollback-major | [Major rollback](/t/12237) |
+| 2 | h-upgrade | [Upgrade](/t/12235) |
 | 3 | h-upgrade-minor | [Minor upgrade](/t/12238) |
 | 3 | h-rollback-minor | [Minor rollback](/t/12239) |
 | 2 | h-contribute | [Contribute](/t/14528) |
 | 1 | reference | [Reference]() |
-| 2 | r-releases-group | [Release Notes](/t/12201) |
-| 3 | r-releases-rev531 | [Revision 530/531](/t/16134) |
-| 3 | r-releases-rev155 | [Revision 154/155](/t/15354) |
-| 3 | r-releases-rev117 | [Revision 117](/t/14074) |
-| 3 | r-releases-rev96 | [Revision 96](/t/13523) |
-| 3 | r-releases-rev82 | [Revision 82](/t/12796) |
-| 3 | r-releases-rev69 | [Revision 69](/t/12202) |
+| 2 | r-releases | [Releases](/t/12201) |
 | 2 | r-system-requirements | [System requirements](/t/12179) |
 | 2 | r-testing | [Testing](/t/12234) |
 | 2 | r-contacts | [Contacts](/t/12177) |
@@ -72,7 +63,17 @@ This MySQL Router K8s charm is an official distribution of MySQL Router. It’s 
 
 [/details]
 
+<!-- Arhived
+| 3 | h-upgrade-major | [Major upgrade](/t/12236) |
+| 3 | h-rollback-major | [Major rollback](/t/12237) |
 
+| 3 | r-releases-rev531 | [Revision 530/531](/t/16134) |
+| 3 | r-releases-rev155 | [Revision 154/155](/t/15354) |
+| 3 | r-releases-rev117 | [Revision 117](/t/14074) |
+| 3 | r-releases-rev96 | [Revision 96](/t/13523) |
+| 3 | r-releases-rev82 | [Revision 82](/t/12796) |
+| 3 | r-releases-rev69 | [Revision 69](/t/12202) |
+-->
 # Redirects
 
 [details=Mapping table]
