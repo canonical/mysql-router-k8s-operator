@@ -10,7 +10,7 @@ import logging
 import socket
 import typing
 
-import charm
+import charm_ as charm
 import charm_refresh
 import lightkube
 import lightkube.models.core_v1
@@ -99,6 +99,7 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
             )
         except charm_refresh.UnitTearingDown:
             # todo cleanup of mysql user for bootstrap?
+            # todo: remove-app cleanup
             self.unit.status = ops.MaintenanceStatus("Tearing down")
             exit()
         except charm_refresh.KubernetesJujuAppNotTrusted:
