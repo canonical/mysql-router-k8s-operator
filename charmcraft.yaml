@@ -80,4 +80,3 @@ parts:
       - refresh_versions.toml
       - scripts
       - templates
-      - dispatch

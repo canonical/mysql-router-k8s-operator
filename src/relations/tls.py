@@ -17,7 +17,7 @@ import ops
 import relations.secrets
 
 if typing.TYPE_CHECKING:
-    import kubernetes_charm
+    import charm
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +48,7 @@ def _generate_private_key() -> str:
 class _Relation:
     """Relation to TLS certificate provider"""
 
-    _charm: "kubernetes_charm.KubernetesRouterCharm"
+    _charm: "charm.KubernetesRouterCharm"
     _interface: tls_certificates.TLSCertificatesRequiresV2
     _secrets: relations.secrets.RelationSecrets
 
@@ -171,7 +171,7 @@ class RelationEndpoint(ops.Object):
 
     NAME = "certificates"
 
-    def __init__(self, charm_: "kubernetes_charm.KubernetesRouterCharm") -> None:
+    def __init__(self, charm_: "charm.KubernetesRouterCharm") -> None:
         super().__init__(charm_, self.NAME)
         self._charm = charm_
         self._interface = tls_certificates.TLSCertificatesRequiresV2(self._charm, self.NAME)
