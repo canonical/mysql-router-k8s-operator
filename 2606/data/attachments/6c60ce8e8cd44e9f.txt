@@ -1,0 +1,63 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:734 Connecting to existing model concierge-microk8s:testing on unspecified cloud
+[32mINFO    [0m integration.test_charm:test_charm.py:45 Deploying mysql, mysqlrouter and application
+[32mINFO    [0m juju.model:model.py:2284 Deploying ch:amd64/jammy/mysql-test-app-73
+[32mINFO    [0m juju.model:model.py:2284 Deploying ch:amd64/jammy/mysql-k8s-243
+[32mINFO    [0m juju.model:model.py:2284 Deploying local:mysql-router-k8s-0
+[32mINFO    [0m integration.test_charm:test_charm.py:76 Waiting for mysqlrouter to be in BlockedStatus
+[32mINFO    [0m integration.test_charm:test_charm.py:82 Relating mysql, mysqlrouter and application
+[33mWARNING [0m juju.model:model.py:1666 relate is deprecated and will be removed. Use integrate instead.
+[33mWARNING [0m juju.model:model.py:1666 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m juju.model:model.py:3211 Waiting for model:
+  mysql-router-k8s/0 [idle] waiting: 
+[32mINFO    [0m juju.model:model.py:3211 Waiting for model:
+  mysql-router-k8s/0 [idle] waiting: 
+[32mINFO    [0m juju.model:model.py:3211 Waiting for model:
+  mysql-router-k8s/0 [executing] waiting: 
+[32mINFO    [0m juju.model:model.py:3211 Waiting for model:
+  mysql-k8s/0 [idle] active: 
+  mysql-k8s/1 [idle] waiting: waiting to join the cluster
+  mysql-k8s/2 [executing] active: Primary
+  mysql-router-k8s/0 [idle] active: 
+  mysql-test-app/0 [idle] active: Last written value=612
+[32mINFO    [0m juju.model:model.py:3211 Waiting for model:
+  mysql-k8s/0 [executing] active: 
+  mysql-k8s/1 [idle] active: 
+  mysql-k8s/2 [executing] active: Primary
+[32mINFO    [0m juju.model:model.py:3211 Waiting for model:
+  mysql-k8s/0 [idle] active: 
+  mysql-k8s/1 [idle] active: 
+[32mINFO    [0m juju.model:model.py:3211 Waiting for model:
+  mysql-router-k8s (waiting for exactly 2 units, current : 1)
+[32mINFO    [0m juju.model:model.py:3211 Waiting for model:
+  mysql-router-k8s/0 [idle] active: 
+  mysql-router-k8s/1 [executing] active: 
+[32mINFO    [0m juju.model:model.py:3211 Waiting for model:
+  mysql-router-k8s/1 [idle] active: 
+[32mINFO    [0m juju.model:model.py:3211 Waiting for model:
+  mysql-test-app (waiting for exactly 2 units, current : 1)
+[32mINFO    [0m juju.model:model.py:3211 Waiting for model:
+  mysql-test-app/0 [idle] active: 
+  mysql-test-app/1 [idle] active:
+[32mINFO    [0m pytest_operator.plugin:plugin.py:862 Model status:
+
+Model    Controller          Cloud/Region        Version  SLA          Timestamp
+testing  concierge-microk8s  microk8s/localhost  3.6.3    unsupported  01:47:33Z
+
+App               Version                  Status  Scale  Charm             Channel      Rev  Address         Exposed  Message
+mysql-k8s         8.0.41-0ubuntu0.22.04.1  active      3  mysql-k8s         8.0/edge     243  10.152.183.92   no       
+mysql-router-k8s  8.0.41-0ubuntu0.22.04.1  active      2  mysql-router-k8s                 0  10.152.183.116  no       
+mysql-test-app    0.0.2                    active      2  mysql-test-app    latest/edge   73  10.152.183.45   no       
+
+Unit                 Workload  Agent  Address      Ports  Message
+mysql-k8s/0          active    idle   10.1.199.78         
+mysql-k8s/1          active    idle   10.1.199.80         
+mysql-k8s/2*         active    idle   10.1.199.79         Primary
+mysql-router-k8s/0*  active    idle   10.1.199.74         
+mysql-router-k8s/1   active    idle   10.1.199.81         
+mysql-test-app/0*    active    idle   10.1.199.73         
+mysql-test-app/1     active    idle   10.1.199.82         
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:868 Juju error logs:
+
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:947 Forgetting model main...
