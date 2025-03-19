@@ -370,6 +370,55 @@ markers = {charm-libs = "platform_python_implementation != \"PyPy\""}
 pycparser = "*"
 
 [[package]]
+name = "charm-api"
+version = "0.1.2"
+description = ""
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+files = [
+    {file = "charm_api-0.1.2-py3-none-any.whl", hash = "sha256:f76806f8d8e1e39ae4a812711350399168cd26b319a01e73a5816ef8fb9f7ed4"},
+    {file = "charm_api-0.1.2.tar.gz", hash = "sha256:5d74418a3ffdee189dec1eaf648ba1bd7cff7449c3cdd2334a724e6722204c9d"},
+]
+
+[[package]]
+name = "charm-json"
+version = "0.1.1"
+description = ""
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+files = [
+    {file = "charm_json-0.1.1-py3-none-any.whl", hash = "sha256:a3fac62d45821d1a8c14058632e21333ec4e2cd41d0d00d6a73d00fc9a656eef"},
+    {file = "charm_json-0.1.1.tar.gz", hash = "sha256:cb2eb24f6135d226ad04b0a17288ca2e027160d8af288083ef701bf4b137154e"},
+]
+
+[package.dependencies]
+charm-api = ">=0.1.1"
+
+[[package]]
+name = "charm-refresh"
+version = "3.1.0.2"
+description = "In-place rolling refreshes (upgrades) of stateful charmed applications"
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+files = [
+    {file = "charm_refresh-3.1.0.2-py3-none-any.whl", hash = "sha256:963ed20704b38af3b5f76e03e07da6e36e9f8a8cac7f49c77bf3c047cb954dea"},
+    {file = "charm_refresh-3.1.0.2.tar.gz", hash = "sha256:dce60c3fb6f237713e4365007a10db7ba363b76faf3a31577b5456ed61831cfd"},
+]
+
+[package.dependencies]
+charm-api = ">=0.1.1"
+charm-json = ">=0.1.1"
+httpx = ">=0.28.1"
+lightkube = ">=0.15.4"
+ops = ">=2.9.0"
+packaging = ">=24.1"
+pyyaml = ">=6.0.2"
+tomli = ">=2.0.1"
+
+[[package]]
 name = "charset-normalizer"
 version = "3.4.3"
 description = "The Real First Universal Charset Detector. Open, modern and actively maintained alternative to Chardet."
@@ -1470,7 +1519,7 @@ version = "25.0"
 description = "Core utilities for Python packages"
 optional = false
 python-versions = ">=3.8"
-groups = ["integration", "unit"]
+groups = ["main", "integration", "unit"]
 files = [
     {file = "packaging-25.0-py3-none-any.whl", hash = "sha256:29572ef2b1f17581046b3a2227d5c611fb25ec70ca1ba8554b24b0e69331a484"},
     {file = "packaging-25.0.tar.gz", hash = "sha256:d443872c98d677bf60f6a1f2f8c1cb748e8fe762d2bf9d3148b5599295b0fc4f"},
@@ -2422,7 +2471,7 @@ version = "2.2.1"
 description = "A lil' TOML parser"
 optional = false
 python-versions = ">=3.8"
-groups = ["integration", "unit"]
+groups = ["main", "integration", "unit"]
 files = [
     {file = "tomli-2.2.1-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:678e4fa69e4575eb77d103de3df8a895e1591b48e740211bd1067378c69e8249"},
     {file = "tomli-2.2.1-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:023aa114dd824ade0100497eb2318602af309e5a55595f76b626d6d9f3b7b0a6"},
@@ -2771,4 +2820,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.10"
-content-hash = "ddd87ed8dbfbf3bea62523b6dec15a52f4ec4fffc3369d93ea7c6b5048bbe5e2"
+content-hash = "ba4e1d1701e5297eefb9a6804c9d88bfe56c3f59f1002826de7d507e508d9f35"
