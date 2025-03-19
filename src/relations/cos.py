@@ -73,15 +73,6 @@ class COSRelation:
         self._charm = charm_
         self._container = container_
 
-        charm_.framework.observe(
-            charm_.on[self._METRICS_RELATION_NAME].relation_created,
-            charm_.reconcile,
-        )
-        charm_.framework.observe(
-            charm_.on[self._METRICS_RELATION_NAME].relation_broken,
-            charm_.reconcile,
-        )
-
         self._secrets = relations.secrets.RelationSecrets(
             charm_,
             self._PEER_RELATION_NAME,
