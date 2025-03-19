@@ -15,3 +15,11 @@ options:
       and managed by the charm.
     type: string
     default: "{}"
+
+  pause_after_unit_refresh:
+    description: |
+      Wait for manual confirmation to resume refresh after these units refresh
+
+      Allowed values: "all", "first", "none"
+    type: string
+    default: first

@@ -186,7 +186,7 @@ class Workload:
             return ops.WaitingStatus()
 
 
-class AuthenticatedWorkload(Workload):
+class RunningWorkload(Workload):
     """Workload with connection to MySQL cluster"""
 
     def __init__(
