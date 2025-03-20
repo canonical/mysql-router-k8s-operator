@@ -56,7 +56,7 @@ class _ServiceType(enum.Enum):
 class _RouterRefresh(charm_refresh.CharmSpecific):
     @staticmethod
     def run_pre_refresh_checks_after_1_unit_refreshed() -> None:
-        raise charm_refresh.PrecheckFailed("Backup in progress")
+        pass
 
     @classmethod
     def is_compatible(
@@ -134,6 +134,7 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
             if self.unit.is_leader():
                 self.app.status = ops.MaintenanceStatus("Waiting for peer relation")
             exit()
+        raise Exception
 
     @property
     def _subordinate_relation_endpoint_names(self) -> typing.Optional[typing.Iterable[str]]:
