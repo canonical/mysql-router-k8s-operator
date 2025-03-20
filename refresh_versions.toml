@@ -1,6 +1,6 @@
 # https://canonical-charm-refresh.readthedocs-hosted.com/latest/refresh-versions-toml/
 
 charm_major = 1
-workload = "8.0.42"
+workload = "8.0.41"
 
 charm = "8.0/1.0.0" # TODO remove
