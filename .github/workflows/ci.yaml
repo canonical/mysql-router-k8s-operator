@@ -24,7 +24,7 @@ jobs:
       - build
     uses: canonical/data-platform-workflows/.github/workflows/release_charm.yaml@v31.0.0
     with:
-      channel: 8.0/edge/test-refresh-v3-8.0.41
+      channel: 8.0/edge/test-refresh-v3-incompat
       artifact-prefix: ${{ needs.build.outputs.artifact-prefix }}
       create-git-tags: false
     secrets:
