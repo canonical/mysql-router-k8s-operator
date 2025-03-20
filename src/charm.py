@@ -56,7 +56,7 @@ class _ServiceType(enum.Enum):
 class _RouterRefresh(charm_refresh.CharmSpecific):
     @staticmethod
     def run_pre_refresh_checks_after_1_unit_refreshed() -> None:
-        pass
+        raise charm_refresh.PrecheckFailed("Backup in progress")
 
     @classmethod
     def is_compatible(
