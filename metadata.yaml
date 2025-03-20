@@ -54,6 +54,6 @@ resources:
   mysql-router-image:
     type: oci-image
     description: OCI image for mysql-router
-    upstream-source: ghcr.io/canonical/charmed-mysql@sha256:089fc04dd2d6f1559161ddf4720c1e06559aeb731ecae57b050c9c816e9833e9
+    upstream-source: ghcr.io/canonical/charmed-mysql@sha256:dbba2661ebc38463ca1b9d16edb73cf2575d7da937274d863492a3dfb288c5b7
 assumes:
   - k8s-api
