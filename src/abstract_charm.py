@@ -23,6 +23,33 @@ import workload
 logger = logging.getLogger(__name__)
 
 
+class RouterRefresh(charm_refresh.CharmSpecific):
+    """MySQL Router refresh callbacks & configuration"""
+
+    @staticmethod
+    def run_pre_refresh_checks_after_1_unit_refreshed() -> None:
+        pass
+
+    @classmethod
+    def is_compatible(
+        cls,
+        *,
+        old_charm_version: charm_refresh.CharmVersion,
+        new_charm_version: charm_refresh.CharmVersion,
+        old_workload_version: str,
+        new_workload_version: str,
+    ) -> bool:
+        if not super().is_compatible(
+            old_charm_version=old_charm_version,
+            new_charm_version=new_charm_version,
+            old_workload_version=old_workload_version,
+            new_workload_version=new_workload_version,
+        ):
+            return False
+        # TODO: check workload version—prevent downgrade?
+        return True
+
+
 class MySQLRouterCharm(ops.CharmBase, abc.ABC):
     """MySQL Router charm"""
 

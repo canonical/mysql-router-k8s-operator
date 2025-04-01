@@ -52,31 +52,6 @@ class _ServiceType(enum.Enum):
     LOAD_BALANCER = "LoadBalancer"
 
 
-class _RouterRefresh(charm_refresh.CharmSpecific):
-    @staticmethod
-    def run_pre_refresh_checks_after_1_unit_refreshed() -> None:
-        pass
-
-    @classmethod
-    def is_compatible(
-        cls,
-        *,
-        old_charm_version: charm_refresh.CharmVersion,
-        new_charm_version: charm_refresh.CharmVersion,
-        old_workload_version: str,
-        new_workload_version: str,
-    ) -> bool:
-        if not super().is_compatible(
-            old_charm_version=old_charm_version,
-            new_charm_version=new_charm_version,
-            old_workload_version=old_workload_version,
-            new_workload_version=new_workload_version,
-        ):
-            return False
-        # TODO: check workload version—prevent downgrade?
-        return True
-
-
 @trace_charm(
     tracing_endpoint="tracing_endpoint",
     extra_types=(
@@ -114,7 +89,7 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         )
         try:
             self.refresh = charm_refresh.Refresh(
-                _RouterRefresh(
+                abstract_charm.RouterRefresh(
                     cloud=charm_refresh.Cloud.KUBERNETES,
                     workload_name="Router",
                     refresh_user_docs_url="https://charmhub.io/mysql-router-k8s/docs/h-upgrade",
