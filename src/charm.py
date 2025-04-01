@@ -7,7 +7,6 @@
 """MySQL Router Kubernetes charm"""
 
 import ops
-from charm_refresh import CharmVersion
 
 from architecture import WrongArchitectureWarningCharm, is_wrong_architecture
 
@@ -62,8 +61,8 @@ class _RouterRefresh(charm_refresh.CharmSpecific):
     def is_compatible(
         cls,
         *,
-        old_charm_version: CharmVersion,
-        new_charm_version: CharmVersion,
+        old_charm_version: charm_refresh.CharmVersion,
+        new_charm_version: charm_refresh.CharmVersion,
         old_workload_version: str,
         new_workload_version: str,
     ) -> bool:
