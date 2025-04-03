@@ -13,6 +13,7 @@ from architecture import WrongArchitectureWarningCharm, is_wrong_architecture
 if is_wrong_architecture() and __name__ == "__main__":
     ops.main.main(WrongArchitectureWarningCharm)
 
+import dataclasses
 import enum
 import functools
 import json
@@ -52,6 +53,11 @@ class _ServiceType(enum.Enum):
     LOAD_BALANCER = "LoadBalancer"
 
 
+@dataclasses.dataclass(eq=False)
+class KubernetesRouterRefresh(abstract_charm.RouterRefresh, charm_refresh.CharmSpecificKubernetes):
+    """MySQL Router Kubernetes refresh callbacks & configuration"""
+
+
 @trace_charm(
     tracing_endpoint="tracing_endpoint",
     extra_types=(
@@ -88,9 +94,8 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
             self.on[rock.CONTAINER_NAME].pebble_ready, self._on_workload_container_pebble_ready
         )
         try:
-            self.refresh = charm_refresh.Refresh(
-                abstract_charm.RouterRefresh(
-                    cloud=charm_refresh.Cloud.KUBERNETES,
+            self.refresh = charm_refresh.Kubernetes(
+                KubernetesRouterRefresh(
                     workload_name="Router",
                     refresh_user_docs_url="https://charmhub.io/mysql-router-k8s/docs/h-upgrade",
                     oci_resource_name="mysql-router-image",

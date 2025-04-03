@@ -4,6 +4,7 @@
 """MySQL Router charm"""
 
 import abc
+import dataclasses
 import logging
 import typing
 
@@ -23,7 +24,8 @@ import workload
 logger = logging.getLogger(__name__)
 
 
-class RouterRefresh(charm_refresh.CharmSpecific):
+@dataclasses.dataclass(eq=False)
+class RouterRefresh(charm_refresh.CharmSpecificCommon, abc.ABC):
     """MySQL Router refresh callbacks & configuration"""
 
     @staticmethod
@@ -58,7 +60,7 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
     _READ_WRITE_X_PORT = 6448
     _READ_ONLY_X_PORT = 6449
 
-    refresh: charm_refresh.Refresh
+    refresh: charm_refresh.Common
 
     def __init__(self, *args) -> None:
         super().__init__(*args)
