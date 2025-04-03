@@ -53,7 +53,9 @@ jobs:
 
   build:
     name: Build charm
-    uses: canonical/data-platform-workflows/.github/workflows/build_charm.yaml@v31.0.1
+    uses: canonical/data-platform-workflows/.github/workflows/build_charm.yaml@s390x-test
+    with:
+      cache: false
 
   integration-test:
     name: Integration test charm
