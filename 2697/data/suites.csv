@@ -1,0 +1,17 @@
+"DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
+"Test that exporter endpoint is functional.","140430","test_exporter_endpoint","tests.integration","Sun Apr 06 01:42:21 UTC 2025","passed","Sun Apr 06 01:44:41 UTC 2025","","test_exporter","",""
+"Upgrade mysqlrouter while ensuring continuous writes incrementing.","178075","test_upgrade_from_edge","tests.integration","Sun Apr 06 01:45:17 UTC 2025","passed","Sun Apr 06 01:48:15 UTC 2025","","test_upgrade","",""
+"Test log rotation.","107545","test_log_rotation","tests.integration","Sun Apr 06 01:43:09 UTC 2025","passed","Sun Apr 06 01:44:57 UTC 2025","","test_log_rotation","",""
+"Test endpoints when mysql-router-k8s is related to a TLS operator.","125219","test_expose_external_with_tls","tests.integration","Sun Apr 06 01:45:28 UTC 2025","passed","Sun Apr 06 01:47:33 UTC 2025","","test_expose_external","",""
+"Upgrade to an invalid version and test rollback.
+
+    Relies on the charm built in the previous test (test_upgrade_from_edge).
+    ","204099","test_fail_and_rollback","tests.integration","Sun Apr 06 01:48:15 UTC 2025","passed","Sun Apr 06 01:51:39 UTC 2025","","test_upgrade","",""
+"Test encryption when backend database is using TLS.","96887","test_deploy_and_relate","tests.integration","Sun Apr 06 01:43:37 UTC 2025","passed","Sun Apr 06 01:45:14 UTC 2025","","test_tls","",""
+"Simple test to ensure that mysql, mysqlrouter and application charms deploy.","132333","test_deploy_edge","tests.integration","Sun Apr 06 01:43:05 UTC 2025","passed","Sun Apr 06 01:45:17 UTC 2025","","test_upgrade","",""
+"Test the database relation.","643291","test_database_relation","tests.integration","Sun Apr 06 01:42:22 UTC 2025","passed","Sun Apr 06 01:53:06 UTC 2025","","test_charm","",""
+"Test encryption when backend database is using TLS.","22221","test_connected_encryption","tests.integration","Sun Apr 06 01:45:14 UTC 2025","passed","Sun Apr 06 01:45:36 UTC 2025","","test_tls","",""
+"Test that the exporter endpoint works when related with TLS","200360","test_exporter_endpoint","tests.integration","Sun Apr 06 01:42:40 UTC 2025","passed","Sun Apr 06 01:46:00 UTC 2025","","test_exporter_with_tls","",""
+"Test the expose-external config option.","147252","test_expose_external","tests.integration","Sun Apr 06 01:43:01 UTC 2025","passed","Sun Apr 06 01:45:28 UTC 2025","","test_expose_external","",""
+"Tries deploying an amd64 charm on arm64 host.","0","test_amd_charm_on_arm_host","tests.integration","Sun Apr 06 01:43:46 UTC 2025","skipped","Sun Apr 06 01:43:46 UTC 2025","","test_architecture","",""
+"Tries deploying an arm64 charm on amd64 host.","50273","test_arm_charm_on_amd_host","tests.integration","Sun Apr 06 01:42:56 UTC 2025","passed","Sun Apr 06 01:43:46 UTC 2025","","test_architecture","",""
