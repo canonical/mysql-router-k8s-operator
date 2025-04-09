@@ -1,0 +1,17 @@
+"DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
+"Tries deploying an amd64 charm on arm64 host.","0","test_amd_charm_on_arm_host","tests.integration","Wed Apr 09 01:44:23 UTC 2025","skipped","Wed Apr 09 01:44:23 UTC 2025","","test_architecture","",""
+"Test that exporter endpoint is functional.","151379","test_exporter_endpoint","tests.integration","Wed Apr 09 01:43:10 UTC 2025","passed","Wed Apr 09 01:45:41 UTC 2025","","test_exporter","",""
+"Test log rotation.","104689","test_log_rotation","tests.integration","Wed Apr 09 01:44:06 UTC 2025","passed","Wed Apr 09 01:45:50 UTC 2025","","test_log_rotation","",""
+"Test the database relation.","1012386","test_database_relation","tests.integration","Wed Apr 09 01:43:25 UTC 2025","broken","Wed Apr 09 02:00:18 UTC 2025","","test_charm","",""
+"Upgrade mysqlrouter while ensuring continuous writes incrementing.","940855","test_upgrade_from_edge","tests.integration","Wed Apr 09 01:45:21 UTC 2025","broken","Wed Apr 09 02:01:02 UTC 2025","","test_upgrade","",""
+"Simple test to ensure that mysql, mysqlrouter and application charms deploy.","123335","test_deploy_edge","tests.integration","Wed Apr 09 01:43:18 UTC 2025","passed","Wed Apr 09 01:45:21 UTC 2025","","test_upgrade","",""
+"Upgrade to an invalid version and test rollback.
+
+    Relies on the charm built in the previous test (test_upgrade_from_edge).
+    ","0","test_fail_and_rollback","tests.integration","Wed Apr 09 02:01:02 UTC 2025","skipped","Wed Apr 09 02:01:02 UTC 2025","","test_upgrade","",""
+"Test encryption when backend database is using TLS.","95279","test_deploy_and_relate","tests.integration","Wed Apr 09 01:43:23 UTC 2025","passed","Wed Apr 09 01:44:59 UTC 2025","","test_tls","",""
+"Tries deploying an arm64 charm on amd64 host.","48779","test_arm_charm_on_amd_host","tests.integration","Wed Apr 09 01:43:35 UTC 2025","passed","Wed Apr 09 01:44:23 UTC 2025","","test_architecture","",""
+"Test endpoints when mysql-router-k8s is related to a TLS operator.","133064","test_expose_external_with_tls","tests.integration","Wed Apr 09 01:46:28 UTC 2025","passed","Wed Apr 09 01:48:41 UTC 2025","","test_expose_external","",""
+"Test that the exporter endpoint works when related with TLS","217518","test_exporter_endpoint","tests.integration","Wed Apr 09 01:43:09 UTC 2025","passed","Wed Apr 09 01:46:47 UTC 2025","","test_exporter_with_tls","",""
+"Test encryption when backend database is using TLS.","22246","test_connected_encryption","tests.integration","Wed Apr 09 01:44:59 UTC 2025","passed","Wed Apr 09 01:45:21 UTC 2025","","test_tls","",""
+"Test the expose-external config option.","147307","test_expose_external","tests.integration","Wed Apr 09 01:44:01 UTC 2025","passed","Wed Apr 09 01:46:28 UTC 2025","","test_expose_external","",""
