@@ -90,9 +90,6 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         self._peer_data = relations.secrets.RelationSecrets(self, self._PEER_RELATION_NAME)
 
         self.framework.observe(self.on.install, self._on_install)
-        self.framework.observe(
-            self.on[rock.CONTAINER_NAME].pebble_ready, self._on_workload_container_pebble_ready
-        )
         try:
             self.refresh = charm_refresh.Kubernetes(
                 KubernetesRouterRefresh(
@@ -105,14 +102,16 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
             # MySQL server charm will clean up users & router metadata when the MySQL Router app or
             # unit(s) tear down
             self.unit.status = ops.MaintenanceStatus("Tearing down")
-            exit()
+            self._reconcile_allowed = False
         except charm_refresh.KubernetesJujuAppNotTrusted:
-            exit()
+            self._reconcile_allowed = False
         except charm_refresh.PeerRelationNotReady:
             self.unit.status = ops.MaintenanceStatus("Waiting for peer relation")
             if self.unit.is_leader():
                 self.app.status = ops.MaintenanceStatus("Waiting for peer relation")
-            exit()
+            self._reconcile_allowed = False
+        else:
+            self._reconcile_allowed = True
 
     @property
     def _subordinate_relation_endpoint_names(self) -> typing.Optional[typing.Iterable[str]]:
@@ -434,9 +433,6 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         if ops.JujuVersion.from_environ().supports_open_port_on_k8s:
             for port in (self._READ_WRITE_PORT, self._READ_ONLY_PORT, 6448, 6449):
                 self.unit.open_port("tcp", port)
-
-    def _on_workload_container_pebble_ready(self, _) -> None:
-        self.unit.set_workload_version(self.get_workload(event=None).version)
 
 
 if __name__ == "__main__":
