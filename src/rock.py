@@ -196,7 +196,12 @@ class Rock(container.Container):
         else:
             self._container.stop(self._EXPORTER_SERVICE_NAME)
 
-    def upgrade(self, unit: ops.Unit) -> None:
+    @staticmethod
+    def install(*_, **__) -> None:
+        raise Exception("Not supported on Kubernetes")
+
+    @staticmethod
+    def refresh(*_, **__) -> None:
         raise Exception("Not supported on Kubernetes")
 
     def update_logrotate_executor_service(self, *, enabled: bool) -> None:

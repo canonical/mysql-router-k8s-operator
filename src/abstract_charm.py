@@ -61,6 +61,12 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
     _READ_ONLY_X_PORT = 6449
 
     refresh: charm_refresh.Common
+    # Whether `reconcile` method is allowed to run
+    # `False` if `charm_refresh.UnitTearingDown` or `charm_refresh.PeerRelationNotReady` raised
+    # Most of the charm code should not run if either of those exceptions is raised
+    # However, some charm libs (i.e. data-platform-libs) will break if they do not receive every
+    # event they expect (e.g. relation-created)
+    _reconcile_allowed: bool
 
     def __init__(self, *args) -> None:
         super().__init__(*args)
@@ -173,9 +179,14 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
         if cos_relation_exists:
             return self._cos_relation.exporter_user_config
 
-    def get_workload(self, *, event):
-        """MySQL Router workload"""
-        if self.refresh.workload_allowed_to_start and (
+    def get_workload(self, *, event, refresh: charm_refresh.Common = None):
+        """MySQL Router workload
+
+        Pass `refresh` if `self.refresh` is not set
+        """
+        if refresh is None:
+            refresh = self.refresh
+        if refresh.workload_allowed_to_start and (
             connection_info := self._database_requires.get_connection_info(event=event)
         ):
             return self._running_workload_type(
@@ -280,18 +291,29 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
 
     def reconcile(self, event=None) -> None:  # noqa: C901
         """Handle most events."""
+        if not self._reconcile_allowed:
+            logger.debug("Reconcile not allowed")
+            return
         workload_ = self.get_workload(event=event)
         logger.debug(
             "State of reconcile "
             f"{self._unit_lifecycle.authorized_leader=}, "
             f"{isinstance(workload_, workload.RunningWorkload)=}, "
             f"{workload_.container_ready=}, "
-            f"{self.refresh.workload_allowed_to_start= }, "
+            f"{self.refresh.workload_allowed_to_start=}, "
             f"{self._database_requires.is_relation_breaking(event)=}, "
             f"{self._database_requires.does_relation_exist()=}, "
             f"{self.refresh.in_progress=}, "
             f"{self._cos_relation.is_relation_breaking(event)=}"
         )
+        if isinstance(self.refresh, charm_refresh.Machines):
+            workload_.install(
+                unit=self.unit,
+                model_uuid=self.model.uuid,
+                snap_revision=self.refresh.pinned_snap_revision,
+                refresh=self.refresh,
+            )
+        self.unit.set_workload_version(workload_.version)
 
         # only in machine charms
         if self._ha_cluster:
