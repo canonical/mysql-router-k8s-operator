@@ -1,0 +1,17 @@
+"DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
+"Test log rotation.","99447","test_log_rotation","tests.integration","Fri Apr 11 01:42:50 UTC 2025","passed","Fri Apr 11 01:44:29 UTC 2025","","test_log_rotation","",""
+"Simple test to ensure that mysql, mysqlrouter and application charms deploy.","119248","test_deploy_edge","tests.integration","Fri Apr 11 01:42:45 UTC 2025","passed","Fri Apr 11 01:44:44 UTC 2025","","test_upgrade","",""
+"Test that exporter endpoint is functional.","137402","test_exporter_endpoint","tests.integration","Fri Apr 11 01:41:49 UTC 2025","passed","Fri Apr 11 01:44:06 UTC 2025","","test_exporter","",""
+"Test the database relation.","273438","test_database_relation","tests.integration","Fri Apr 11 01:43:04 UTC 2025","passed","Fri Apr 11 01:47:37 UTC 2025","","test_charm","",""
+"Test the expose-external config option.","2770","test_expose_external","tests.integration","Fri Apr 11 01:42:45 UTC 2025","broken","Fri Apr 11 01:42:48 UTC 2025","","test_expose_external","",""
+"Test that the exporter endpoint works when related with TLS","208725","test_exporter_endpoint","tests.integration","Fri Apr 11 01:42:25 UTC 2025","passed","Fri Apr 11 01:45:53 UTC 2025","","test_exporter_with_tls","",""
+"Tries deploying an amd64 charm on arm64 host.","0","test_amd_charm_on_arm_host","tests.integration","Fri Apr 11 01:43:36 UTC 2025","skipped","Fri Apr 11 01:43:36 UTC 2025","","test_architecture","",""
+"Test encryption when backend database is using TLS.","105281","test_deploy_and_relate","tests.integration","Fri Apr 11 01:42:56 UTC 2025","passed","Fri Apr 11 01:44:42 UTC 2025","","test_tls","",""
+"Upgrade mysqlrouter while ensuring continuous writes incrementing.","170472","test_upgrade_from_edge","tests.integration","Fri Apr 11 01:44:44 UTC 2025","passed","Fri Apr 11 01:47:34 UTC 2025","","test_upgrade","",""
+"Upgrade to an invalid version and test rollback.
+
+    Relies on the charm built in the previous test (test_upgrade_from_edge).
+    ","199656","test_fail_and_rollback","tests.integration","Fri Apr 11 01:47:34 UTC 2025","passed","Fri Apr 11 01:50:54 UTC 2025","","test_upgrade","",""
+"Tries deploying an arm64 charm on amd64 host.","45795","test_arm_charm_on_amd_host","tests.integration","Fri Apr 11 01:42:51 UTC 2025","passed","Fri Apr 11 01:43:36 UTC 2025","","test_architecture","",""
+"Test endpoints when mysql-router-k8s is related to a TLS operator.","0","test_expose_external_with_tls","tests.integration","Fri Apr 11 01:42:48 UTC 2025","skipped","Fri Apr 11 01:42:48 UTC 2025","","test_expose_external","",""
+"Test encryption when backend database is using TLS.","21955","test_connected_encryption","tests.integration","Fri Apr 11 01:44:42 UTC 2025","passed","Fri Apr 11 01:45:03 UTC 2025","","test_tls","",""
