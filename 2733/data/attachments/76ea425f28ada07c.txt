@@ -1,0 +1,53 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:734 Connecting to existing model concierge-microk8s:testing on unspecified cloud
+[33mWARNING [0m juju.client.connection:connection.py:858 unexpected facade SSHServer received from the controller
+[32mINFO    [0m integration.test_log_rotation:test_log_rotation.py:46 Deploying mysql, mysqlrouter and application
+[32mINFO    [0m juju.model:model.py:2284 Deploying ch:amd64/jammy/mysql-test-app-73
+[32mINFO    [0m juju.model:model.py:2284 Deploying ch:amd64/jammy/mysql-k8s-249
+[32mINFO    [0m juju.model:model.py:2284 Deploying local:mysql-router-k8s-0
+[32mINFO    [0m integration.test_log_rotation:test_log_rotation.py:77 Waiting for mysqlrouter to be in BlockedStatus
+[32mINFO    [0m integration.test_log_rotation:test_log_rotation.py:83 Relating mysql, mysqlrouter and application
+[33mWARNING [0m juju.model:model.py:1666 relate is deprecated and will be removed. Use integrate instead.
+[33mWARNING [0m juju.model:model.py:1666 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m pytest_operator.plugin:plugin.py:862 Model status:
+
+Model    Controller          Cloud/Region        Version  SLA          Timestamp
+testing  concierge-microk8s  microk8s/localhost  3.6.4    unsupported  04:16:44Z
+
+App               Version                  Status   Scale  Charm             Channel      Rev  Address        Exposed  Message
+mysql-k8s                                  waiting    0/3  mysql-k8s         8.0/edge     249                 no       installing agent
+mysql-router-k8s  8.0.41-0ubuntu0.22.04.1  waiting      1  mysql-router-k8s                 0  10.152.183.97  no       Waiting for mysql-k8s app on backend-database endpoint
+mysql-test-app    0.0.2                    waiting      1  mysql-test-app    latest/edge   73  10.152.183.61  no       
+
+Unit                 Workload  Agent       Address       Ports  Message
+mysql-k8s/0          waiting   allocating                       installing agent
+mysql-k8s/1          waiting   allocating                       installing agent
+mysql-k8s/2          waiting   allocating                       installing agent
+mysql-router-k8s/0*  waiting   idle        10.1.228.137         
+mysql-test-app/0*    waiting   idle        10.1.228.138         
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:868 Juju error logs:
+
+controller-0: 04:02:21 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-test-app": more than 20 retries ensuring scale: setting scale to 1 for "mysql-test-app": statefulset "mysql-test-app" not found
+controller-0: 04:02:22 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-k8s": more than 20 retries ensuring trust: updating application "mysql-k8s" to desired trust true: getting service account role "mysql-k8s": k8s: roles.rbac.authorization.k8s.io "mysql-k8s" not found
+controller-0: 04:03:24 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-test-app": more than 20 retries ensuring trust: updating application "mysql-test-app" to desired trust false: getting service account role "mysql-test-app": k8s: roles.rbac.authorization.k8s.io "mysql-test-app" not found
+controller-0: 04:03:25 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-k8s": more than 20 retries ensuring trust: updating application "mysql-k8s" to desired trust true: getting service account role "mysql-k8s": k8s: roles.rbac.authorization.k8s.io "mysql-k8s" not found
+controller-0: 04:04:27 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-test-app": more than 20 retries ensuring trust: updating application "mysql-test-app" to desired trust false: getting service account role "mysql-test-app": k8s: roles.rbac.authorization.k8s.io "mysql-test-app" not found
+controller-0: 04:04:28 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-k8s": more than 20 retries ensuring trust: updating application "mysql-k8s" to desired trust true: getting service account role "mysql-k8s": k8s: roles.rbac.authorization.k8s.io "mysql-k8s" not found
+controller-0: 04:05:30 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-test-app": more than 20 retries ensuring trust: updating application "mysql-test-app" to desired trust false: getting service account role "mysql-test-app": k8s: roles.rbac.authorization.k8s.io "mysql-test-app" not found
+controller-0: 04:05:31 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-k8s": more than 20 retries ensuring trust: updating application "mysql-k8s" to desired trust true: getting service account role "mysql-k8s": k8s: roles.rbac.authorization.k8s.io "mysql-k8s" not found
+controller-0: 04:06:30 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-test-app": more than 20 retries ensuring scale: setting scale to 1 for "mysql-test-app": statefulset "mysql-test-app" not found
+controller-0: 04:06:35 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-k8s": more than 20 retries ensuring trust: updating application "mysql-k8s" to desired trust true: getting service account role "mysql-k8s": k8s: roles.rbac.authorization.k8s.io "mysql-k8s" not found
+controller-0: 04:07:33 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-test-app": more than 20 retries ensuring trust: updating application "mysql-test-app" to desired trust false: getting service account role "mysql-test-app": k8s: roles.rbac.authorization.k8s.io "mysql-test-app" not found
+controller-0: 04:07:35 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-k8s": more than 20 retries ensuring scale: setting scale to 3 for "mysql-k8s": statefulset "mysql-k8s" not found
+controller-0: 04:08:33 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-test-app": more than 20 retries ensuring scale: setting scale to 1 for "mysql-test-app": statefulset "mysql-test-app" not found
+controller-0: 04:08:38 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-k8s": more than 20 retries ensuring scale: setting scale to 3 for "mysql-k8s": statefulset "mysql-k8s" not found
+controller-0: 04:09:37 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-test-app": more than 20 retries ensuring scale: setting scale to 1 for "mysql-test-app": statefulset "mysql-test-app" not found
+controller-0: 04:09:38 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-k8s": more than 20 retries ensuring scale: setting scale to 3 for "mysql-k8s": statefulset "mysql-k8s" not found
+controller-0: 04:10:41 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-k8s": more than 20 retries ensuring trust: updating application "mysql-k8s" to desired trust true: getting service account role "mysql-k8s": k8s: roles.rbac.authorization.k8s.io "mysql-k8s" not found
+controller-0: 04:11:44 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-k8s": more than 20 retries ensuring trust: updating application "mysql-k8s" to desired trust true: getting service account role "mysql-k8s": k8s: roles.rbac.authorization.k8s.io "mysql-k8s" not found
+controller-0: 04:12:45 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-k8s": more than 20 retries ensuring scale: setting scale to 3 for "mysql-k8s": statefulset "mysql-k8s" not found
+controller-0: 04:13:48 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-k8s": more than 20 retries ensuring scale: setting scale to 3 for "mysql-k8s": statefulset "mysql-k8s" not found
+controller-0: 04:14:51 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-k8s": more than 20 retries ensuring scale: setting scale to 3 for "mysql-k8s": statefulset "mysql-k8s" not found
+controller-0: 04:15:54 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-k8s": more than 20 retries ensuring scale: setting scale to 3 for "mysql-k8s": statefulset "mysql-k8s" not found
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:947 Forgetting model main...
