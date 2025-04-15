@@ -292,7 +292,7 @@ develop = false
 type = "git"
 url = "https://github.com/canonical/charm-api"
 reference = "HEAD"
-resolved_reference = "d298e56e355679b8f2095a149fdb83b77601c3f2"
+resolved_reference = "32be20dbfef070f94f4f90f7892212307200acfd"
 
 [[package]]
 name = "charm-json"
@@ -337,7 +337,7 @@ tomli = ">=2.0.1"
 type = "git"
 url = "https://github.com/canonical/charm-refresh"
 reference = "draft"
-resolved_reference = "b4e8db416505d5340983b7c7155c81e9406aca61"
+resolved_reference = "d1a3e7d21b7dbbea9609521bff08b5cfadd8450c"
 
 [[package]]
 name = "charset-normalizer"
