@@ -27,6 +27,7 @@ import lightkube.models.core_v1
 import lightkube.models.meta_v1
 import lightkube.resources.core_v1
 import ops
+import ops.log
 import tenacity
 from charms.tempo_coordinator_k8s.v0.charm_tracing import trace_charm
 
@@ -82,6 +83,12 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
 
     def __init__(self, *args) -> None:
         super().__init__(*args)
+        # Show logger name (module name) in logs
+        root_logger = logging.getLogger()
+        for handler in root_logger.handlers:
+            if isinstance(handler, ops.log.JujuLogHandler):
+                handler.setFormatter(logging.Formatter("{name}:{message}", style="{"))
+
         self._namespace = self.model.name
 
         self.service_name = f"{self.app.name}-service"
