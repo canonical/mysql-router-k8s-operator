@@ -5,6 +5,12 @@
 
 import secrets
 import string
+import sys
+
+python_version_after_3_12 = all((
+    sys.version_info[0] == 3,
+    sys.version_info[1] >= 12,
+))
 
 
 def generate_password() -> str:
