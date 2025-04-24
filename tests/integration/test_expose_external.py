@@ -132,7 +132,7 @@ async def test_expose_external(ops_test, charm) -> None:
             DATA_INTEGRATOR,
             channel="latest/edge",
             application_name=DATA_INTEGRATOR,
-            base="ubuntu@22.04",
+            base="ubuntu@24.04",
             config={"database-name": TEST_DATABASE_NAME},
             num_units=1,
         ),
