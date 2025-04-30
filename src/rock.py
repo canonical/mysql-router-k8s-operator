@@ -9,6 +9,7 @@ import typing
 import ops
 
 import container
+import utils
 
 if typing.TYPE_CHECKING:
     import relations.cos
@@ -22,10 +23,14 @@ _UNIX_USERNAME = "mysql"
 class _Path(container.Path):
     """Rock filesystem path"""
 
-    def __new__(cls, *args, container_: ops.Container):
-        path = super().__new__(cls, *args)
-        path._container = container_
-        return path
+    # TODO python3.10 min version: remove when min version >= 3.12
+    def __new__(cls, *args, **kwargs):
+        return super().__new__(cls, *args)
+
+    def __init__(self, *args, container_: ops.Container):
+        if utils.python_version_after_3_12:
+            super().__init__(*args)
+        self._container = container_
 
     def __truediv__(self, other):
         return type(self)(self, other, container_=self._container)
