@@ -101,7 +101,7 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
             self.refresh = charm_refresh.Kubernetes(
                 KubernetesRouterRefresh(
                     workload_name="Router",
-                    refresh_user_docs_url="https://charmhub.io/mysql-router-k8s/docs/h-upgrade",
+                    charm_name="mysql-router-k8s",
                     oci_resource_name="mysql-router-image",
                 )
             )
