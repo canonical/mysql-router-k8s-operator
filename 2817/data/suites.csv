@@ -1,0 +1,17 @@
+"DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
+"Test the database relation.","","test_database_relation","tests.integration","","unknown","","","test_charm","",""
+"Test that the exporter endpoint works when related with TLS","","test_exporter_endpoint","tests.integration","","unknown","","","test_exporter_with_tls","",""
+"Tries deploying an arm64 charm on amd64 host.","","test_arm_charm_on_amd_host","tests.integration","","unknown","","","test_architecture","",""
+"Upgrade to an invalid version and test rollback.
+
+    Relies on the charm built in the previous test (test_upgrade_from_edge).
+    ","","test_fail_and_rollback","tests.integration","","unknown","","","test_upgrade","",""
+"Test the expose-external config option.","","test_expose_external","tests.integration","","unknown","","","test_expose_external","",""
+"Test endpoints when mysql-router-k8s is related to a TLS operator.","","test_expose_external_with_tls","tests.integration","","unknown","","","test_expose_external","",""
+"Test encryption when backend database is using TLS.","","test_deploy_and_relate","tests.integration","","unknown","","","test_tls","",""
+"Tries deploying an amd64 charm on arm64 host.","","test_amd_charm_on_arm_host","tests.integration","","unknown","","","test_architecture","",""
+"Test that exporter endpoint is functional.","","test_exporter_endpoint","tests.integration","","unknown","","","test_exporter","",""
+"Upgrade mysqlrouter while ensuring continuous writes incrementing.","","test_upgrade_from_edge","tests.integration","","unknown","","","test_upgrade","",""
+"Test encryption when backend database is using TLS.","","test_connected_encryption","tests.integration","","unknown","","","test_tls","",""
+"Simple test to ensure that mysql, mysqlrouter and application charms deploy.","","test_deploy_edge","tests.integration","","unknown","","","test_upgrade","",""
+"Test log rotation.","","test_log_rotation","tests.integration","","unknown","","","test_log_rotation","",""
