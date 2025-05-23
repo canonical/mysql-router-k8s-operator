@@ -252,6 +252,13 @@ class AuthenticatedWorkload(Workload):
             "--conf-set-option",
             f"http_auth_backend:default_auth_backend.filename={self._container.rest_api_credentials_file.relative_to_container}",
             "--conf-use-gr-notifications",
+            # destination_status added to workaround MySQL Router bug
+            # https://bugs.mysql.com/bug.php?id=118059
+            # TODO: Remove once fixed on upstream
+            "--conf-set-option",
+            "destination_status.error_quarantine_threshold=3",
+            "--conf-set-option",
+            "destination_status.error_quarantine_interval=5",
         ]
 
     def _bootstrap_router(self, *, event, tls: bool) -> None:
