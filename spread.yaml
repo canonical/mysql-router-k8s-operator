@@ -79,6 +79,9 @@ backends:
       PermitEmptyPasswords yes
       EOF
 
+      # Needed for IS-hosted runners
+      sudo passwd --delete ubuntu
+
       ADDRESS localhost
     # HACK: spread does not pass environment variables set on runner
     # Manually pass specific environment variables
