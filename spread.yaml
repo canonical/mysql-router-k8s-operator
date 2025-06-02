@@ -79,7 +79,6 @@ backends:
       PermitEmptyPasswords yes
       EOF
 
-      # Needed for IS-hosted runners
       sudo passwd --delete "$USER"
 
       ADDRESS localhost
