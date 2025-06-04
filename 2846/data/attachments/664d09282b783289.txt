@@ -1,0 +1,49 @@
+[33mWARNING [0m juju.client.connection:connection.py:858 unexpected facade SSHServer received from the controller
+[32mINFO    [0m pytest_operator.plugin:plugin.py:734 Connecting to existing model concierge-microk8s:testing on unspecified cloud
+[33mWARNING [0m juju.client.connection:connection.py:858 unexpected facade SSHServer received from the controller
+[33mWARNING [0m juju.client.connection:connection.py:858 unexpected facade SSHSession received from the controller
+[33mWARNING [0m juju.client.connection:connection.py:858 unexpected facade SSHTunneler received from the controller
+[33mWARNING [0m juju.client.connection:connection.py:858 unexpected facade SSHServer received from the controller
+[32mINFO    [0m integration.test_log_rotation:test_log_rotation.py:46 Deploying mysql, mysqlrouter and application
+[32mINFO    [0m juju.model:model.py:2284 Deploying ch:amd64/jammy/mysql-test-app-73
+[32mINFO    [0m juju.model:model.py:2284 Deploying ch:amd64/jammy/mysql-k8s-250
+[32mINFO    [0m juju.model:model.py:2284 Deploying local:mysql-router-k8s-0
+[32mINFO    [0m integration.test_log_rotation:test_log_rotation.py:77 Waiting for mysqlrouter to be in BlockedStatus
+[32mINFO    [0m integration.test_log_rotation:test_log_rotation.py:83 Relating mysql, mysqlrouter and application
+[33mWARNING [0m juju.model:model.py:1666 relate is deprecated and will be removed. Use integrate instead.
+[33mWARNING [0m juju.model:model.py:1666 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m integration.test_log_rotation:test_log_rotation.py:104 Stopping the logrotate executor pebble service
+[32mINFO    [0m integration.test_log_rotation:test_log_rotation.py:107 Stopping any running logrotate jobs
+[32mINFO    [0m integration.test_log_rotation:test_log_rotation.py:110 Removing existing archive directory
+[32mINFO    [0m integration.test_log_rotation:test_log_rotation.py:117 Writing some data mysqlrouter log file
+[32mINFO    [0m integration.test_log_rotation:test_log_rotation.py:121 Ensuring only log files exist
+[32mINFO    [0m integration.test_log_rotation:test_log_rotation.py:130 Executing logrotate
+[32mINFO    [0m integration.test_log_rotation:test_log_rotation.py:133 Ensuring log files and archive directories exist
+[32mINFO    [0m integration.test_log_rotation:test_log_rotation.py:145 Ensuring log files was rotated
+[32mINFO    [0m pytest_operator.plugin:plugin.py:862 Model status:
+
+Model    Controller          Cloud/Region        Version  SLA          Timestamp
+testing  concierge-microk8s  microk8s/localhost  3.6.6    unsupported  01:46:01Z
+
+App               Version                  Status   Scale  Charm             Channel      Rev  Address         Exposed  Message
+mysql-k8s         8.0.41-0ubuntu0.22.04.1  waiting      3  mysql-k8s         8.0/edge     250  10.152.183.243  no       installing agent
+mysql-router-k8s  8.0.41-0ubuntu0.22.04.1  active       1  mysql-router-k8s                 0  10.152.183.31   no       
+mysql-test-app    0.0.2                    active       1  mysql-test-app    latest/edge   73  10.152.183.79   no       Last written value=64
+
+Unit                 Workload     Agent      Address      Ports  Message
+mysql-k8s/0          maintenance  idle       10.1.249.14         joining the cluster
+mysql-k8s/1          waiting      executing  10.1.249.15         waiting to get cluster primary from peers
+mysql-k8s/2*         active       executing  10.1.249.16         Primary
+mysql-router-k8s/0*  active       idle       10.1.249.10         
+mysql-test-app/0*    active       idle       10.1.249.9          Last written value=64
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:868 Juju error logs:
+
+unit-mysql-k8s-1: 01:45:39 ERROR unit.mysql-k8s/1.juju-log database-peers:3: get_unit_address: unit DNS domain name is not fully propagated yet, trying again
+unit-mysql-k8s-1: 01:45:41 ERROR unit.mysql-k8s/1.juju-log database-peers:3: get_unit_address: unit DNS domain name is not fully propagated yet, trying again
+unit-mysql-k8s-1: 01:45:43 ERROR unit.mysql-k8s/1.juju-log database-peers:3: get_unit_address: unit DNS domain name is not fully propagated yet, trying again
+unit-mysql-k8s-1: 01:45:45 ERROR unit.mysql-k8s/1.juju-log database-peers:3: get_unit_address: unit DNS domain name is not fully propagated yet, trying again
+unit-mysql-k8s-1: 01:45:47 ERROR unit.mysql-k8s/1.juju-log database-peers:3: get_unit_address: unit DNS domain name is not fully propagated yet, trying again
+unit-mysql-k8s-1: 01:45:49 ERROR unit.mysql-k8s/1.juju-log database-peers:3: get_unit_address: unit DNS domain name is not fully propagated yet, trying again
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:947 Forgetting model main...
