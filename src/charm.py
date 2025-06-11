@@ -319,7 +319,7 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
     def _host(self) -> str:
         """K8s service hostname for MySQL Router"""
         # Example: mysql-router-k8s-service.my-model.svc.cluster.local
-        return f"{self.service_name}.{self.model_service_domain}"
+        return f"{self.service_name}.{self.model_service_domain}."
 
     def _get_node_hosts(self) -> set[str]:
         """Return the node ports of nodes where units of this app are scheduled."""
