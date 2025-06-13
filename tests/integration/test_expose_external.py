@@ -65,7 +65,7 @@ async def confirm_cluster_ip_endpoints(ops_test: OpsTest) -> None:
     assert credentials["mysql"]["username"] is not None, "Username is empty"
     assert credentials["mysql"]["password"] is not None, "Password is empty"
 
-    endpoint_name = f"mysql-router-k8s-service.{ops_test.model.name}.svc.cluster.local"
+    endpoint_name = f"mysql-router-k8s-service.{ops_test.model.name}.svc.cluster.local."
     assert credentials["mysql"]["endpoints"] == f"{endpoint_name}:6446", "Endpoint is unexpected"
     assert (
         credentials["mysql"]["read-only-endpoints"] == f"{endpoint_name}:6447"

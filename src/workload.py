@@ -252,6 +252,8 @@ class AuthenticatedWorkload(Workload):
             "--conf-set-option",
             f"http_auth_backend:default_auth_backend.filename={self._container.rest_api_credentials_file.relative_to_container}",
             "--conf-use-gr-notifications",
+            "--conf-set-option",
+            "metadata_cache:bootstrap.ttl=5",
             # destination_status added to workaround MySQL Router bug
             # https://bugs.mysql.com/bug.php?id=118059
             # TODO: Remove once fixed on upstream
