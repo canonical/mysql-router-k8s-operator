@@ -1,0 +1,17 @@
+"DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
+"Test endpoints when mysql-router-k8s is related to a TLS operator.","125716","test_expose_external_with_tls","tests.integration","Fri Jun 13 01:48:01 UTC 2025","passed","Fri Jun 13 01:50:06 UTC 2025","","test_expose_external","",""
+"Tries deploying an arm64 charm on amd64 host.","47877","test_arm_charm_on_amd_host","tests.integration","Fri Jun 13 01:45:27 UTC 2025","passed","Fri Jun 13 01:46:15 UTC 2025","","test_architecture","",""
+"Test that exporter endpoint is functional.","","test_exporter_endpoint","tests.integration","","unknown","","","test_exporter","",""
+"Simple test to ensure that mysql, mysqlrouter and application charms deploy.","125314","test_deploy_edge","tests.integration","Fri Jun 13 01:45:29 UTC 2025","passed","Fri Jun 13 01:47:34 UTC 2025","","test_upgrade","",""
+"Test that the exporter endpoint works when related with TLS","191686","test_exporter_endpoint","tests.integration","Fri Jun 13 01:46:37 UTC 2025","passed","Fri Jun 13 01:49:49 UTC 2025","","test_exporter_with_tls","",""
+"Upgrade mysqlrouter while ensuring continuous writes incrementing.","174298","test_upgrade_from_edge","tests.integration","Fri Jun 13 01:47:34 UTC 2025","passed","Fri Jun 13 01:50:29 UTC 2025","","test_upgrade","",""
+"Test encryption when backend database is using TLS.","110271","test_deploy_and_relate","tests.integration","Fri Jun 13 01:46:37 UTC 2025","passed","Fri Jun 13 01:48:27 UTC 2025","","test_tls","",""
+"Test the database relation.","274020","test_database_relation","tests.integration","Fri Jun 13 01:45:25 UTC 2025","passed","Fri Jun 13 01:49:59 UTC 2025","","test_charm","",""
+"Tries deploying an amd64 charm on arm64 host.","0","test_amd_charm_on_arm_host","tests.integration","Fri Jun 13 01:46:15 UTC 2025","skipped","Fri Jun 13 01:46:15 UTC 2025","","test_architecture","",""
+"Test log rotation.","124700","test_log_rotation","tests.integration","Fri Jun 13 01:46:19 UTC 2025","passed","Fri Jun 13 01:48:23 UTC 2025","","test_log_rotation","",""
+"Upgrade to an invalid version and test rollback.
+
+    Relies on the charm built in the previous test (test_upgrade_from_edge).
+    ","200458","test_fail_and_rollback","tests.integration","Fri Jun 13 01:50:29 UTC 2025","passed","Fri Jun 13 01:53:49 UTC 2025","","test_upgrade","",""
+"Test encryption when backend database is using TLS.","22226","test_connected_encryption","tests.integration","Fri Jun 13 01:48:27 UTC 2025","passed","Fri Jun 13 01:48:49 UTC 2025","","test_tls","",""
+"Test the expose-external config option.","150308","test_expose_external","tests.integration","Fri Jun 13 01:45:30 UTC 2025","passed","Fri Jun 13 01:48:01 UTC 2025","","test_expose_external","",""
