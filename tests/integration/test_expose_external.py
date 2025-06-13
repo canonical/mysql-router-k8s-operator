@@ -67,9 +67,9 @@ async def confirm_cluster_ip_endpoints(ops_test: OpsTest) -> None:
 
     endpoint_name = f"mysql-router-k8s-service.{ops_test.model.name}.svc.cluster.local."
     assert credentials["mysql"]["endpoints"] == f"{endpoint_name}:6446", "Endpoint is unexpected"
-    assert credentials["mysql"]["read-only-endpoints"] == f"{endpoint_name}:6447", (
-        "Read-only endpoint is unexpected"
-    )
+    assert (
+        credentials["mysql"]["read-only-endpoints"] == f"{endpoint_name}:6447"
+    ), "Read-only endpoint is unexpected"
 
 
 async def confirm_endpoint_connectivity(ops_test: OpsTest) -> None:
@@ -95,9 +95,9 @@ async def confirm_endpoint_connectivity(ops_test: OpsTest) -> None:
                 "ssl_disabled": False,
             }
 
-            assert is_connection_possible(connection_config, **extra_connection_options), (
-                "Connection not possible through endpoints"
-            )
+            assert is_connection_possible(
+                connection_config, **extra_connection_options
+            ), "Connection not possible through endpoints"
 
 
 @pytest.mark.abort_on_fail
