@@ -1,0 +1,6 @@
+[32mINFO    [0m integration.helpers:helpers.py:563 Ensure continuous writes are incrementing
+[32mINFO    [0m integration.helpers:helpers.py:515 Retrieving primary unit
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:106 Update workload version and snap revision in the charm
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:109 Refresh the charm
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:112 Wait for the first unit to be refreshed and the app to move to blocked status
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:132 Running resume-upgrade on the mysql router leader unit
