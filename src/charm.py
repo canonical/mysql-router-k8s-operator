@@ -13,6 +13,7 @@ from architecture import WrongArchitectureWarningCharm, is_wrong_architecture
 if is_wrong_architecture() and __name__ == "__main__":
     ops.main.main(WrongArchitectureWarningCharm)
 
+import dataclasses
 import enum
 import functools
 import json
@@ -20,24 +21,24 @@ import logging
 import socket
 import typing
 
+import charm_refresh
 import lightkube
 import lightkube.models.core_v1
 import lightkube.models.meta_v1
 import lightkube.resources.core_v1
 import ops
+import ops.log
 import tenacity
 from charms.tempo_coordinator_k8s.v0.charm_tracing import trace_charm
 
 import abstract_charm
 import kubernetes_logrotate
-import kubernetes_upgrade
 import logrotate
 import relations.cos
 import relations.database_provides
 import relations.database_requires
 import relations.secrets
 import rock
-import upgrade
 import workload
 
 logger = logging.getLogger(__name__)
@@ -53,17 +54,21 @@ class _ServiceType(enum.Enum):
     LOAD_BALANCER = "LoadBalancer"
 
 
+@dataclasses.dataclass(eq=False)
+class KubernetesRouterRefresh(abstract_charm.RouterRefresh, charm_refresh.CharmSpecificKubernetes):
+    """MySQL Router Kubernetes refresh callbacks & configuration"""
+
+
 @trace_charm(
     tracing_endpoint="tracing_endpoint",
     extra_types=(
-        kubernetes_upgrade.Upgrade,
         logrotate.LogRotate,
         relations.cos.COSRelation,
         relations.database_provides.RelationEndpoint,
         relations.database_requires.RelationEndpoint,
         relations.tls.RelationEndpoint,
         rock.Rock,
-        workload.AuthenticatedWorkload,
+        workload.RunningWorkload,
         workload.Workload,
     ),
 )
@@ -78,6 +83,12 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
 
     def __init__(self, *args) -> None:
         super().__init__(*args)
+        # Show logger name (module name) in logs
+        root_logger = logging.getLogger()
+        for handler in root_logger.handlers:
+            if isinstance(handler, ops.log.JujuLogHandler):
+                handler.setFormatter(logging.Formatter("{name}:{message}", style="{"))
+
         self._namespace = self.model.name
 
         self.service_name = f"{self.app.name}-service"
@@ -86,11 +97,28 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         self._peer_data = relations.secrets.RelationSecrets(self, self._PEER_RELATION_NAME)
 
         self.framework.observe(self.on.install, self._on_install)
-        self.framework.observe(self.on.config_changed, self.reconcile)
-        self.framework.observe(
-            self.on[rock.CONTAINER_NAME].pebble_ready, self._on_workload_container_pebble_ready
-        )
-        self.framework.observe(self.on.stop, self._on_stop)
+        try:
+            self.refresh = charm_refresh.Kubernetes(
+                KubernetesRouterRefresh(
+                    workload_name="Router",
+                    charm_name="mysql-router-k8s",
+                    oci_resource_name="mysql-router-image",
+                )
+            )
+        except charm_refresh.UnitTearingDown:
+            # MySQL server charm will clean up users & router metadata when the MySQL Router app or
+            # unit(s) tear down
+            self.unit.status = ops.MaintenanceStatus("Tearing down")
+            self._reconcile_allowed = False
+        except charm_refresh.KubernetesJujuAppNotTrusted:
+            self._reconcile_allowed = False
+        except charm_refresh.PeerRelationNotReady:
+            self.unit.status = ops.MaintenanceStatus("Waiting for peer relation")
+            if self.unit.is_leader():
+                self.app.status = ops.MaintenanceStatus("Waiting for peer relation")
+            self._reconcile_allowed = False
+        else:
+            self._reconcile_allowed = True
 
     @property
     def _subordinate_relation_endpoint_names(self) -> typing.Optional[typing.Iterable[str]]:
@@ -103,13 +131,6 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
     @property
     def _logrotate(self) -> logrotate.LogRotate:
         return kubernetes_logrotate.LogRotate(container_=self._container)
-
-    @property
-    def _upgrade(self) -> typing.Optional[kubernetes_upgrade.Upgrade]:
-        try:
-            return kubernetes_upgrade.Upgrade(self)
-        except upgrade.PeerRelationNotReady:
-            pass
 
     @property
     def _status(self) -> ops.StatusBase:
@@ -236,7 +257,7 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
     def _check_service_connectivity(self) -> bool:
         """Check if the service is available (connectable with a socket)."""
         if not self._get_service() or not isinstance(
-            self.get_workload(event=None), workload.AuthenticatedWorkload
+            self.get_workload(event=None), workload.RunningWorkload
         ):
             logger.debug("No service or unauthenticated workload")
             return False
@@ -415,33 +436,10 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
 
     def _on_install(self, _) -> None:
         """Open ports & patch k8s service."""
+        # TODO fix this if fails because app not trusted and user runs `juju trust`
         if ops.JujuVersion.from_environ().supports_open_port_on_k8s:
             for port in (self._READ_WRITE_PORT, self._READ_ONLY_PORT, 6448, 6449):
                 self.unit.open_port("tcp", port)
-        if not self.unit.is_leader():
-            return
-
-    def _on_workload_container_pebble_ready(self, _) -> None:
-        self.unit.set_workload_version(self.get_workload(event=None).version)
-        self.reconcile()
-
-    def _on_stop(self, _) -> None:
-        # During the stop event, the unit could be upgrading, scaling down, or just restarting.
-        if self._unit_lifecycle.tearing_down_and_app_active:
-            # Unit is tearing down and 1+ other units are not tearing down (scaling down)
-            # The partition should never be greater than the highest unit number, since that will
-            # cause `juju refresh` to have no effect
-            return
-        unit_number = int(self.unit.name.split("/")[-1])
-        # Raise partition to prevent other units from restarting if an upgrade is in progress.
-        # If an upgrade is not in progress, the leader unit will reset the partition to 0.
-        if kubernetes_upgrade.partition.get(app_name=self.app.name) < unit_number:
-            kubernetes_upgrade.partition.set(app_name=self.app.name, value=unit_number)
-            logger.debug(f"Partition set to {unit_number} during stop event")
-        if not self._upgrade:
-            logger.debug("Peer relation missing during stop event")
-            return
-        self._upgrade.unit_state = upgrade.UnitState.RESTARTING
 
 
 if __name__ == "__main__":
