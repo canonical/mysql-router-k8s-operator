@@ -89,7 +89,7 @@ async def test_exporter_endpoint(ops_test: OpsTest, charm) -> None:
             application_name=GRAFANA_AGENT_APP_NAME,
             num_units=1,
             base="ubuntu@22.04",
-            channel="latest/stable",
+            channel="1/stable",
         ),
     )
 
