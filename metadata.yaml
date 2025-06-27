@@ -26,8 +26,10 @@ provides:
     interface: mysql_client
   metrics-endpoint:
     interface: prometheus_scrape
+    optional: true
   grafana-dashboard:
     interface: grafana_dashboard
+    optional: true
 requires:
   backend-database:
     interface: mysql_client
