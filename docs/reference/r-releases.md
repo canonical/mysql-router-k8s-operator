@@ -3,6 +3,7 @@
 The release notes for stable releases can be found in the charm's [GitHub releases page](https://github.com/canonical/mysql-router-k8s-operator/releases).
 
 The following revisions have been published in the `8.0/stable` [channel](https://juju.is/docs/sdk/channel):
+* [Revisions 747, 748](https://github.com/canonical/mysql-router-k8s-operator/releases/tag/rev747)
 * [Revisions 745, 746](https://github.com/canonical/mysql-router-k8s-operator/releases/tag/rev745)
 * [Revisions 598, 599](https://github.com/canonical/mysql-router-k8s-operator/releases/tag/rev598)
 * [Revisions 530, 531](https://github.com/canonical/mysql-router-k8s-operator/releases/tag/rev530)
