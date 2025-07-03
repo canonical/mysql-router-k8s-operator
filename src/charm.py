@@ -184,16 +184,23 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         service = self._get_service()
         service_exists = service is not None
         service_type = service_exists and _ServiceType(service.spec.type)
-        if service_exists and service_type == desired_service_type:
-            return
-
-        pod0 = self._get_pod(f"{self.app.name}/0")
-
+        if service_exists:
+            existing_annotations = service.metadata.annotations or {}
+        else:
+            existing_annotations = {}
         annotations = (
             json.loads(self.config.get("loadbalancer-extra-annotations", "{}"))
             if desired_service_type == _ServiceType.LOAD_BALANCER
             else {}
         )
+        if (
+            service_exists
+            and service_type == desired_service_type
+            and existing_annotations == annotations
+        ):
+            return
+
+        pod0 = self._get_pod(f"{self.app.name}/0")
 
         desired_service = lightkube.resources.core_v1.Service(
             metadata=lightkube.models.meta_v1.ObjectMeta(
