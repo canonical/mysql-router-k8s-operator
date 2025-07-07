@@ -307,7 +307,7 @@ charm-api = ">=0.1.1"
 
 [[package]]
 name = "charm-refresh"
-version = "0.1.0"
+version = "0.0.0"
 description = "In-place rolling refreshes of stateful charmed applications "
 optional = false
 python-versions = ">=3.8"
@@ -328,8 +328,8 @@ tomli = ">=2.0.1"
 [package.source]
 type = "git"
 url = "https://github.com/canonical/charm-refresh"
-reference = "draft"
-resolved_reference = "6d4e6a9bc41a943ed8be6a0c6326d2d9d461ecab"
+reference = "fix-pending-ux"
+resolved_reference = "25dbac652854bae3327acf1e481172763fa0c2bb"
 
 [[package]]
 name = "charset-normalizer"
@@ -2567,4 +2567,4 @@ test = ["big-O", "importlib-resources ; python_version < \"3.9\"", "jaraco.funct
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.10"
-content-hash = "13754ccc5de08ba0ecdb4a28f035bd96e7f650b39ef14edd054045da8a6dbc87"
+content-hash = "941e60f8894e376875f1de77dbe401f1a2be45534c92a24db545af8b988d7351"

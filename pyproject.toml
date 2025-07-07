@@ -14,7 +14,7 @@ tenacity = "^8.5.0"
 jinja2 = "^3.1.4"
 poetry-core = "^1.9.0"
 requests = "^2.32.3"
-charm-refresh = {git = "https://github.com/canonical/charm-refresh", rev = "draft"}
+charm-refresh = {git = "https://github.com/canonical/charm-refresh", rev = "fix-pending-ux"}
 
 [tool.poetry.group.charm-libs.dependencies]
 # data_platform_libs/v0/data_interfaces.py
