@@ -87,14 +87,14 @@ class Upgrade(upgrade.Upgrade):
         ):
             if isinstance(workload_status, ops.WaitingStatus):
                 return ops.WaitingStatus(
-                    f'Router {self._current_versions["workload"]}; Charmed operator {self._current_versions["charm"]}'
+                    f"Router {self._current_versions['workload']}; Charmed operator {self._current_versions['charm']}"
                 )
             return ops.ActiveStatus(
-                f'Router {self._current_versions["workload"]} running; Charmed operator {self._current_versions["charm"]}'
+                f"Router {self._current_versions['workload']} running; Charmed operator {self._current_versions['charm']}"
             )
         if isinstance(workload_status, ops.WaitingStatus):
             return ops.WaitingStatus(
-                f'Router {self._current_versions["workload"]}; Charmed operator {self._current_versions["charm"]}'
+                f"Router {self._current_versions['workload']}; Charmed operator {self._current_versions['charm']}"
             )
         # During a rollback, non-upgraded units will restart
         # (Juju bug: https://bugs.launchpad.net/juju/+bug/2036246)
@@ -103,7 +103,7 @@ class Upgrade(upgrade.Upgrade):
         # since the Kubernetes controller revision hash is different, the unit (pod) will restart
         # during rollback.
         return ops.ActiveStatus(
-            f'Router {self._current_versions["workload"]} running (restart pending); Charmed operator {self._current_versions["charm"]}'
+            f"Router {self._current_versions['workload']} running (restart pending); Charmed operator {self._current_versions['charm']}"
         )
 
     @property
@@ -144,7 +144,7 @@ class Upgrade(upgrade.Upgrade):
 
         def get_unit_name(pod_name: str) -> str:
             *app_name, unit_number = pod_name.split("-")
-            return f'{"-".join(app_name)}/{unit_number}'
+            return f"{'-'.join(app_name)}/{unit_number}"
 
         return {
             get_unit_name(pod.metadata.name): pod.metadata.labels["controller-revision-hash"]
