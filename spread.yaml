@@ -86,6 +86,7 @@ backends:
     # Manually pass specific environment variables
     environment:
       CI: '$(HOST: echo $CI)'
+      DOCKERHUB_MIRROR: '$(HOST: echo $DOCKERHUB_MIRROR)'
     systems:
       - ubuntu-24.04:
           username: runner
@@ -123,6 +124,26 @@ prepare: |
   cd "$SPREAD_PATH"
   # Install via snap after https://github.com/canonical/concierge/pull/81 released
   go install github.com/canonical/concierge@latest
+  
+  if [[ -n "$DOCKERHUB_MIRROR" ]]
+  then
+    # Running on IS-hosted runner; configure microk8s to use Docker Hub mirror
+    # Run before concierge prepare because of https://github.com/canonical/concierge/issues/75
+
+    snap install microk8s --channel "$CONCIERGE_MICROK8S_CHANNEL"
+  
+    # Wait for microk8s to populate iptables
+    # https://chat.canonical.com/canonical/pl/jo5cg6wqjjrudqd5ybj6hhttee
+    microk8s status --wait-ready
+
+    tee /var/snap/microk8s/current/args/certs.d/docker.io/hosts.toml << EOF
+    server = "$DOCKERHUB_MIRROR"
+    [host."${DOCKERHUB_MIRROR#'https://'}"]
+    capabilities = ["pull", "resolve"]
+  EOF
+    microk8s stop
+    microk8s start
+  fi
 
   # Install charmcraft & pipx on lxd-vm backend and install pipx on IS-hosted runners
   ~/go/bin/concierge prepare --trace
