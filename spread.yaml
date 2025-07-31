@@ -153,6 +153,7 @@ prepare: |
 
   microk8s config | juju add-k8s my-k8s --client
   juju bootstrap my-k8s concierge-microk8s
+  juju add-model testing
 
   if [[ $SPREAD_SYSTEM == *"s390x"* ]]
   then
