@@ -151,6 +151,9 @@ prepare: |
   # Install charmcraft & pipx on lxd-vm backend and install pipx on IS-hosted runners
   ~/go/bin/concierge prepare --trace
 
+  microk8s config | juju add-k8s my-k8s --client
+  juju bootstrap my-k8s concierge-microk8s
+
   if [[ $SPREAD_SYSTEM == *"s390x"* ]]
   then
     rustup set profile minimal
