@@ -79,7 +79,6 @@ async def test_deploy_and_relate(ops_test: OpsTest, charm) -> None:
                 application_name=tls_app_name,
                 channel=tls_channel,
                 config=tls_config,
-                base="ubuntu@22.04",
             ),
             ops_test.model.deploy(
                 TEST_APP_NAME,

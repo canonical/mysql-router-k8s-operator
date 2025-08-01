@@ -197,7 +197,6 @@ async def test_expose_external_with_tls(ops_test: OpsTest) -> None:
         TLS_APP_NAME,
         channel=TLS_CHANNEL,
         config=TLS_CONFIG,
-        base="ubuntu@22.04",
     )
     async with ops_test.fast_forward("60s"):
         await ops_test.model.wait_for_idle(
