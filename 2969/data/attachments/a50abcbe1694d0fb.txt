@@ -1,0 +1,19 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:862 Model status:
+
+Model    Controller          Cloud/Region        Version  SLA          Timestamp
+testing  concierge-microk8s  microk8s/localhost  3.6.8    unsupported  01:49:07Z
+
+App               Version                  Status   Scale  Charm             Channel      Rev  Address         Exposed  Message
+data-integrator                            blocked      1  data-integrator   latest/edge  212  10.152.183.169  no       Please relate the data-integrator with the desired product
+mysql-k8s         8.0.42-0ubuntu0.22.04.2  active       1  mysql-k8s         8.0/edge     269  10.152.183.21   no       Primary
+mysql-router-k8s  8.0.42-0ubuntu0.22.04.2  waiting      1  mysql-router-k8s                 0  10.152.183.108  no       Waiting for mysql-k8s app on backend-database endpoint
+
+Unit                 Workload  Agent      Address       Ports  Message
+data-integrator/0*   blocked   idle       10.1.112.202         Please relate the data-integrator with the desired product
+mysql-k8s/0*         active    executing  10.1.112.204         Primary
+mysql-router-k8s/0*  error     idle       10.1.112.201         hook failed: "backend-database-relation-changed"
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:868 Juju error logs:
+
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:947 Forgetting model main...
