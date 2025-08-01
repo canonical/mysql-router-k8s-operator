@@ -36,8 +36,8 @@ TEST_DATABASE_NAME = "testdatabase"
 TLS_SETUP_SLEEP_TIME = 30
 if juju_.is_3_or_higher:
     TLS_APP_NAME = "self-signed-certificates"
-    if architecture.architecture == "arm64":
-        TLS_CHANNEL = "latest/edge"
+    if architecture.architecture == "s390x":
+        TLS_CHANNEL = "1/edge"
     else:
         TLS_CHANNEL = "latest/stable"
     TLS_CONFIG = {"ca-common-name": "Test CA"}
