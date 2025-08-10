@@ -1,0 +1,17 @@
+"DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
+"Test encryption when backend database is using TLS.","92856","test_deploy_and_relate","tests.integration","Sun Aug 10 02:19:18 UTC 2025","passed","Sun Aug 10 02:20:51 UTC 2025","","test_tls","",""
+"Upgrade to an invalid version and test rollback.
+
+    Relies on the charm built in the previous test (test_upgrade_from_edge).
+    ","210704","test_fail_and_rollback","tests.integration","Sun Aug 10 02:24:09 UTC 2025","passed","Sun Aug 10 02:27:40 UTC 2025","","test_upgrade","",""
+"Test that exporter endpoint is functional.","145016","test_exporter_endpoint","tests.integration","Sun Aug 10 02:19:37 UTC 2025","passed","Sun Aug 10 02:22:02 UTC 2025","","test_exporter","",""
+"Test the expose-external config option.","150221","test_expose_external","tests.integration","Sun Aug 10 02:19:53 UTC 2025","passed","Sun Aug 10 02:22:23 UTC 2025","","test_expose_external","",""
+"Test the database relation.","335615","test_database_relation","tests.integration","Sun Aug 10 02:18:51 UTC 2025","passed","Sun Aug 10 02:24:27 UTC 2025","","test_charm","",""
+"Tries deploying an amd64 charm on arm64 host.","0","test_amd_charm_on_arm_host","tests.integration","Sun Aug 10 02:20:40 UTC 2025","skipped","Sun Aug 10 02:20:40 UTC 2025","","test_architecture","",""
+"Simple test to ensure that mysql, mysqlrouter and application charms deploy.","127076","test_deploy_edge","tests.integration","Sun Aug 10 02:19:10 UTC 2025","passed","Sun Aug 10 02:21:17 UTC 2025","","test_upgrade","",""
+"Test endpoints when mysql-router-k8s is related to a TLS operator.","126493","test_expose_external_with_tls","tests.integration","Sun Aug 10 02:22:23 UTC 2025","passed","Sun Aug 10 02:24:29 UTC 2025","","test_expose_external","",""
+"Test log rotation.","95230","test_log_rotation","tests.integration","Sun Aug 10 02:18:52 UTC 2025","passed","Sun Aug 10 02:20:27 UTC 2025","","test_log_rotation","",""
+"Test encryption when backend database is using TLS.","22237","test_connected_encryption","tests.integration","Sun Aug 10 02:20:51 UTC 2025","passed","Sun Aug 10 02:21:13 UTC 2025","","test_tls","",""
+"Tries deploying an arm64 charm on amd64 host.","48925","test_arm_charm_on_amd_host","tests.integration","Sun Aug 10 02:19:51 UTC 2025","passed","Sun Aug 10 02:20:40 UTC 2025","","test_architecture","",""
+"Upgrade mysqlrouter while ensuring continuous writes incrementing.","172202","test_upgrade_from_edge","tests.integration","Sun Aug 10 02:21:17 UTC 2025","passed","Sun Aug 10 02:24:09 UTC 2025","","test_upgrade","",""
+"Test that the exporter endpoint works when related with TLS","194728","test_exporter_endpoint","tests.integration","Sun Aug 10 02:18:53 UTC 2025","passed","Sun Aug 10 02:22:08 UTC 2025","","test_exporter_with_tls","",""
