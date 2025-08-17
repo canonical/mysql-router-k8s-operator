@@ -1,0 +1,46 @@
+[32mINFO    [0m integration.test_expose_external:test_expose_external.py:187 Resetting expose-external=false
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  mysql-router-k8s/0 [idle] active: 
+[32mINFO    [0m integration.test_expose_external:test_expose_external.py:195 Deploying TLS operator
+[32mINFO    [0m juju.model:__init__.py:2301 Deploying ch:amd64/jammy/self-signed-certificates-264
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  self-signed-certificates/0 [allocating] waiting: installing agent
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  self-signed-certificates/0 [idle] active: 
+[32mINFO    [0m integration.test_expose_external:test_expose_external.py:209 Relate mysql-router-k8s with TLS operator
+[33mWARNING [0m juju.model:__init__.py:1683 relate is deprecated and will be removed. Use integrate instead.
+[32mINFO    [0m integration.test_expose_external:test_expose_external.py:214 Testing endpoint when expose-external=false(default)
+[32mINFO    [0m integration.test_expose_external:test_expose_external.py:217 Testing endpoint when expose-external=nodeport
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  mysql-router-k8s/0 [idle] active: 
+[32mINFO    [0m integration.test_expose_external:test_expose_external.py:227 Testing endpoint when expose-external=loadbalancer
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  mysql-router-k8s/0 [idle] active:
+[32mINFO    [0m pytest_operator.plugin:plugin.py:862 Model status:
+
+Model    Controller          Cloud/Region        Version  SLA          Timestamp
+testing  concierge-microk8s  microk8s/localhost  3.6.8    unsupported  04:54:06Z
+
+App                       Version                  Status  Scale  Charm                     Channel        Rev  Address         Exposed  Message
+data-integrator                                    active      1  data-integrator           latest/edge    218  10.152.183.180  no       
+mysql-k8s                 8.0.42-0ubuntu0.22.04.2  active      1  mysql-k8s                 8.0/edge       275  10.152.183.32   no       
+mysql-router-k8s          8.0.42-0ubuntu0.22.04.2  active      1  mysql-router-k8s                           0  10.152.183.102  no       
+self-signed-certificates                           active      1  self-signed-certificates  latest/stable  264  10.152.183.78   no       
+
+Unit                         Workload  Agent  Address       Ports  Message
+data-integrator/0*           active    idle   10.1.130.137         
+mysql-k8s/0*                 active    idle   10.1.130.140         Primary
+mysql-router-k8s/0*          active    idle   10.1.130.138         
+self-signed-certificates/0*  active    idle   10.1.130.141         
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:868 Juju error logs:
+
+controller-0: 04:42:58 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-k8s": more than 20 retries ensuring scale: setting scale to 1 for "mysql-k8s": statefulset "mysql-k8s" not found
+controller-0: 04:44:01 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-k8s": more than 20 retries ensuring trust: updating application "mysql-k8s" to desired trust true: getting service account role "mysql-k8s": k8s: roles.rbac.authorization.k8s.io "mysql-k8s" not found
+controller-0: 04:45:04 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-k8s": more than 20 retries ensuring trust: updating application "mysql-k8s" to desired trust true: getting service account role "mysql-k8s": k8s: roles.rbac.authorization.k8s.io "mysql-k8s" not found
+controller-0: 04:46:07 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-k8s": more than 20 retries ensuring scale: setting scale to 1 for "mysql-k8s": statefulset "mysql-k8s" not found
+controller-0: 04:47:07 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-k8s": more than 20 retries ensuring scale: setting scale to 1 for "mysql-k8s": statefulset "mysql-k8s" not found
+controller-0: 04:48:07 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-k8s": more than 20 retries ensuring scale: setting scale to 1 for "mysql-k8s": statefulset "mysql-k8s" not found
+controller-0: 04:49:08 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-k8s": more than 20 retries ensuring scale: setting scale to 1 for "mysql-k8s": statefulset "mysql-k8s" not found
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:947 Forgetting model main...

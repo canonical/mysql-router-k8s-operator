@@ -1,0 +1,63 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:862 Model status:
+
+Model    Controller          Cloud/Region        Version  SLA          Timestamp
+testing  concierge-microk8s  microk8s/localhost  3.6.8    unsupported  04:57:12Z
+
+App                       Version                  Status   Scale  Charm                     Channel        Rev  Address         Exposed  Message
+mysql-k8s                                          waiting    0/1  mysql-k8s                 8.0/edge       275                  no       installing agent
+mysql-router-k8s          8.0.42-0ubuntu0.22.04.2  waiting      1  mysql-router-k8s                           0  10.152.183.248  no       Waiting for mysql-k8s app on backend-database endpoint
+mysql-test-app                                     waiting    0/1  mysql-test-app            latest/edge     82                  no       installing agent
+self-signed-certificates                           waiting    0/1  self-signed-certificates  latest/stable  264                  no       installing agent
+
+Unit                        Workload  Agent       Address       Ports  Message
+mysql-k8s/0                 waiting   allocating                       installing agent
+mysql-router-k8s/0*         waiting   idle        10.1.130.137         
+mysql-test-app/0            waiting   allocating                       installing agent
+self-signed-certificates/0  waiting   allocating                       installing agent
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:868 Juju error logs:
+
+controller-0: 04:43:09 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-k8s": more than 20 retries ensuring scale: setting scale to 1 for "mysql-k8s": statefulset "mysql-k8s" not found
+controller-0: 04:43:09 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-test-app": more than 20 retries ensuring scale: setting scale to 1 for "mysql-test-app": statefulset "mysql-test-app" not found
+controller-0: 04:43:11 ERROR juju.worker.caasapplicationprovisioner.runner exited "self-signed-certificates": more than 20 retries ensuring trust: updating application "self-signed-certificates" to desired trust false: getting service account role "self-signed-certificates": k8s: roles.rbac.authorization.k8s.io "self-signed-certificates" not found
+controller-0: 04:44:13 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-k8s": more than 20 retries ensuring scale: setting scale to 1 for "mysql-k8s": statefulset "mysql-k8s" not found
+controller-0: 04:44:14 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-test-app": more than 20 retries ensuring scale: setting scale to 1 for "mysql-test-app": statefulset "mysql-test-app" not found
+controller-0: 04:44:16 ERROR juju.worker.caasapplicationprovisioner.runner exited "self-signed-certificates": more than 20 retries ensuring trust: updating application "self-signed-certificates" to desired trust false: getting service account role "self-signed-certificates": k8s: roles.rbac.authorization.k8s.io "self-signed-certificates" not found
+controller-0: 04:45:14 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-k8s": more than 20 retries ensuring scale: setting scale to 1 for "mysql-k8s": statefulset "mysql-k8s" not found
+controller-0: 04:45:16 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-test-app": more than 20 retries ensuring scale: setting scale to 1 for "mysql-test-app": statefulset "mysql-test-app" not found
+controller-0: 04:45:20 ERROR juju.worker.caasapplicationprovisioner.runner exited "self-signed-certificates": more than 20 retries ensuring scale: setting scale to 1 for "self-signed-certificates": statefulset "self-signed-certificates" not found
+controller-0: 04:46:16 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-test-app": more than 20 retries ensuring scale: setting scale to 1 for "mysql-test-app": statefulset "mysql-test-app" not found
+controller-0: 04:46:17 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-k8s": more than 20 retries ensuring trust: updating application "mysql-k8s" to desired trust true: getting service account role "mysql-k8s": k8s: roles.rbac.authorization.k8s.io "mysql-k8s" not found
+controller-0: 04:46:24 ERROR juju.worker.caasapplicationprovisioner.runner exited "self-signed-certificates": more than 20 retries ensuring scale: setting scale to 1 for "self-signed-certificates": statefulset "self-signed-certificates" not found
+controller-0: 04:47:18 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-k8s": more than 20 retries ensuring scale: setting scale to 1 for "mysql-k8s": statefulset "mysql-k8s" not found
+controller-0: 04:47:19 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-test-app": more than 20 retries ensuring trust: updating application "mysql-test-app" to desired trust false: getting service account role "mysql-test-app": k8s: roles.rbac.authorization.k8s.io "mysql-test-app" not found
+controller-0: 04:47:24 ERROR juju.worker.caasapplicationprovisioner.runner exited "self-signed-certificates": more than 20 retries ensuring scale: setting scale to 1 for "self-signed-certificates": statefulset "self-signed-certificates" not found
+controller-0: 04:48:18 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-k8s": more than 20 retries ensuring scale: setting scale to 1 for "mysql-k8s": statefulset "mysql-k8s" not found
+controller-0: 04:48:22 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-test-app": more than 20 retries ensuring scale: setting scale to 1 for "mysql-test-app": statefulset "mysql-test-app" not found
+controller-0: 04:48:24 ERROR juju.worker.caasapplicationprovisioner.runner exited "self-signed-certificates": more than 20 retries ensuring scale: setting scale to 1 for "self-signed-certificates": statefulset "self-signed-certificates" not found
+controller-0: 04:49:21 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-k8s": more than 20 retries ensuring trust: updating application "mysql-k8s" to desired trust true: getting service account role "mysql-k8s": k8s: roles.rbac.authorization.k8s.io "mysql-k8s" not found
+controller-0: 04:49:25 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-test-app": more than 20 retries ensuring scale: setting scale to 1 for "mysql-test-app": statefulset "mysql-test-app" not found
+controller-0: 04:49:27 ERROR juju.worker.caasapplicationprovisioner.runner exited "self-signed-certificates": more than 20 retries ensuring scale: setting scale to 1 for "self-signed-certificates": statefulset "self-signed-certificates" not found
+controller-0: 04:50:21 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-k8s": more than 20 retries ensuring scale: setting scale to 1 for "mysql-k8s": statefulset "mysql-k8s" not found
+controller-0: 04:50:28 ERROR juju.worker.caasapplicationprovisioner.runner exited "self-signed-certificates": more than 20 retries ensuring scale: setting scale to 1 for "self-signed-certificates": statefulset "self-signed-certificates" not found
+controller-0: 04:50:29 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-test-app": more than 20 retries ensuring trust: updating application "mysql-test-app" to desired trust false: getting service account role "mysql-test-app": k8s: roles.rbac.authorization.k8s.io "mysql-test-app" not found
+controller-0: 04:51:24 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-k8s": more than 20 retries ensuring scale: setting scale to 1 for "mysql-k8s": statefulset "mysql-k8s" not found
+controller-0: 04:51:31 ERROR juju.worker.caasapplicationprovisioner.runner exited "self-signed-certificates": more than 20 retries ensuring trust: updating application "self-signed-certificates" to desired trust false: getting service account role "self-signed-certificates": k8s: roles.rbac.authorization.k8s.io "self-signed-certificates" not found
+controller-0: 04:51:32 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-test-app": more than 20 retries ensuring trust: updating application "mysql-test-app" to desired trust false: getting service account role "mysql-test-app": k8s: roles.rbac.authorization.k8s.io "mysql-test-app" not found
+controller-0: 04:52:25 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-k8s": more than 20 retries ensuring scale: setting scale to 1 for "mysql-k8s": statefulset "mysql-k8s" not found
+controller-0: 04:52:34 ERROR juju.worker.caasapplicationprovisioner.runner exited "self-signed-certificates": more than 20 retries ensuring trust: updating application "self-signed-certificates" to desired trust false: getting service account role "self-signed-certificates": k8s: roles.rbac.authorization.k8s.io "self-signed-certificates" not found
+controller-0: 04:52:35 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-test-app": more than 20 retries ensuring trust: updating application "mysql-test-app" to desired trust false: getting service account role "mysql-test-app": k8s: roles.rbac.authorization.k8s.io "mysql-test-app" not found
+controller-0: 04:53:28 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-k8s": more than 20 retries ensuring scale: setting scale to 1 for "mysql-k8s": statefulset "mysql-k8s" not found
+controller-0: 04:53:36 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-test-app": more than 20 retries ensuring scale: setting scale to 1 for "mysql-test-app": statefulset "mysql-test-app" not found
+controller-0: 04:53:37 ERROR juju.worker.caasapplicationprovisioner.runner exited "self-signed-certificates": more than 20 retries ensuring scale: setting scale to 1 for "self-signed-certificates": statefulset "self-signed-certificates" not found
+controller-0: 04:54:31 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-k8s": more than 20 retries ensuring trust: updating application "mysql-k8s" to desired trust true: getting service account role "mysql-k8s": k8s: roles.rbac.authorization.k8s.io "mysql-k8s" not found
+controller-0: 04:54:39 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-test-app": more than 20 retries ensuring scale: setting scale to 1 for "mysql-test-app": statefulset "mysql-test-app" not found
+controller-0: 04:54:40 ERROR juju.worker.caasapplicationprovisioner.runner exited "self-signed-certificates": more than 20 retries ensuring trust: updating application "self-signed-certificates" to desired trust false: getting service account role "self-signed-certificates": k8s: roles.rbac.authorization.k8s.io "self-signed-certificates" not found
+controller-0: 04:55:34 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-k8s": more than 20 retries ensuring scale: setting scale to 1 for "mysql-k8s": statefulset "mysql-k8s" not found
+controller-0: 04:55:41 ERROR juju.worker.caasapplicationprovisioner.runner exited "self-signed-certificates": more than 20 retries ensuring scale: setting scale to 1 for "self-signed-certificates": statefulset "self-signed-certificates" not found
+controller-0: 04:55:42 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-test-app": more than 20 retries ensuring trust: updating application "mysql-test-app" to desired trust false: getting service account role "mysql-test-app": k8s: roles.rbac.authorization.k8s.io "mysql-test-app" not found
+controller-0: 04:56:37 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-k8s": more than 20 retries ensuring trust: updating application "mysql-k8s" to desired trust true: getting service account role "mysql-k8s": k8s: roles.rbac.authorization.k8s.io "mysql-k8s" not found
+controller-0: 04:56:41 ERROR juju.worker.caasapplicationprovisioner.runner exited "self-signed-certificates": more than 20 retries ensuring scale: setting scale to 1 for "self-signed-certificates": statefulset "self-signed-certificates" not found
+controller-0: 04:56:45 ERROR juju.worker.caasapplicationprovisioner.runner exited "mysql-test-app": more than 20 retries ensuring trust: updating application "mysql-test-app" to desired trust false: getting service account role "mysql-test-app": k8s: roles.rbac.authorization.k8s.io "mysql-test-app" not found
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:947 Forgetting model main...
