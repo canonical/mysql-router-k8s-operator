@@ -16,7 +16,7 @@ options:
     type: string
     default: "{}"
 
-  pause_after_unit_refresh:
+  pause-after-unit-refresh:
     description: |
       Wait for manual confirmation to resume refresh after these units refresh
 
