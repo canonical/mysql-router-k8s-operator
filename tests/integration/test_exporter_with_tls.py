@@ -34,8 +34,8 @@ RETRY_TIMEOUT = 3 * 60
 
 if juju_.is_3_or_higher:
     tls_app_name = "self-signed-certificates"
-    if architecture.architecture == "arm64":
-        tls_channel = "latest/edge"
+    if architecture.architecture == "s390x":
+        tls_channel = "1/edge"
     else:
         tls_channel = "latest/stable"
     tls_config = {"ca-common-name": "Test CA"}
@@ -138,7 +138,6 @@ async def test_exporter_endpoint(ops_test: OpsTest, charm) -> None:
         application_name=tls_app_name,
         channel=tls_channel,
         config=tls_config,
-        base="ubuntu@22.04",
     )
 
     await ops_test.model.wait_for_idle([tls_app_name], status="active", timeout=SLOW_TIMEOUT)
