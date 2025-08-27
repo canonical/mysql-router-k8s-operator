@@ -59,7 +59,7 @@ async def test_deploy_edge(ops_test: OpsTest) -> None:
             "-n",
             3,
             "--channel",
-            "8.0/test-refresh-v3-8.0.42",  # TODO remove after refresh v3 merged
+            "8.0/edge/test-refresh-v3-8.0.42",  # TODO remove after refresh v3 merged
             "--trust",
             "--base",
             "ubuntu@22.04",
