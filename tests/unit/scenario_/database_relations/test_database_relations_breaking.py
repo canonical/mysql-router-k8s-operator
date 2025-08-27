@@ -21,7 +21,7 @@ def output_state(
         relations=[
             *relations,
             scenario.PeerRelation(endpoint="mysql-router-peers"),
-            scenario.PeerRelation(endpoint="upgrade-version-a"),
+            scenario.PeerRelation(endpoint="refresh-v-three"),
         ],
         containers=[container],
         secrets=secrets,

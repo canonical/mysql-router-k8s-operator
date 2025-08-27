@@ -20,7 +20,7 @@ def test_start_sets_status_if_no_relations(leader, can_connect, unit_status):
         leader=leader,
         relations=[
             scenario.PeerRelation(endpoint="mysql-router-peers"),
-            scenario.PeerRelation(endpoint="upgrade-version-a"),
+            scenario.PeerRelation(endpoint="refresh-v-three"),
         ],
     )
     output_state = context.run("start", input_state)

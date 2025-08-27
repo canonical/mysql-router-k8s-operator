@@ -25,6 +25,20 @@ def disable_tenacity_retry(monkeypatch):
         monkeypatch.setattr(f"tenacity.{retry_class}.__call__", lambda *args, **kwargs: False)
 
 
+class _MockRefresh:
+    in_progress = False
+    next_unit_allowed_to_refresh = True
+    workload_allowed_to_start = True
+    app_status_higher_priority = None
+    unit_status_higher_priority = None
+
+    def __init__(self, _, /):
+        pass
+
+    def unit_status_lower_priority(self, *, workload_is_running=True):
+        return None
+
+
 @pytest.fixture(autouse=True)
 def patch(monkeypatch):
     monkeypatch.setattr(
@@ -37,9 +51,14 @@ def patch(monkeypatch):
         "mysql_shell.Shell.get_mysql_router_user_for_unit", lambda *args, **kwargs: None
     )
     monkeypatch.setattr("mysql_shell.Shell.is_router_in_cluster_set", lambda *args, **kwargs: True)
-    monkeypatch.setattr("upgrade.Upgrade.in_progress", False)
-    monkeypatch.setattr("upgrade.Upgrade.versions_set", True)
-    monkeypatch.setattr("upgrade.Upgrade.is_compatible", True)
+    monkeypatch.setattr("charm_refresh.Kubernetes", _MockRefresh)
+    monkeypatch.setattr(
+        "charm_refresh.CharmSpecificCommon.__post_init__", lambda *args, **kwargs: None
+    )
+    monkeypatch.setattr(
+        "relations.database_requires.RelationEndpoint.does_relation_exist",
+        lambda *args, **kwargs: True,
+    )
 
 
 @pytest.fixture(autouse=True)
