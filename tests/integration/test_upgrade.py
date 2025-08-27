@@ -61,8 +61,8 @@ async def test_deploy_edge(ops_test: OpsTest) -> None:
             "--channel",
             "8.0/edge/test-refresh-v3-8.0.42",  # TODO remove after refresh v3 merged
             "--trust",
-            "--base",
-            "ubuntu@22.04",
+            "--series",  # For juju 2 compatibility
+            "jammy",
         ),
         ops_test.model.deploy(
             APPLICATION_APP_NAME,
