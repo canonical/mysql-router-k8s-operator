@@ -115,6 +115,14 @@ async def test_upgrade_from_edge(ops_test: OpsTest, charm) -> None:
         "mysql router application status not indicating that user should resume refresh"
     )
 
+    logger.info("Wait for first unit to restart")
+    async with ops_test.fast_forward("60s"):
+        await ops_test.model.wait_for_idle(
+            [MYSQL_ROUTER_APP_NAME],
+            idle_period=30,
+            timeout=5 * 60,
+        )
+
     # Refresh will be incompatible on PR CI (not edge CI) since unreleased charm versions are
     # always marked as incompatible
     if (
