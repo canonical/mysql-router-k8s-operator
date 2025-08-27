@@ -55,7 +55,7 @@ class _ServiceType(enum.Enum):
 
 
 @dataclasses.dataclass(eq=False)
-class KubernetesRouterRefresh(abstract_charm.RouterRefresh, charm_refresh.CharmSpecificKubernetes):
+class _KubernetesRouterRefresh(abstract_charm.RouterRefresh, charm_refresh.CharmSpecificKubernetes):
     """MySQL Router Kubernetes refresh callbacks & configuration"""
 
 
@@ -99,7 +99,7 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         self.framework.observe(self.on.install, self._on_install)
         try:
             self.refresh = charm_refresh.Kubernetes(
-                KubernetesRouterRefresh(
+                _KubernetesRouterRefresh(
                     workload_name="Router",
                     charm_name="mysql-router-k8s",
                     oci_resource_name="mysql-router-image",
