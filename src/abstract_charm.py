@@ -41,6 +41,7 @@ class RouterRefresh(charm_refresh.CharmSpecificCommon, abc.ABC):
         old_workload_version: str,
         new_workload_version: str,
     ) -> bool:
+        # Check charm version compatibility
         if not super().is_compatible(
             old_charm_version=old_charm_version,
             new_charm_version=new_charm_version,
@@ -48,8 +49,22 @@ class RouterRefresh(charm_refresh.CharmSpecificCommon, abc.ABC):
             new_workload_version=new_workload_version,
         ):
             return False
-        # TODO: check workload version—prevent downgrade?
-        return True
+
+        # Check workload version compatibility
+        old_major, old_minor, old_patch = (
+            int(component) for component in old_workload_version.split(".")
+        )
+        new_major, new_minor, new_patch = (
+            int(component) for component in new_workload_version.split(".")
+        )
+        if old_major != new_major:
+            return False
+        if new_minor > old_minor:
+            return True
+        elif new_minor == old_minor:
+            return new_patch >= old_patch
+        else:
+            return False
 
 
 class MySQLRouterCharm(ops.CharmBase, abc.ABC):
@@ -323,7 +338,7 @@ class MySQLRouterCharm(ops.CharmBase, abc.ABC):
                 if self._database_requires.is_relation_breaking(event):
                     if self.refresh.in_progress:
                         logger.warning(
-                            "Modifying relations during an upgrade is not supported. The charm may be in a broken, unrecoverable state. Re-deploy the charm"
+                            "Modifying relations during a refresh is not supported. The charm may be in a broken, unrecoverable state. Re-deploy the charm"
                         )
                     self._database_provides.delete_all_databags()
                 elif (
