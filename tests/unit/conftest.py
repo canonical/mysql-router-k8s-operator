@@ -93,8 +93,6 @@ def kubernetes_patch(monkeypatch):
         "charm.KubernetesRouterCharm.get_all_k8s_node_hostnames_and_ips",
         lambda *args, **kwargs: None,
     )
-    monkeypatch.setattr("kubernetes_upgrade._Partition.get", lambda *args, **kwargs: 0)
-    monkeypatch.setattr("kubernetes_upgrade._Partition.set", lambda *args, **kwargs: None)
 
 
 @pytest.fixture(params=[True, False])
