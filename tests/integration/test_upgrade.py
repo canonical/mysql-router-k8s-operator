@@ -22,6 +22,7 @@ from .helpers import (
     MYSQL_DEFAULT_APP_NAME,
     MYSQL_ROUTER_DEFAULT_APP_NAME,
     ensure_all_units_continuous_writes_incrementing,
+    get_leader_unit,
 )
 from .juju_ import run_action
 
@@ -140,8 +141,9 @@ async def test_upgrade_from_edge(ops_test: OpsTest, charm) -> None:
             timeout=TIMEOUT,
         )
 
-    logger.info("Running resume-refresh")
-    await run_action(refresh_order[1], "resume-refresh")
+    mysql_router_leader_unit = await get_leader_unit(ops_test, MYSQL_ROUTER_APP_NAME)
+    logger.info("Running resume-refresh on the mysql router leader unit")
+    await run_action(mysql_router_leader_unit, "resume-refresh")
 
     logger.info("Waiting for upgrade to complete on all units")
     await ops_test.model.wait_for_idle(

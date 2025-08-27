@@ -12,6 +12,7 @@ from typing import Dict, List, Optional
 import mysql.connector
 import tenacity
 import yaml
+from juju.model import Model
 from juju.unit import Unit
 from mysql.connector.errors import (
     DatabaseError,
@@ -610,6 +611,27 @@ async def ensure_all_units_continuous_writes_incrementing(
                     )
 
                     last_max_written_value = max_written_value
+
+
+async def get_leader_unit(
+    ops_test: Optional[OpsTest], app_name: str, model: Optional[Model] = None
+) -> Optional[Unit]:
+    """Get the leader unit of a given application.
+
+    Args:
+        ops_test: The ops test framework instance
+        app_name: The name of the application
+        model: The model to use (overrides ops_test.model)
+    """
+    leader_unit = None
+    if not model:
+        model = ops_test.model
+    for unit in model.applications[app_name].units:
+        if await unit.is_leader_from_status():
+            leader_unit = unit
+            break
+
+    return leader_unit
 
 
 def get_juju_status(model_name: str) -> str:
