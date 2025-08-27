@@ -55,7 +55,9 @@ class _ServiceType(enum.Enum):
 
 
 @dataclasses.dataclass(eq=False)
-class _KubernetesRouterRefresh(abstract_charm.RouterRefresh, charm_refresh.CharmSpecificKubernetes):
+class _KubernetesRouterRefresh(
+    abstract_charm.RouterRefresh, charm_refresh.CharmSpecificKubernetes
+):
     """MySQL Router Kubernetes refresh callbacks & configuration"""
 
 
