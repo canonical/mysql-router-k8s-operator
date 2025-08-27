@@ -52,7 +52,7 @@ parts:
     source: .
     after:
       - poetry-deps
-    poetry-export-extra-args: ['--only', 'main,charm-libs', '--without-hashes'] # TODO: re-enable hashes
+    poetry-export-extra-args: ['--only', 'main,charm-libs']
     build-packages:
       - libffi-dev  # Needed to build Python dependencies with Rust from source
       - libssl-dev  # Needed to build Python dependencies with Rust from source
@@ -84,10 +84,18 @@ parts:
   files:
     plugin: dump
     source: .
+    after:
+      - poetry-deps  # Ensure poetry is installed
     build-packages:
       - git
     override-build: |
-      # TODO: set charm version in refresh_versions.toml
+      # Set `charm_version` in refresh_versions.toml from git tag
+      # Create venv in `..` so that git working tree is not dirty
+      python3 -m venv ../refresh-version-venv
+      source ../refresh-version-venv/bin/activate
+      poetry install --only build-refresh-version
+      write-charm-version
+
       craftctl default
     stage:
       - LICENSE
