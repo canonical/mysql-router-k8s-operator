@@ -208,12 +208,32 @@ async def test_fail_and_rollback(ops_test: OpsTest, charm, continuous_writes) ->
         and all(unit.agent_status == "idle" for unit in mysql_router_application.units)
     )
 
-    logger.info("Wait for the charm to be rolled back")
+    logger.info("Wait for blocked app status")
+    await ops_test.model.block_until(
+        lambda: mysql_router_application.status == "blocked", timeout=3 * 60
+    )
+    assert "resume-refresh" in mysql_router_application.status_message, (
+        "mysql router application status not indicating that user should resume refresh"
+    )
+
+    logger.info("Wait for first unit to rollback")
+    async with ops_test.fast_forward("60s"):
+        await ops_test.model.wait_for_idle(
+            [MYSQL_ROUTER_APP_NAME],
+            idle_period=30,
+            timeout=TIMEOUT,
+        )
+
+    mysql_router_leader_unit = await get_leader_unit(ops_test, MYSQL_ROUTER_APP_NAME)
+    logger.info("Running resume-refresh on the mysql router leader unit")
+    await run_action(mysql_router_leader_unit, "resume-refresh")
+
+    logger.info("Waiting for rollback to complete on all units")
     await ops_test.model.wait_for_idle(
-        apps=[MYSQL_ROUTER_APP_NAME],
+        [MYSQL_ROUTER_APP_NAME],
         status="active",
-        timeout=TIMEOUT,
         idle_period=30,
+        timeout=UPGRADE_TIMEOUT,
     )
 
     logger.info("Ensure continuous writes after rollback procedure")
