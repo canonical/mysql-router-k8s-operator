@@ -16,12 +16,13 @@ is_3_1_or_higher = (
 is_3_or_higher = int(_libjuju_version.split(".")[0]) >= 3
 
 
-async def run_action(unit: juju.unit.Unit, action_name, **params):
+async def run_action(unit: juju.unit.Unit, action_name, *, check_return_code=True, **params):
     action = await unit.run_action(action_name=action_name, **params)
     result = await action.wait()
     # Syntax changed across libjuju major versions
-    if is_3_or_higher:
-        assert result.results.get("return-code") == 0
-    else:
-        assert result.results.get("Code") == "0"
+    if check_return_code:
+        if is_3_or_higher:
+            assert result.results.get("return-code") == 0
+        else:
+            assert result.results.get("Code") == "0"
     return result.results

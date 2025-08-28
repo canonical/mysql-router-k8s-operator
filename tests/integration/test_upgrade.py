@@ -143,7 +143,12 @@ async def test_upgrade_from_edge(ops_test: OpsTest, charm) -> None:
 
     mysql_router_leader_unit = await get_leader_unit(ops_test, MYSQL_ROUTER_APP_NAME)
     logger.info("Running resume-refresh on the mysql router leader unit")
-    await run_action(mysql_router_leader_unit, "resume-refresh")
+    await run_action(
+        mysql_router_leader_unit,
+        "resume-refresh",
+        # If leader is next to refresh, charm will be killed before action can succeed
+        check_return_code=False,
+    )
 
     logger.info("Waiting for upgrade to complete on all units")
     await ops_test.model.wait_for_idle(
@@ -226,7 +231,12 @@ async def test_fail_and_rollback(ops_test: OpsTest, charm, continuous_writes) ->
 
     mysql_router_leader_unit = await get_leader_unit(ops_test, MYSQL_ROUTER_APP_NAME)
     logger.info("Running resume-refresh on the mysql router leader unit")
-    await run_action(mysql_router_leader_unit, "resume-refresh")
+    await run_action(
+        mysql_router_leader_unit,
+        "resume-refresh",
+        # If leader is next to refresh, charm will be killed before action can succeed
+        check_return_code=False,
+    )
 
     logger.info("Waiting for rollback to complete on all units")
     await ops_test.model.wait_for_idle(
