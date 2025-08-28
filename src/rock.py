@@ -6,13 +6,13 @@
 import logging
 import typing
 
+import common.container
 import ops
 
-import container
 import utils
 
 if typing.TYPE_CHECKING:
-    import relations.cos
+    import common.relations.cos
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +20,7 @@ CONTAINER_NAME = "mysql-router"
 _UNIX_USERNAME = "mysql"
 
 
-class _Path(container.Path):
+class _Path(common.container.Path):
     """Rock filesystem path"""
 
     # TODO python3.10 min version: remove when min version >= 3.12
@@ -76,7 +76,7 @@ class _Path(container.Path):
         return self._container.exists(self)
 
 
-class Rock(container.Container):
+class Rock(common.container.Container):
     """Workload rock or OCI container"""
 
     _SERVICE_NAME = "mysql_router"
@@ -145,7 +145,7 @@ class Rock(container.Container):
         self,
         *,
         enabled: bool,
-        config: "relations.cos.ExporterConfig" = None,
+        config: "common.relations.cos.ExporterConfig" = None,
         tls: bool = None,
         key_filename: str = None,
         certificate_filename: str = None,
@@ -254,7 +254,7 @@ class Rock(container.Container):
             )
             output, _ = process.wait_output()
         except ops.pebble.ExecError as e:
-            raise container.CalledProcessError(
+            raise common.container.CalledProcessError(
                 returncode=e.exit_code, cmd=e.command, output=e.stdout, stderr=e.stderr
             )
         return output

@@ -6,18 +6,18 @@
 import logging
 import pathlib
 
-import container
-import logrotate
+import common.container
+import common.logrotate
 
 logger = logging.getLogger(__name__)
 
 
-class LogRotate(logrotate.LogRotate):
+class LogRotate(common.logrotate.LogRotate):
     """logrotate implementation for k8s"""
 
     _SYSTEM_USER = "mysql"
 
-    def __init__(self, *, container_: container.Container):
+    def __init__(self, *, container_: common.container.Container):
         super().__init__(container_=container_)
         self._logrotate_executor = self._container.path("/logrotate_executor.py")
 

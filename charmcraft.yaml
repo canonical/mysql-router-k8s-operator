@@ -104,4 +104,3 @@ parts:
     stage:
       - refresh_versions.toml
       - scripts
-      - templates

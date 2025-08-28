@@ -45,18 +45,20 @@ def patch(monkeypatch):
         "charm.KubernetesRouterCharm.wait_until_mysql_router_ready",
         lambda *args, **kwargs: None,
     )
-    monkeypatch.setattr("workload.RunningWorkload._router_username", "")
-    monkeypatch.setattr("mysql_shell.Shell._run_code", lambda *args, **kwargs: None)
+    monkeypatch.setattr("common.workload.RunningWorkload._router_username", "")
+    monkeypatch.setattr("common.mysql_shell.Shell._run_code", lambda *args, **kwargs: None)
     monkeypatch.setattr(
-        "mysql_shell.Shell.get_mysql_router_user_for_unit", lambda *args, **kwargs: None
+        "common.mysql_shell.Shell.get_mysql_router_user_for_unit", lambda *args, **kwargs: None
     )
-    monkeypatch.setattr("mysql_shell.Shell.is_router_in_cluster_set", lambda *args, **kwargs: True)
+    monkeypatch.setattr(
+        "common.mysql_shell.Shell.is_router_in_cluster_set", lambda *args, **kwargs: True
+    )
     monkeypatch.setattr("charm_refresh.Kubernetes", _MockRefresh)
     monkeypatch.setattr(
         "charm_refresh.CharmSpecificCommon.__post_init__", lambda *args, **kwargs: None
     )
     monkeypatch.setattr(
-        "relations.database_requires.RelationEndpoint.does_relation_exist",
+        "common.relations.database_requires.RelationEndpoint.does_relation_exist",
         lambda *args, **kwargs: True,
     )
 

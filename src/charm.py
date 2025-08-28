@@ -6,12 +6,11 @@
 
 """MySQL Router Kubernetes charm"""
 
+import common.architecture
 import ops
 
-from architecture import WrongArchitectureWarningCharm, is_wrong_architecture
-
-if is_wrong_architecture() and __name__ == "__main__":
-    ops.main.main(WrongArchitectureWarningCharm)
+if common.architecture.is_wrong_architecture() and __name__ == "__main__":
+    ops.main.main(common.architecture.WrongArchitectureWarningCharm)
 
 import dataclasses
 import enum
@@ -22,6 +21,13 @@ import socket
 import typing
 
 import charm_refresh
+import common.abstract_charm
+import common.logrotate
+import common.relations.cos
+import common.relations.database_provides
+import common.relations.database_requires
+import common.relations.secrets
+import common.workload
 import lightkube
 import lightkube.models.core_v1
 import lightkube.models.meta_v1
@@ -31,15 +37,9 @@ import ops.log
 import tenacity
 from charms.tempo_coordinator_k8s.v0.charm_tracing import trace_charm
 
-import abstract_charm
 import kubernetes_logrotate
-import logrotate
-import relations.cos
-import relations.database_provides
-import relations.database_requires
-import relations.secrets
+import relations.kubernetes_cos
 import rock
-import workload
 
 logger = logging.getLogger(__name__)
 logging.getLogger("httpx").setLevel(logging.WARNING)
@@ -56,7 +56,7 @@ class _ServiceType(enum.Enum):
 
 @dataclasses.dataclass(eq=False)
 class _KubernetesRouterRefresh(
-    abstract_charm.RouterRefresh, charm_refresh.CharmSpecificKubernetes
+    common.abstract_charm.RouterRefresh, charm_refresh.CharmSpecificKubernetes
 ):
     """MySQL Router Kubernetes refresh callbacks & configuration"""
 
@@ -64,17 +64,17 @@ class _KubernetesRouterRefresh(
 @trace_charm(
     tracing_endpoint="tracing_endpoint",
     extra_types=(
-        logrotate.LogRotate,
-        relations.cos.COSRelation,
-        relations.database_provides.RelationEndpoint,
-        relations.database_requires.RelationEndpoint,
-        relations.tls.RelationEndpoint,
+        common.logrotate.LogRotate,
+        common.relations.database_provides.RelationEndpoint,
+        common.relations.database_requires.RelationEndpoint,
+        common.relations.tls.RelationEndpoint,
+        common.workload.RunningWorkload,
+        common.workload.Workload,
+        relations.kubernetes_cos.COSRelation,
         rock.Rock,
-        workload.RunningWorkload,
-        workload.Workload,
     ),
 )
-class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
+class KubernetesRouterCharm(common.abstract_charm.MySQLRouterCharm):
     """MySQL Router Kubernetes charm"""
 
     _PEER_RELATION_NAME = "mysql-router-peers"
@@ -96,7 +96,7 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         self.service_name = f"{self.app.name}-service"
         self._lightkube_client = lightkube.Client()
 
-        self._peer_data = relations.secrets.RelationSecrets(self, self._PEER_RELATION_NAME)
+        self._peer_data = common.relations.secrets.RelationSecrets(self, self._PEER_RELATION_NAME)
 
         self.framework.observe(self.on.install, self._on_install)
         try:
@@ -131,8 +131,12 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         return rock.Rock(unit=self.unit)
 
     @property
-    def _logrotate(self) -> logrotate.LogRotate:
+    def _logrotate(self) -> kubernetes_logrotate.LogRotate:
         return kubernetes_logrotate.LogRotate(container_=self._container)
+
+    @property
+    def _cos_relation_type(self) -> typing.Type[common.relations.cos.COSRelation]:
+        return relations.kubernetes_cos.COSRelation
 
     def _status(self, *, event) -> typing.Optional[ops.StatusBase]:
         if self.config.get("expose-external", "false") not in [
@@ -141,14 +145,11 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
             "loadbalancer",
         ]:
             return ops.BlockedStatus("Invalid expose-external config value")
-        if (
-            self._peer_data.get_value(
-                relations.secrets.APP_SCOPE, self._K8S_SERVICE_INITIALIZED_KEY
-            )
-            and not self._check_service_connectivity(event=event)
-        ):
+        if self._peer_data.get_value(
+            common.relations.secrets.APP_SCOPE, self._K8S_SERVICE_INITIALIZED_KEY
+        ) and not self._check_service_connectivity(event=event):
             if self._peer_data.get_value(
-                relations.secrets.APP_SCOPE, self._K8S_SERVICE_CREATING_KEY
+                common.relations.secrets.APP_SCOPE, self._K8S_SERVICE_CREATING_KEY
             ):
                 return ops.MaintenanceStatus("Waiting for K8s service connectivity")
             else:
@@ -253,10 +254,10 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
         self._lightkube_client.apply(desired_service, field_manager=self.app.name)
 
         self._peer_data.set_value(
-            relations.secrets.APP_SCOPE, self._K8S_SERVICE_CREATING_KEY, "true"
+            common.relations.secrets.APP_SCOPE, self._K8S_SERVICE_CREATING_KEY, "true"
         )
         self._peer_data.set_value(
-            relations.secrets.APP_SCOPE, self._K8S_SERVICE_INITIALIZED_KEY, "true"
+            common.relations.secrets.APP_SCOPE, self._K8S_SERVICE_INITIALIZED_KEY, "true"
         )
 
         logger.info(f"Request to create desired service {desired_service_type=} dispatched")
@@ -264,7 +265,7 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
     def _check_service_connectivity(self, *, event) -> bool:
         """Check if the service is available (connectable with a socket)."""
         if not self._get_service() or not isinstance(
-            self.get_workload(event=None), workload.RunningWorkload
+            self.get_workload(event=None), common.workload.RunningWorkload
         ):
             logger.debug("No service or unauthenticated workload")
             return False
