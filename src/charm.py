@@ -411,6 +411,34 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
     def _read_only_endpoints(self, *, event) -> str:
         return self._get_hosts_ports("ro")
 
+    def tls_sans_ip(self, *, event) -> typing.Optional[typing.List[str]]:
+        _, extra_ips = self.get_all_k8s_node_hostnames_and_ips()
+        return [
+            str(self.model.get_binding("juju-info").network.bind_address),
+            "127.0.0.1",
+            *extra_ips,
+        ]
+
+    def tls_sans_dns(self, *, event) -> typing.Optional[typing.List[str]]:
+        service_name = self.service_name
+        unit_name = self.unit.name.replace("/", "-")
+        extra_hosts, _ = self.get_all_k8s_node_hostnames_and_ips()
+        return [
+            socket.getfqdn(),
+            service_name,
+            f"{service_name}.{self.model_service_domain}",
+            unit_name,
+            f"{unit_name}.{self.app.name}-endpoints",
+            f"{unit_name}.{self.app.name}-endpoints.{self.model_service_domain}",
+            self.app.name,
+            f"{self.app.name}.{self.app.name}-endpoints",
+            f"{self.app.name}.{self.app.name}-endpoints.{self.model_service_domain}"
+            f"{self.app.name}-endpoints",
+            f"{self.app.name}-endpoints.{self.model_service_domain}",
+            f"{self.app.name}.{self.model_service_domain}",
+            *extra_hosts,
+        ]
+
     def get_all_k8s_node_hostnames_and_ips(
         self,
     ) -> typing.Tuple[typing.List[str], typing.List[str]]:

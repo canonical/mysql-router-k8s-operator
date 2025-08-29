@@ -47,6 +47,8 @@ requires:
     optional: true
     limit: 1
 peers:
+  tls:
+    interface: tls
   cos:
     interface: cos
   refresh-v-three:

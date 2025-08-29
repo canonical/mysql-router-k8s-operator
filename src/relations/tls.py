@@ -1,4 +1,4 @@
-# Copyright 2023 Canonical Ltd.
+# Copyright 2024 Canonical Ltd.
 # See LICENSE file for licensing details.
 
 """Relation to TLS certificate provider"""
@@ -17,11 +17,11 @@ import ops
 import relations.secrets
 
 if typing.TYPE_CHECKING:
-    import charm
+    import abstract_charm
 
 logger = logging.getLogger(__name__)
 
-_PEER_RELATION_ENDPOINT_NAME = "mysql-router-peers"
+_PEER_RELATION_ENDPOINT_NAME = "tls"
 
 _TLS_REQUESTED_CSR = "tls-requested-csr"
 _TLS_ACTIVE_CSR = "tls-active-csr"
@@ -48,7 +48,7 @@ def _generate_private_key() -> str:
 class _Relation:
     """Relation to TLS certificate provider"""
 
-    _charm: "charm.KubernetesRouterCharm"
+    _charm: "abstract_charm.MySQLRouterCharm"
     _interface: tls_certificates.TLSCertificatesRequiresV2
     _secrets: relations.secrets.RelationSecrets
 
@@ -110,56 +110,35 @@ class _Relation:
         logger.debug(f"Saved TLS certificate {event=}")
         self._charm.reconcile(event=None)
 
-    def _generate_csr(self, key: bytes) -> bytes:
+    def _generate_csr(self, *, event, key: bytes) -> bytes:
         """Generate certificate signing request (CSR)."""
-        service_name = self._charm.service_name
-        unit_name = self._charm.unit.name.replace("/", "-")
-        extra_hosts, extra_ips = self._charm.get_all_k8s_node_hostnames_and_ips()
         return tls_certificates.generate_csr(
             private_key=key,
             # X.509 CommonName has a limit of 64 characters
             # (https://github.com/pyca/cryptography/issues/10553)
             subject=socket.getfqdn()[:64],
             organization=self._charm.app.name,
-            sans_dns=[
-                socket.getfqdn(),
-                service_name,
-                f"{service_name}.{self._charm.model_service_domain}",
-                unit_name,
-                f"{unit_name}.{self._charm.app.name}-endpoints",
-                f"{unit_name}.{self._charm.app.name}-endpoints.{self._charm.model_service_domain}",
-                self._charm.app.name,
-                f"{self._charm.app.name}.{self._charm.app.name}-endpoints",
-                f"{self._charm.app.name}.{self._charm.app.name}-endpoints.{self._charm.model_service_domain}"
-                f"{self._charm.app.name}-endpoints",
-                f"{self._charm.app.name}-endpoints.{self._charm.model_service_domain}",
-                f"{self._charm.app.name}.{self._charm.model_service_domain}",
-                *extra_hosts,
-            ],
-            sans_ip=[
-                str(self._charm.model.get_binding("juju-info").network.bind_address),
-                "127.0.0.1",
-                *extra_ips,
-            ],
+            sans_ip=self._charm.tls_sans_ip(event=event),
+            sans_dns=self._charm.tls_sans_dns(event=event),
         )
 
-    def request_certificate_creation(self):
+    def request_certificate_creation(self, *, event):
         """Request new TLS certificate from related provider charm."""
         logger.debug("Requesting TLS certificate creation")
-        csr = self._generate_csr(self.key.encode("utf-8"))
+        csr = self._generate_csr(event=event, key=self.key.encode("utf-8"))
         self._interface.request_certificate_creation(certificate_signing_request=csr)
         self._secrets.set_value(
             relations.secrets.UNIT_SCOPE, _TLS_REQUESTED_CSR, csr.decode("utf-8")
         )
         logger.debug("Requested TLS certificate creation")
 
-    def request_certificate_renewal(self):
+    def request_certificate_renewal(self, *, event):
         """Request TLS certificate renewal from related provider charm."""
         logger.debug("Requesting TLS certificate renewal")
         old_csr = self._secrets.get_value(relations.secrets.UNIT_SCOPE, _TLS_ACTIVE_CSR).encode(
             "utf-8"
         )
-        new_csr = self._generate_csr(self.key.encode("utf-8"))
+        new_csr = self._generate_csr(event=event, key=self.key.encode("utf-8"))
         self._interface.request_certificate_renewal(
             old_certificate_signing_request=old_csr, new_certificate_signing_request=new_csr
         )
@@ -174,13 +153,15 @@ class RelationEndpoint(ops.Object):
 
     NAME = "certificates"
 
-    def __init__(self, charm_: "charm.KubernetesRouterCharm") -> None:
+    def __init__(self, charm_: "abstract_charm.MySQLRouterCharm") -> None:
         super().__init__(charm_, self.NAME)
         self._charm = charm_
         self._interface = tls_certificates.TLSCertificatesRequiresV2(self._charm, self.NAME)
 
         self._secrets = relations.secrets.RelationSecrets(
-            charm_, self._interface.relationship_name, unit_secret_fields=[_TLS_PRIVATE_KEY]
+            charm_,
+            _PEER_RELATION_ENDPOINT_NAME,
+            unit_secret_fields=[_TLS_PRIVATE_KEY],
         )
 
         self.framework.observe(
@@ -269,7 +250,7 @@ class RelationEndpoint(ops.Object):
             logger.debug("No TLS certificate relation active. Skipped certificate request")
         else:
             try:
-                self._relation.request_certificate_creation()
+                self._relation.request_certificate_creation(event=event)
             except Exception as e:
                 event.fail(f"Failed to request certificate: {e}")
                 logger.exception(
@@ -278,9 +259,9 @@ class RelationEndpoint(ops.Object):
                 raise
         logger.debug("Handled set TLS private key action")
 
-    def _on_tls_relation_created(self, _) -> None:
+    def _on_tls_relation_created(self, event) -> None:
         """Request certificate when TLS relation created."""
-        self._relation.request_certificate_creation()
+        self._relation.request_certificate_creation(event=event)
 
     def _on_tls_relation_broken(self, _) -> None:
         """Delete TLS certificate."""
@@ -300,4 +281,4 @@ class RelationEndpoint(ops.Object):
             logger.warning("Unknown certificate expiring")
             return
 
-        self._relation.request_certificate_renewal()
+        self._relation.request_certificate_renewal(event=event)
