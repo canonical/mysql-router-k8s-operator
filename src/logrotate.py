@@ -47,4 +47,4 @@ class LogRotate(abc.ABC):
 
     def disable(self) -> None:
         """Disable logrotate."""
-        self._logrotate_config.unlink()
+        self._logrotate_config.unlink(missing_ok=True)
