@@ -134,8 +134,7 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
     def _logrotate(self) -> logrotate.LogRotate:
         return kubernetes_logrotate.LogRotate(container_=self._container)
 
-    @property
-    def _status(self) -> ops.StatusBase:
+    def _status(self, *, event) -> typing.Optional[ops.StatusBase]:
         if self.config.get("expose-external", "false") not in [
             "false",
             "nodeport",
@@ -146,7 +145,7 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
             self._peer_data.get_value(
                 relations.secrets.APP_SCOPE, self._K8S_SERVICE_INITIALIZED_KEY
             )
-            and not self._check_service_connectivity()
+            and not self._check_service_connectivity(event=event)
         ):
             if self._peer_data.get_value(
                 relations.secrets.APP_SCOPE, self._K8S_SERVICE_CREATING_KEY
@@ -262,7 +261,7 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
 
         logger.info(f"Request to create desired service {desired_service_type=} dispatched")
 
-    def _check_service_connectivity(self) -> bool:
+    def _check_service_connectivity(self, *, event) -> bool:
         """Check if the service is available (connectable with a socket)."""
         if not self._get_service() or not isinstance(
             self.get_workload(event=None), workload.RunningWorkload
@@ -271,12 +270,12 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
             return False
 
         for endpoints in (
-            self._read_write_endpoints,
-            self._read_only_endpoints,
+            self._read_write_endpoints(event=event),
+            self._read_only_endpoints(event=event),
         ):
             if endpoints == "":
                 logger.debug(
-                    f"Empty endpoints {self._read_write_endpoints=} {self._read_only_endpoints=}"
+                    f"Empty endpoints {self._read_write_endpoints(event=event)=} {self._read_only_endpoints(event=event)=}"
                 )
                 return False
 
@@ -302,11 +301,11 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
     def _reconcile_ports(self, *, event) -> None:
         """Needed for VM, so no-op"""
 
-    def _update_endpoints(self) -> None:
-        if self._check_service_connectivity():
+    def _update_endpoints(self, *, event) -> None:
+        if self._check_service_connectivity(event=event):
             self._database_provides.update_endpoints(
-                router_read_write_endpoints=self._read_write_endpoints,
-                router_read_only_endpoints=self._read_only_endpoints,
+                router_read_write_endpoints=self._read_write_endpoints(event=event),
+                router_read_only_endpoints=self._read_only_endpoints(event=event),
             )
 
     def wait_until_mysql_router_ready(self, *, event=None) -> None:
@@ -406,23 +405,11 @@ class KubernetesRouterCharm(abstract_charm.MySQLRouterCharm):
 
         return ""
 
-    @property
-    def _read_write_endpoints(self) -> str:
+    def _read_write_endpoints(self, *, event) -> str:
         return self._get_hosts_ports("rw")
 
-    @property
-    def _read_only_endpoints(self) -> str:
+    def _read_only_endpoints(self, *, event) -> str:
         return self._get_hosts_ports("ro")
-
-    @property
-    def _exposed_read_write_endpoints(self) -> typing.Optional[str]:
-        """Only applies to VM charm, so no-op."""
-        pass
-
-    @property
-    def _exposed_read_only_endpoints(self) -> typing.Optional[str]:
-        """Only applies to VM charm, so no-op."""
-        pass
 
     def get_all_k8s_node_hostnames_and_ips(
         self,

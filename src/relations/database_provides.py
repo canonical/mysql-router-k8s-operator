@@ -48,6 +48,13 @@ class _Relation:
         # Application charm databag
         self._databag = remote_databag.RemoteDatabag(interface=interface, relation=relation)
 
+        # Whether endpoints should be externally accessible
+        # (e.g. when related to `data-integrator` charm)
+        # Implements DA073 - Add Expose Flag to the Database Interface
+        # https://docs.google.com/document/d/1Y7OZWwMdvF8eEMuVKrqEfuFV3JOjpqLHL7_GPqJpRHU
+        # Ignored on Kubernetes charm in favor of expose-external config option
+        self.external_connectivity = self._databag.get("external-node-connectivity") == "true"
+
     def __eq__(self, other) -> bool:
         if not isinstance(other, _Relation):
             return False
@@ -70,9 +77,8 @@ class _RelationThatRequestedUser(_Relation):
     ) -> None:
         super().__init__(relation=relation, interface=interface)
         self._interface = interface
-        if event and isinstance(event, ops.RelationBrokenEvent) and event.relation.id == self._id:
+        if isinstance(event, ops.RelationBrokenEvent) and event.relation.id == self._id:
             raise _RelationBreaking
-
         self._database: str = self._databag["database"]
         if self._databag.get("extra-user-roles"):
             raise _UnsupportedExtraUserRole(
@@ -151,7 +157,7 @@ class _RelationWithSharedUser(_Relation):
         router_read_write_endpoints: str,
         router_read_only_endpoints: str,
     ) -> None:
-        """Update the endpoins in the databag."""
+        """Update the endpoints in the databag."""
         logger.debug(
             f"Updating endpoints {self._id} {router_read_write_endpoints=} {router_read_only_endpoints=}"
         )
@@ -198,6 +204,27 @@ class RelationEndpoint:
                 pass
         return shared_users
 
+    def external_connectivity(self, event) -> bool:
+        """Whether any of the relations are marked as external.
+
+        Only used on machines charm
+        """
+        requested_users = []
+        for relation in self._interface.relations:
+            try:
+                requested_users.append(
+                    _RelationThatRequestedUser(
+                        relation=relation, interface=self._interface, event=event
+                    )
+                )
+            except (
+                _RelationBreaking,
+                remote_databag.IncompleteDatabag,
+                _UnsupportedExtraUserRole,
+            ):
+                pass
+        return any(relation.external_connectivity for relation in requested_users)
+
     def update_endpoints(
         self,
         *,
@@ -218,7 +245,6 @@ class RelationEndpoint:
         router_read_write_endpoints: str,
         router_read_only_endpoints: str,
         shell: mysql_shell.Shell,
-        **_,
     ) -> None:
         """Create requested users and delete inactive users.
 
