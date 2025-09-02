@@ -117,12 +117,7 @@ async def test_upgrade_from_edge(ops_test: OpsTest, charm) -> None:
     )
 
     logger.info("Wait for first unit to restart")
-    async with ops_test.fast_forward("60s"):
-        await ops_test.model.wait_for_idle(
-            [MYSQL_ROUTER_APP_NAME],
-            idle_period=30,
-            timeout=5 * 60,
-        )
+    await ops_test.model.wait_for_idle([MYSQL_ROUTER_APP_NAME], idle_period=30, timeout=5 * 60)
 
     # Refresh will be incompatible on PR CI (not edge CI) since unreleased charm versions are
     # always marked as incompatible
@@ -134,12 +129,7 @@ async def test_upgrade_from_edge(ops_test: OpsTest, charm) -> None:
         await run_action(refresh_order[0], "force-refresh-start", **{"check-compatibility": False})
 
     logger.info("Wait for first unit to upgrade")
-    async with ops_test.fast_forward("60s"):
-        await ops_test.model.wait_for_idle(
-            [MYSQL_ROUTER_APP_NAME],
-            idle_period=30,
-            timeout=TIMEOUT,
-        )
+    await ops_test.model.wait_for_idle([MYSQL_ROUTER_APP_NAME], idle_period=30, timeout=TIMEOUT)
 
     mysql_router_leader_unit = await get_leader_unit(ops_test, MYSQL_ROUTER_APP_NAME)
     logger.info("Running resume-refresh on the mysql router leader unit")
@@ -222,12 +212,7 @@ async def test_fail_and_rollback(ops_test: OpsTest, charm, continuous_writes) ->
     )
 
     logger.info("Wait for first unit to rollback")
-    async with ops_test.fast_forward("60s"):
-        await ops_test.model.wait_for_idle(
-            [MYSQL_ROUTER_APP_NAME],
-            idle_period=30,
-            timeout=TIMEOUT,
-        )
+    await ops_test.model.wait_for_idle([MYSQL_ROUTER_APP_NAME], idle_period=30, timeout=TIMEOUT)
 
     mysql_router_leader_unit = await get_leader_unit(ops_test, MYSQL_ROUTER_APP_NAME)
     logger.info("Running resume-refresh on the mysql router leader unit")
