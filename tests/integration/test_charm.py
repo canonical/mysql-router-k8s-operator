@@ -109,7 +109,7 @@ async def test_database_relation(ops_test: OpsTest, charm):
     server_config_credentials = await get_server_config_credentials(mysql_unit)
 
     select_inserted_data_sql = [
-        f"SELECT data FROM continuous_writes_database.random_data WHERE data = '{inserted_data}'",
+        f"SELECT data FROM continuous_writes.random_data WHERE data = '{inserted_data}'",
     ]
     selected_data = await execute_queries_against_unit(
         mysql_unit_address,
