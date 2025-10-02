@@ -8,3 +8,6 @@ build/
 .coverage
 __pycache__/
 *.py[cod]
+
+.terraform
+.terraform.lock.hcl
