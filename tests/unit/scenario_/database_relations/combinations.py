@@ -3,14 +3,14 @@
 
 """Generate `Relation` combinations for `pytest.mark.parameterize`."""
 
+import collections.abc
 import itertools
-import typing
 
 import scenario
 
 
 def _relation_combinations(
-    *, relation_amounts: typing.Iterable[int], relations: list[scenario.Relation]
+    *, relation_amounts: collections.abc.Iterable[int], relations: list[scenario.Relation]
 ) -> list[list[scenario.Relation]]:
     """Get all combinations of `relations` for each length in `relation_amounts`."""
     combinations = []

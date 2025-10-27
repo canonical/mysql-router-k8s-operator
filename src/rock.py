@@ -240,12 +240,11 @@ class Rock(common.container.Container):
         else:
             self._container.stop(self._LOGROTATE_EXECUTOR_SERVICE_NAME)
 
-    # TODO python3.10 min version: Use `list` instead of `typing.List`
     def _run_command(
         self,
-        command: typing.List[str],
+        command: list[str],
         *,
-        timeout: typing.Optional[int] = 15,
+        timeout: int | None = 15,
         input: str = None,  # noqa: A002 Match subprocess.run()
     ) -> str:
         try:

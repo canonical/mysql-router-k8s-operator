@@ -7,7 +7,6 @@ import logging
 import pathlib
 import subprocess
 import tempfile
-from typing import Dict, List, Optional
 
 import mysql.connector
 import tenacity
@@ -43,9 +42,9 @@ async def execute_queries_against_unit(
     unit_address: str,
     username: str,
     password: str,
-    queries: List[str],
+    queries: list[str],
     commit: bool = False,
-) -> List:
+) -> list:
     """Execute given MySQL queries on a unit.
 
     Args:
@@ -79,7 +78,7 @@ async def execute_queries_against_unit(
     return output
 
 
-async def get_server_config_credentials(unit: Unit) -> Dict:
+async def get_server_config_credentials(unit: Unit) -> dict:
     """Helper to run an action to retrieve server config credentials.
 
     Args:
@@ -91,7 +90,7 @@ async def get_server_config_credentials(unit: Unit) -> Dict:
     return await run_action(unit, "get-password", username=SERVER_CONFIG_USERNAME)
 
 
-async def get_inserted_data_by_application(unit: Unit) -> Optional[str]:
+async def get_inserted_data_by_application(unit: Unit) -> str | None:
     """Helper to run an action to retrieve inserted data by the application.
 
     Args:
@@ -103,7 +102,7 @@ async def get_inserted_data_by_application(unit: Unit) -> Optional[str]:
     return (await run_action(unit, "get-inserted-data")).get("data")
 
 
-async def get_credentials(unit: Unit) -> Dict:
+async def get_credentials(unit: Unit) -> dict:
     """Helper to run an action on data-integrator to get credentials.
 
     Args:
@@ -384,7 +383,7 @@ async def rotate_mysqlrouter_logs(ops_test: OpsTest, unit_name: str) -> None:
 
 
 @tenacity.retry(stop=tenacity.stop_after_attempt(8), wait=tenacity.wait_fixed(15), reraise=True)
-def is_connection_possible(credentials: Dict, **extra_opts) -> bool:
+def is_connection_possible(credentials: dict, **extra_opts) -> bool:
     """Test a connection to a MySQL server.
 
     Args:
@@ -438,9 +437,9 @@ async def get_tls_ca(
 async def get_tls_certificate_issuer(
     ops_test: OpsTest,
     unit_name: str,
-    socket: Optional[str] = None,
-    host: Optional[str] = None,
-    port: Optional[int] = None,
+    socket: str | None = None,
+    host: str | None = None,
+    port: int | None = None,
 ) -> str:
     connect_args = f"-unix {socket}" if socket else f"-connect {host}:{port}"
     get_tls_certificate_issuer_commands = [
@@ -553,7 +552,7 @@ async def get_max_written_value_in_database(
 
 
 async def ensure_all_units_continuous_writes_incrementing(
-    ops_test: OpsTest, mysql_units: Optional[List[Unit]] = None
+    ops_test: OpsTest, mysql_units: list[Unit] | None = None
 ) -> None:
     """Ensure that continuous writes is incrementing on all units.
 
@@ -614,8 +613,8 @@ async def ensure_all_units_continuous_writes_incrementing(
 
 
 async def get_leader_unit(
-    ops_test: Optional[OpsTest], app_name: str, model: Optional[Model] = None
-) -> Optional[Unit]:
+    ops_test: OpsTest | None, app_name: str, model: Model | None = None
+) -> Unit | None:
     """Get the leader unit of a given application.
 
     Args:

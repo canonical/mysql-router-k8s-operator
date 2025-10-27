@@ -12,13 +12,13 @@ import ops
 if common.architecture.is_wrong_architecture() and __name__ == "__main__":
     ops.main.main(common.architecture.WrongArchitectureWarningCharm)
 
+import collections.abc
 import dataclasses
 import enum
 import functools
 import json
 import logging
 import socket
-import typing
 
 import charm_refresh
 import common.abstract_charm
@@ -123,7 +123,7 @@ class KubernetesRouterCharm(common.abstract_charm.MySQLRouterCharm):
             self._reconcile_allowed = True
 
     @property
-    def _subordinate_relation_endpoint_names(self) -> typing.Optional[typing.Iterable[str]]:
+    def _subordinate_relation_endpoint_names(self) -> collections.abc.Collection[str] | None:
         return
 
     @property
@@ -135,10 +135,10 @@ class KubernetesRouterCharm(common.abstract_charm.MySQLRouterCharm):
         return kubernetes_logrotate.LogRotate(container_=self._container)
 
     @property
-    def _cos_relation_type(self) -> typing.Type[common.relations.cos.COSRelation]:
+    def _cos_relation_type(self) -> type[common.relations.cos.COSRelation]:
         return relations.kubernetes_cos.COSRelation
 
-    def _status(self, *, event) -> typing.Optional[ops.StatusBase]:
+    def _status(self, *, event) -> ops.StatusBase | None:
         if self.config.get("expose-external", "false") not in [
             "false",
             "nodeport",
@@ -155,10 +155,10 @@ class KubernetesRouterCharm(common.abstract_charm.MySQLRouterCharm):
             else:
                 return ops.BlockedStatus("K8s service not connectable")
 
-    def is_externally_accessible(self, *, event) -> typing.Optional[bool]:
+    def is_externally_accessible(self, *, event) -> bool | None:
         """No-op since this charm is exposed with the expose-external config."""
 
-    def _get_service(self) -> typing.Optional[lightkube.resources.core_v1.Service]:
+    def _get_service(self) -> lightkube.resources.core_v1.Service | None:
         """Get the managed k8s service."""
         try:
             service = self._lightkube_client.get(
@@ -412,7 +412,7 @@ class KubernetesRouterCharm(common.abstract_charm.MySQLRouterCharm):
     def _read_only_endpoints(self, *, event) -> str:
         return self._get_hosts_ports("ro")
 
-    def tls_sans_ip(self, *, event) -> typing.Optional[typing.List[str]]:
+    def tls_sans_ip(self, *, event) -> list[str] | None:
         _, extra_ips = self.get_all_k8s_node_hostnames_and_ips()
         return [
             str(self.model.get_binding("juju-info").network.bind_address),
@@ -420,7 +420,7 @@ class KubernetesRouterCharm(common.abstract_charm.MySQLRouterCharm):
             *extra_ips,
         ]
 
-    def tls_sans_dns(self, *, event) -> typing.Optional[typing.List[str]]:
+    def tls_sans_dns(self, *, event) -> list[str] | None:
         service_name = self.service_name
         unit_name = self.unit.name.replace("/", "-")
         extra_hosts, _ = self.get_all_k8s_node_hostnames_and_ips()
@@ -442,7 +442,7 @@ class KubernetesRouterCharm(common.abstract_charm.MySQLRouterCharm):
 
     def get_all_k8s_node_hostnames_and_ips(
         self,
-    ) -> typing.Tuple[typing.List[str], typing.List[str]]:
+    ) -> tuple[list[str], list[str]]:
         """Return all node hostnames and IPs registered in k8s."""
         node = self._get_node(self.unit.name)
         hostnames = []

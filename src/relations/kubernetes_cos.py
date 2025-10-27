@@ -55,6 +55,6 @@ class COSRelation(common.relations.cos.COSRelation):
         super().__init__(charm_=charm_, container_=container_)
 
     @property
-    def tracing_endpoint(self) -> typing.Optional[str]:
+    def tracing_endpoint(self) -> str | None:
         if self._tracing.is_ready():
             return self._tracing.get_endpoint(self._TRACING_PROTOCOL)

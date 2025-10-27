@@ -3,7 +3,7 @@
 
 """Test app status and relation databags"""
 
-import typing
+import collections.abc
 
 import ops
 import pytest
@@ -26,7 +26,9 @@ def model_service_domain(monkeypatch, request):
     return request.param
 
 
-def output_states(*, relations: list[scenario.Relation]) -> typing.Iterable[scenario.State]:
+def output_states(
+    *, relations: list[scenario.Relation]
+) -> collections.abc.Iterable[scenario.State]:
     """Run scenario test for each `abstract_charm.reconcile_database_relations` event.
 
     Excludes *-relation-breaking events
