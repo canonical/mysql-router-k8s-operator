@@ -34,18 +34,14 @@ RETRY_TIMEOUT = 3 * 60
 
 if juju_.is_3_or_higher:
     tls_app_name = "self-signed-certificates"
-    if architecture.architecture == "arm64":
-        tls_channel = "latest/edge"
-    else:
-        tls_channel = "latest/stable"
+    tls_channel = "1/stable"
     tls_config = {"ca-common-name": "Test CA"}
+    tls_base = "ubuntu@24.04"
 else:
     tls_app_name = "tls-certificates-operator"
-    if architecture.architecture == "arm64":
-        tls_channel = "legacy/edge"
-    else:
-        tls_channel = "legacy/stable"
+    tls_channel = "legacy/edge" if architecture.architecture == "arm64" else "legacy/stable"
     tls_config = {"generate-self-signed-certificates": "true", "ca-common-name": "Test CA"}
+    tls_base = "ubuntu@22.04"
 
 
 # TODO: remove after https://github.com/canonical/grafana-agent-k8s-operator/issues/309 fixed
@@ -138,7 +134,7 @@ async def test_exporter_endpoint(ops_test: OpsTest, charm) -> None:
         application_name=tls_app_name,
         channel=tls_channel,
         config=tls_config,
-        base="ubuntu@22.04",
+        base=tls_base,
     )
 
     await ops_test.model.wait_for_idle([tls_app_name], status="active", timeout=SLOW_TIMEOUT)

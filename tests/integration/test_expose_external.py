@@ -36,18 +36,14 @@ TEST_DATABASE_NAME = "testdatabase"
 TLS_SETUP_SLEEP_TIME = 30
 if juju_.is_3_or_higher:
     TLS_APP_NAME = "self-signed-certificates"
-    if architecture.architecture == "arm64":
-        TLS_CHANNEL = "latest/edge"
-    else:
-        TLS_CHANNEL = "latest/stable"
+    TLS_CHANNEL = "1/stable"
     TLS_CONFIG = {"ca-common-name": "Test CA"}
+    TLS_BASE = "ubuntu@24.04"
 else:
     TLS_APP_NAME = "tls-certificates-operator"
-    if architecture.architecture == "arm64":
-        TLS_CHANNEL = "legacy/edge"
-    else:
-        TLS_CHANNEL = "legacy/stable"
+    TLS_CHANNEL = "legacy/edge" if architecture.architecture == "arm64" else "legacy/stable"
     TLS_CONFIG = {"generate-self-signed-certificates": "true", "ca-common-name": "Test CA"}
+    TLS_BASE = "ubuntu@22.04"
 
 
 async def confirm_cluster_ip_endpoints(ops_test: OpsTest) -> None:
@@ -197,7 +193,7 @@ async def test_expose_external_with_tls(ops_test: OpsTest) -> None:
         TLS_APP_NAME,
         channel=TLS_CHANNEL,
         config=TLS_CONFIG,
-        base="ubuntu@22.04",
+        base=TLS_BASE,
     )
     async with ops_test.fast_forward("60s"):
         await ops_test.model.wait_for_idle(
