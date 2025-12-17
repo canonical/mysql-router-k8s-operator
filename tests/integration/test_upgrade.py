@@ -36,6 +36,7 @@ MYSQL_ROUTER_APP_NAME = MYSQL_ROUTER_DEFAULT_APP_NAME
 APPLICATION_APP_NAME = APPLICATION_DEFAULT_APP_NAME
 
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
+RESOURCES = {"mysql-router-image": METADATA["resources"]["mysql-router-image"]["upstream-source"]}
 
 
 @pytest.mark.abort_on_fail
@@ -98,7 +99,7 @@ async def test_upgrade_from_edge(ops_test: OpsTest, charm) -> None:
     mysql_router_application = ops_test.model.applications[MYSQL_ROUTER_APP_NAME]
 
     logger.info("Refresh the charm")
-    await mysql_router_application.refresh(path=charm)
+    await mysql_router_application.refresh(path=charm, resources=RESOURCES)
 
     # Highest to lowest unit number
     refresh_order = sorted(
@@ -171,7 +172,7 @@ async def test_fail_and_rollback(ops_test: OpsTest, charm, continuous_writes) ->
     create_invalid_upgrade_charm(fault_charm)
 
     logger.info("Refreshing mysql router with an invalid charm")
-    await mysql_router_application.refresh(path=fault_charm)
+    await mysql_router_application.refresh(path=fault_charm, resources=RESOURCES)
 
     # Highest to lowest unit number
     refresh_order = sorted(
@@ -192,7 +193,7 @@ async def test_fail_and_rollback(ops_test: OpsTest, charm, continuous_writes) ->
     await ensure_all_units_continuous_writes_incrementing(ops_test)
 
     logger.info("Re-refresh the charm")
-    await mysql_router_application.refresh(path=charm)
+    await mysql_router_application.refresh(path=charm, resources=RESOURCES)
 
     # sleep to ensure that active status from before re-refresh does not affect below check
     time.sleep(15)
@@ -242,6 +243,8 @@ def create_invalid_upgrade_charm(charm_file: str | pathlib.Path) -> None:
         with zipfile.Path(charm_zip, "refresh_versions.toml").open("rb") as file:
             versions = tomli.load(file)
 
+    # "charm" is added during pack time using the charm refresh compatibility version stored as a git tag
+    # so charm can be set after the release (when the version is determined) but before pack time
     versions["charm"] = "8.0/0.0.0"
 
     with zipfile.ZipFile(charm_file, mode="a") as charm_zip:
