@@ -1,5 +1,6 @@
 # Copyright 2023 Canonical Ltd.
 # See LICENSE file for licensing details.
+
 name: mysql-router-k8s
 display-name: MySQL Router K8s
 summary: Charmed MySQL Router K8s operator
@@ -21,6 +22,7 @@ maintainers:
 containers:
   mysql-router:
     resource: mysql-router-image
+
 provides:
   database:
     interface: mysql_client
@@ -30,6 +32,7 @@ provides:
   grafana-dashboard:
     interface: grafana_dashboard
     optional: true
+
 requires:
   backend-database:
     interface: mysql_client
@@ -46,6 +49,7 @@ requires:
     interface: tracing
     optional: true
     limit: 1
+
 peers:
   tls:
     interface: tls
@@ -55,10 +59,12 @@ peers:
     interface: refresh
   mysql-router-peers:
     interface: mysql_router_peers
+
 resources:
   mysql-router-image:
     type: oci-image
     description: OCI image for mysql-router
     upstream-source: ghcr.io/canonical/charmed-mysql@sha256:672f20830d66678a3ece7285048700d6e52a9393202eb51e9749eb35031559c4
+
 assumes:
   - k8s-api
