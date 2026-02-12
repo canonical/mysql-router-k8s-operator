@@ -3,8 +3,6 @@
 This is part of the [MySQL Router K8s Tutorial](/t/12176). Please refer to this page for more information and the overview of the content. The following document will deploy "MySQL Router" together with "MySQL server" (coming from the separate charm "[Charmed MySQL K8s](https://charmhub.io/mysql-k8s)"). 
 
 ## Deploy Charmed MySQL K8s + MySQL Router K8s
-> :information_source: **Info**: [the minimum Juju version for "Charmed MySQL K8s" is 2.9.44](https://charmhub.io/mysql-k8s/docs/r-requirements)
-
 To deploy Charmed MySQL K8s + MySQL Router K8s, all you need to do is run the following commands:
 
 ```shell
@@ -21,7 +19,7 @@ juju status --watch 1s
 This command is useful for checking the status of Juju applications and gathering information about the machines hosting them. Some of the helpful information it displays include IP addresses, ports, state, etc. The command updates the status of charms every second and as the application starts you can watch the status and messages of their change. Wait until the application is ready - when it is ready, `juju status` will show:
 ```shell
 Model     Controller  Cloud/Region        Version  SLA          Timestamp
-tutorial  overlord    microk8s/localhost  2.9.46   unsupported  22:33:45+01:00
+tutorial  overlord    microk8s/localhost  3.4.3    unsupported  22:33:45+01:00
 
 App               Version                  Status   Scale  Charm             Channel   Rev  Address        Exposed  Message
 mysql-k8s         8.0.34-0ubuntu0.22.04.1  active       1  mysql-k8s         8.0/edge  109  10.152.183.68  no       
@@ -39,15 +37,17 @@ At this stage MySQL Router will stay in blocked state due to missing relation/in
 ```shell
 juju integrate mysql-k8s mysql-router-k8s
 ```
+
 Shortly the `juju status` will report new blocking reason `Missing relation: database` as it waits for a client to consume DB service, let's deploy [data-integrator](https://charmhub.io/data-integrator) and request access to database `test123`:
 ```shell
 juju deploy data-integrator --config database-name=test123
 juju relate data-integrator mysql-router-k8s
 ```
-In couple of seconds, the status will be happy for entire model:
+
+In a couple of seconds, the status will be happy for entire model:
 ```shell
 Model     Controller  Cloud/Region        Version  SLA          Timestamp
-tutorial  overlord    microk8s/localhost  2.9.46   unsupported  22:37:41+01:00
+tutorial  overlord    microk8s/localhost  3.4.3   unsupported  22:37:41+01:00
 
 App               Version                  Status  Scale  Charm             Channel   Rev  Address         Exposed  Message
 data-integrator                            active      1  data-integrator   stable     13  10.152.183.142  no       
@@ -133,6 +133,7 @@ This will output an error message:
 ```shell
 ERROR 1045 (28000): Access denied for user 'relation-4-6'@'mysql-router-k8s-1.mysql-router-k8s-endpoints.tutorial.svc.clust' (using password: YES)
 ```
+
 As this user no longer exists. This is expected as `juju remove-relation mysql-router-k8s data-integrator` also removes the user.
 Note: data stay remain on the server at this stage!
 
@@ -140,9 +141,11 @@ Relate the the two applications again if you wanted to recreate the user:
 ```shell
 juju relate data-integrator mysql-router-k8s
 ```
+
 Re-relating generates a new user and password:
 ```shell
 juju run data-integrator/leader get-credentials
 ```
+
 You can connect to the database with this new credentials.
 From here you will see all of your data is still present in the database.

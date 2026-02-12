@@ -65,9 +65,8 @@ def assert_complete_local_app_databag(
     complete_requires: scenario.Relation,
     provides: scenario.Relation,
     model_service_domain: str,
-    juju_has_secrets: bool,
 ):
-    if juju_has_secrets and "requested-secrets" in provides.remote_app_data:
+    if "requested-secrets" in provides.remote_app_data:
         secret_id = local_app_data.pop("secret-user")
         secrets_ = [secret for secret in secrets if secret.id == secret_id]
         assert len(secrets_) == 1
@@ -149,7 +148,6 @@ def test_complete_requires_and_provides_unsupported_extra_user_role(
     complete_provides_s,
     unsupported_extra_user_role_provides_s,
     model_service_domain,
-    juju_has_secrets,
 ):
     for state in output_states(
         relations=[
@@ -169,7 +167,6 @@ def test_complete_requires_and_provides_unsupported_extra_user_role(
                 complete_requires,
                 provides,
                 model_service_domain,
-                juju_has_secrets,
             )
         for index, provides in enumerate(
             unsupported_extra_user_role_provides_s, 1 + len(complete_provides_s)
@@ -188,9 +185,7 @@ def test_incomplete_provides(complete_requires, incomplete_provides_s):
 
 
 @pytest.mark.parametrize("complete_provides_s", combinations.complete_provides(1, 2, 4))
-def test_complete_provides(
-    complete_requires, complete_provides_s, model_service_domain, juju_has_secrets
-):
+def test_complete_provides(complete_requires, complete_provides_s, model_service_domain):
     for state in output_states(relations=[complete_requires, *complete_provides_s]):
         assert state.app_status == ops.ActiveStatus()
         for index, provides in enumerate(complete_provides_s, 1):
@@ -201,7 +196,6 @@ def test_complete_provides(
                 complete_requires,
                 provides,
                 model_service_domain,
-                juju_has_secrets,
             )
 
 
@@ -212,7 +206,6 @@ def test_complete_provides_and_incomplete_provides(
     complete_provides_s,
     incomplete_provides_s,
     model_service_domain,
-    juju_has_secrets,
 ):
     for state in output_states(
         relations=[complete_requires, *complete_provides_s, *incomplete_provides_s]
@@ -228,7 +221,6 @@ def test_complete_provides_and_incomplete_provides(
                 complete_requires,
                 provides,
                 model_service_domain,
-                juju_has_secrets,
             )
         for index, provides in enumerate(incomplete_provides_s, 1 + len(complete_provides_s)):
             assert state.relations[index].local_app_data == {}

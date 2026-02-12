@@ -101,12 +101,6 @@ def kubernetes_patch(monkeypatch):
     )
 
 
-@pytest.fixture(params=[True, False])
-def juju_has_secrets(request, monkeypatch):
-    monkeypatch.setattr("ops.JujuVersion.has_secrets", request.param)
-    return request.param
-
-
 @pytest.fixture(autouse=True)
 def disable_charm_tracing():
     with charm_tracing_disabled():

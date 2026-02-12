@@ -12,7 +12,6 @@ import tenacity
 import yaml
 from pytest_operator.plugin import OpsTest
 
-from . import architecture, juju_
 from .helpers import (
     APPLICATION_DEFAULT_APP_NAME,
     MYSQL_DEFAULT_APP_NAME,
@@ -29,21 +28,12 @@ MYSQL_APP_NAME = MYSQL_DEFAULT_APP_NAME
 MYSQL_ROUTER_APP_NAME = MYSQL_ROUTER_DEFAULT_APP_NAME
 APPLICATION_APP_NAME = APPLICATION_DEFAULT_APP_NAME
 DATA_INTEGRATOR = "data-integrator"
-SLOW_TIMEOUT = 15 * 60
-MODEL_CONFIG = {"logging-config": "<root>=INFO;unit=DEBUG"}
-TEST_DATABASE_NAME = "testdatabase"
+TLS_APP_NAME = "self-signed-certificates"
 
+SLOW_TIMEOUT = 15 * 60
 TLS_SETUP_SLEEP_TIME = 30
-if juju_.is_3_or_higher:
-    TLS_APP_NAME = "self-signed-certificates"
-    TLS_CHANNEL = "1/stable"
-    TLS_CONFIG = {"ca-common-name": "Test CA"}
-    TLS_BASE = "ubuntu@24.04"
-else:
-    TLS_APP_NAME = "tls-certificates-operator"
-    TLS_CHANNEL = "legacy/edge" if architecture.architecture == "arm64" else "legacy/stable"
-    TLS_CONFIG = {"generate-self-signed-certificates": "true", "ca-common-name": "Test CA"}
-    TLS_BASE = "ubuntu@22.04"
+TEST_DATABASE_NAME = "testdatabase"
+MODEL_CONFIG = {"logging-config": "<root>=INFO;unit=DEBUG"}
 
 
 async def confirm_cluster_ip_endpoints(ops_test: OpsTest) -> None:
@@ -191,9 +181,9 @@ async def test_expose_external_with_tls(ops_test: OpsTest) -> None:
     logger.info("Deploying TLS operator")
     await ops_test.model.deploy(
         TLS_APP_NAME,
-        channel=TLS_CHANNEL,
-        config=TLS_CONFIG,
-        base=TLS_BASE,
+        channel="1/stable",
+        config={"ca-common-name": "Test CA"},
+        base="ubuntu@24.04",
     )
     async with ops_test.fast_forward("60s"):
         await ops_test.model.wait_for_idle(

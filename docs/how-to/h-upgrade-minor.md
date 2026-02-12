@@ -82,9 +82,6 @@ The action will configure the charm to minimize the amount of primary switchover
 Use the [`juju refresh`](https://juju.is/docs/juju/juju-refresh) command to trigger the charm upgrade process. If using juju version 3 or higher, it is necessary to add the `--trust` option.
 
 ```shell
-# example with channel selection and juju 2.9.x
-juju refresh mysql-router-k8s --channel 8.0/edge
-
 # example with channel selection and juju 3.x
 juju refresh mysql-router-k8s --channel 8.0/edge --trust
 
@@ -94,9 +91,6 @@ juju refresh mysql-router-k8s --revision=89 --resource mysql-router-image=...
 
 After the Router upgrade is completed, upgrade the Server:
 ```shell
-# example with channel selection and juju 2.9.x
-juju refresh mysql-k8s --channel 8.0/edge
-
 # example with channel selection and juju 3.x
 juju refresh mysql-k8s --channel 8.0/edge --trust
 
@@ -117,7 +111,7 @@ juju refresh mysql-k8s --revision=89
 After the unit is upgraded, the charm will set the unit upgrade state as completed. If deemed necessary, the user can further assert the success of the upgrade. If the unit is healthy within the cluster, the next step is to resume the upgrade process by running:
 
 ```shell
-juju run-action mysql-k8s/leader resume-upgrade --wait
+juju run mysql-k8s/leader resume-upgrade
 ```
 
 The `resume-upgrade` will roll out the Server upgrade for the following unit, always from highest from lowest. For each successfully upgraded unit beyond the first, the process will roll out the next one automatically.

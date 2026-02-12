@@ -10,7 +10,6 @@ import tenacity
 import yaml
 from pytest_operator.plugin import OpsTest
 
-from . import architecture, juju_
 from .helpers import (
     APPLICATION_DEFAULT_APP_NAME,
     MYSQL_DEFAULT_APP_NAME,
@@ -25,19 +24,10 @@ METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 MYSQL_APP_NAME = MYSQL_DEFAULT_APP_NAME
 MYSQL_ROUTER_APP_NAME = MYSQL_ROUTER_DEFAULT_APP_NAME
 TEST_APP_NAME = APPLICATION_DEFAULT_APP_NAME
+TLS_APP_NAME = "self-signed-certificates"
+
 SLOW_TIMEOUT = 15 * 60
 RETRY_TIMEOUT = 2 * 60
-
-if juju_.is_3_or_higher:
-    tls_app_name = "self-signed-certificates"
-    tls_channel = "1/stable"
-    tls_config = {"ca-common-name": "Test CA"}
-    tls_base = "ubuntu@24.04"
-else:
-    tls_app_name = "tls-certificates-operator"
-    tls_channel = "legacy/edge" if architecture.architecture == "arm64" else "legacy/stable"
-    tls_config = {"generate-self-signed-certificates": "true", "ca-common-name": "Test CA"}
-    tls_base = "ubuntu@22.04"
 
 
 @pytest.mark.abort_on_fail
@@ -71,11 +61,11 @@ async def test_deploy_and_relate(ops_test: OpsTest, charm) -> None:
                 trust=True,
             ),
             ops_test.model.deploy(
-                tls_app_name,
-                application_name=tls_app_name,
-                channel=tls_channel,
-                config=tls_config,
-                base=tls_base,
+                TLS_APP_NAME,
+                application_name=TLS_APP_NAME,
+                channel="1/stable",
+                config={"ca-common-name": "Test CA"},
+                base="ubuntu@24.04",
             ),
             ops_test.model.deploy(
                 TEST_APP_NAME,
@@ -120,7 +110,7 @@ async def test_connected_encryption(ops_test: OpsTest) -> None:
             )
 
     logger.info("Relating TLS with mysqlrouter")
-    await ops_test.model.relate(tls_app_name, MYSQL_ROUTER_APP_NAME)
+    await ops_test.model.relate(TLS_APP_NAME, MYSQL_ROUTER_APP_NAME)
 
     logger.info("Getting certificate issuer after relating with tls operator")
     for attempt in tenacity.Retrying(
@@ -136,12 +126,12 @@ async def test_connected_encryption(ops_test: OpsTest) -> None:
                 port=6446,
             )
             assert "CN = Test CA" in issuer, (
-                f"Expected mysqlrouter certificate from {tls_app_name}"
+                f"Expected mysqlrouter certificate from {TLS_APP_NAME}"
             )
 
     logger.info("Removing relation TLS with mysqlrouter")
     await ops_test.model.applications[MYSQL_ROUTER_APP_NAME].remove_relation(
-        f"{tls_app_name}:certificates", f"{MYSQL_ROUTER_APP_NAME}:certificates"
+        f"{TLS_APP_NAME}:certificates", f"{MYSQL_ROUTER_APP_NAME}:certificates"
     )
 
     for attempt in tenacity.Retrying(

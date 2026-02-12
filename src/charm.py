@@ -461,9 +461,8 @@ class KubernetesRouterCharm(common.abstract_charm.MySQLRouterCharm):
     def _on_install(self, _) -> None:
         """Open ports & patch k8s service."""
         # TODO fix this if fails because app not trusted and user runs `juju trust`
-        if ops.JujuVersion.from_environ().supports_open_port_on_k8s:
-            for port in (self._READ_WRITE_PORT, self._READ_ONLY_PORT, 6448, 6449):
-                self.unit.open_port("tcp", port)
+        for port in (self._READ_WRITE_PORT, self._READ_ONLY_PORT, 6448, 6449):
+            self.unit.open_port("tcp", port)
 
 
 if __name__ == "__main__":

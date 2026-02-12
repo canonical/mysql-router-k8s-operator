@@ -4,7 +4,7 @@ MySQL Router K8s supports modern ['mysql_client'](https://github.com/canonical/c
 
 ### Modern `mysql_client` interface (`database` endpoint):
 
-Adding a relation is accomplished with `juju relate` (or `juju integrate` for Juju 3.x) via endpoint `database`. Read more about [Juju relations (integrations)](https://juju.is/docs/olm/relations). Example:
+Adding a relation is accomplished with `juju integrate` via endpoint `database`. Read more about [Juju relations (integrations)](https://juju.is/docs/olm/relations). Example:
 
 ```shell
 # Deploy Charmed MySQL K8s and MySQL Router K8s clusters with 3 nodes each
