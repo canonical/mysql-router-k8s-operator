@@ -12,7 +12,7 @@ import tenacity
 import yaml
 from pytest_operator.plugin import OpsTest
 
-from . import architecture, juju_, markers
+from . import architecture, juju_
 from .helpers import (
     APPLICATION_DEFAULT_APP_NAME,
     MYSQL_DEFAULT_APP_NAME,
@@ -44,8 +44,6 @@ else:
     tls_series = "jammy"
 
 
-# TODO: remove after https://github.com/canonical/grafana-agent-k8s-operator/issues/309 fixed
-@markers.amd64_only
 @pytest.mark.abort_on_fail
 async def test_exporter_endpoint(ops_test: OpsTest, charm, series) -> None:
     """Test that the exporter endpoint works when related with TLS"""
