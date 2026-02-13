@@ -32,16 +32,16 @@ if juju_.is_3_or_higher:
     tls_app_name = "self-signed-certificates"
     tls_channel = "1/stable"
     tls_config = {"ca-common-name": "Test CA"}
-    tls_base = "ubuntu@24.04"
+    tls_series = "noble"
 else:
     tls_app_name = "tls-certificates-operator"
     tls_channel = "legacy/edge" if architecture.architecture == "arm64" else "legacy/stable"
     tls_config = {"generate-self-signed-certificates": "true", "ca-common-name": "Test CA"}
-    tls_base = "ubuntu@22.04"
+    tls_series = "jammy"
 
 
 @pytest.mark.abort_on_fail
-async def test_deploy_and_relate(ops_test: OpsTest, charm) -> None:
+async def test_deploy_and_relate(ops_test: OpsTest, charm, series) -> None:
     """Test encryption when backend database is using TLS."""
     mysqlrouter_resources = {
         "mysql-router-image": METADATA["resources"]["mysql-router-image"]["upstream-source"]
@@ -55,7 +55,7 @@ async def test_deploy_and_relate(ops_test: OpsTest, charm) -> None:
             channel="8.0/edge",
             application_name=MYSQL_APP_NAME,
             config={"profile": "testing"},
-            base="ubuntu@22.04",
+            series=series,
             num_units=1,
             trust=True,
         )
@@ -65,8 +65,8 @@ async def test_deploy_and_relate(ops_test: OpsTest, charm) -> None:
             ops_test.model.deploy(
                 charm,
                 application_name=MYSQL_ROUTER_APP_NAME,
-                base="ubuntu@22.04",
                 resources=mysqlrouter_resources,
+                series=series,
                 num_units=1,
                 trust=True,
             ),
@@ -75,13 +75,13 @@ async def test_deploy_and_relate(ops_test: OpsTest, charm) -> None:
                 application_name=tls_app_name,
                 channel=tls_channel,
                 config=tls_config,
-                base=tls_base,
+                series=tls_series,
             ),
             ops_test.model.deploy(
                 TEST_APP_NAME,
                 application_name=TEST_APP_NAME,
                 channel="latest/edge",
-                base="ubuntu@22.04",
+                series=series,
             ),
         )
 

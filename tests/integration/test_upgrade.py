@@ -40,7 +40,7 @@ RESOURCES = {"mysql-router-image": METADATA["resources"]["mysql-router-image"]["
 
 
 @pytest.mark.abort_on_fail
-async def test_deploy_edge(ops_test: OpsTest) -> None:
+async def test_deploy_edge(ops_test: OpsTest, series) -> None:
     """Simple test to ensure that mysql, mysqlrouter and application charms deploy."""
     logger.info("Deploying all applications")
 
@@ -50,26 +50,23 @@ async def test_deploy_edge(ops_test: OpsTest) -> None:
             channel="8.0/edge",
             application_name=MYSQL_APP_NAME,
             config={"profile": "testing"},
-            base="ubuntu@22.04",
+            series=series,
             num_units=1,
             trust=True,  # Necessary after a6f1f01: Fix/endpoints as k8s services (#142)
         ),
-        ops_test.juju(
-            "deploy",
+        ops_test.model.deploy(
             MYSQL_ROUTER_APP_NAME,
-            "-n",
-            3,
-            "--channel",
-            "8.0/edge/test-refresh-v3-8.0.42",  # TODO remove after refresh v3 merged
-            "--trust",
-            "--series",  # For juju 2 compatibility
-            "jammy",
+            channel="8.0/edge",
+            application_name=MYSQL_ROUTER_APP_NAME,
+            series=series,
+            num_units=3,
+            trust=True,  # Necessary after a6f1f01: Fix/endpoints as k8s services (#142)
         ),
         ops_test.model.deploy(
             APPLICATION_APP_NAME,
             channel="latest/edge",
             application_name=APPLICATION_APP_NAME,
-            base="ubuntu@22.04",
+            series=series,
             num_units=1,
         ),
     )

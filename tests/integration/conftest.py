@@ -13,11 +13,21 @@ logger = logging.getLogger(__name__)
 
 
 @pytest.fixture
-def charm():
+def ubuntu_base():
+    return "ubuntu@22.04"
+
+
+@pytest.fixture
+def series():
+    return "jammy"
+
+
+@pytest.fixture
+def charm(ubuntu_base):
     # Return str instead of pathlib.Path since python-libjuju's model.deploy(), juju deploy, and
     # juju bundle files expect local charms to begin with `./` or `/` to distinguish them from
     # Charmhub charms.
-    return f"./mysql-router-k8s_ubuntu@22.04-{architecture.architecture}.charm"
+    return f"./mysql-router-k8s_{ubuntu_base}-{architecture.architecture}.charm"
 
 
 @pytest.fixture

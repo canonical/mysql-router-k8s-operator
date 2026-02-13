@@ -34,7 +34,7 @@ MODEL_CONFIG = {"logging-config": "<root>=INFO;unit=DEBUG"}
 
 
 @pytest.mark.abort_on_fail
-async def test_database_relation(ops_test: OpsTest, charm):
+async def test_database_relation(ops_test: OpsTest, charm, series):
     """Test the database relation."""
     await ops_test.model.set_config(MODEL_CONFIG)
 
@@ -49,15 +49,15 @@ async def test_database_relation(ops_test: OpsTest, charm):
             channel="8.0/edge",
             application_name=MYSQL_APP_NAME,
             config={"profile": "testing"},
-            base="ubuntu@22.04",
+            series=series,
             num_units=3,
             trust=True,  # Necessary after a6f1f01: Fix/endpoints as k8s services (#142)
         ),
         ops_test.model.deploy(
             charm,
             application_name=MYSQL_ROUTER_APP_NAME,
-            base="ubuntu@22.04",
             resources=mysqlrouter_resources,
+            series=series,
             num_units=1,
             trust=True,
         ),
@@ -65,7 +65,7 @@ async def test_database_relation(ops_test: OpsTest, charm):
             APPLICATION_APP_NAME,
             channel="latest/edge",
             application_name=APPLICATION_APP_NAME,
-            base="ubuntu@22.04",
+            series=series,
             num_units=1,
         ),
     )

@@ -14,7 +14,7 @@ MYSQL_ROUTER_APP_NAME = METADATA["name"]
 
 
 @markers.amd64_only
-async def test_arm_charm_on_amd_host(ops_test: OpsTest) -> None:
+async def test_arm_charm_on_amd_host(ops_test: OpsTest, series) -> None:
     """Tries deploying an arm64 charm on amd64 host."""
     charm = "./mysql-router-k8s_ubuntu@22.04-arm64.charm"
 
@@ -27,7 +27,7 @@ async def test_arm_charm_on_amd_host(ops_test: OpsTest) -> None:
         application_name=MYSQL_ROUTER_APP_NAME,
         num_units=1,
         resources=resources,
-        base="ubuntu@22.04",
+        series=series,
     )
 
     await ops_test.model.wait_for_idle(
@@ -38,7 +38,7 @@ async def test_arm_charm_on_amd_host(ops_test: OpsTest) -> None:
 
 
 @markers.arm64_only
-async def test_amd_charm_on_arm_host(ops_test: OpsTest) -> None:
+async def test_amd_charm_on_arm_host(ops_test: OpsTest, series) -> None:
     """Tries deploying an amd64 charm on arm64 host."""
     charm = "./mysql-router-k8s_ubuntu@22.04-amd64.charm"
 
@@ -51,7 +51,7 @@ async def test_amd_charm_on_arm_host(ops_test: OpsTest) -> None:
         application_name=MYSQL_ROUTER_APP_NAME,
         num_units=1,
         resources=resources,
-        base="ubuntu@22.04",
+        series=series,
     )
 
     await ops_test.model.wait_for_idle(

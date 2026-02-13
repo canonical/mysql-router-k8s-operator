@@ -38,12 +38,12 @@ if juju_.is_3_or_higher:
     TLS_APP_NAME = "self-signed-certificates"
     TLS_CHANNEL = "1/stable"
     TLS_CONFIG = {"ca-common-name": "Test CA"}
-    TLS_BASE = "ubuntu@24.04"
+    TLS_SERIES = "noble"
 else:
     TLS_APP_NAME = "tls-certificates-operator"
     TLS_CHANNEL = "legacy/edge" if architecture.architecture == "arm64" else "legacy/stable"
     TLS_CONFIG = {"generate-self-signed-certificates": "true", "ca-common-name": "Test CA"}
-    TLS_BASE = "ubuntu@22.04"
+    TLS_SERIES = "jammy"
 
 
 async def confirm_cluster_ip_endpoints(ops_test: OpsTest) -> None:
@@ -97,7 +97,7 @@ async def confirm_endpoint_connectivity(ops_test: OpsTest) -> None:
 
 
 @pytest.mark.abort_on_fail
-async def test_expose_external(ops_test, charm) -> None:
+async def test_expose_external(ops_test, charm, series) -> None:
     """Test the expose-external config option."""
     await ops_test.model.set_config(MODEL_CONFIG)
 
@@ -112,15 +112,15 @@ async def test_expose_external(ops_test, charm) -> None:
             channel="8.0/edge",
             application_name=MYSQL_APP_NAME,
             config={"profile": "testing"},
-            base="ubuntu@22.04",
+            series=series,
             num_units=1,
             trust=True,
         ),
         ops_test.model.deploy(
             charm,
             application_name=MYSQL_ROUTER_APP_NAME,
-            base="ubuntu@22.04",
             resources=mysql_router_resources,
+            series=series,
             num_units=1,
             trust=True,
         ),
@@ -128,8 +128,8 @@ async def test_expose_external(ops_test, charm) -> None:
             DATA_INTEGRATOR,
             channel="latest/edge",
             application_name=DATA_INTEGRATOR,
-            base="ubuntu@24.04",
             config={"database-name": TEST_DATABASE_NAME},
+            series="noble",
             num_units=1,
         ),
     )
@@ -193,7 +193,7 @@ async def test_expose_external_with_tls(ops_test: OpsTest) -> None:
         TLS_APP_NAME,
         channel=TLS_CHANNEL,
         config=TLS_CONFIG,
-        base=TLS_BASE,
+        series=TLS_SERIES,
     )
     async with ops_test.fast_forward("60s"):
         await ops_test.model.wait_for_idle(
