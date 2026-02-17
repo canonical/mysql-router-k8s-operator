@@ -46,7 +46,11 @@ async def test_deploy_and_relate(ops_test: OpsTest, charm) -> None:
             application_name=MYSQL_APP_NAME,
             config={"profile": "testing"},
             base="ubuntu@22.04",
-            num_units=1,
+            # TODO: Check again when switching to 8.4/edge channel
+            # MySQL Router 8.4 requires cluster quorum for R/W traffic,
+            # because of the unreachable_quorum_allowed_traffic config option
+            # (only observable upon process restart)
+            num_units=3,
             trust=True,
         )
 
@@ -55,7 +59,7 @@ async def test_deploy_and_relate(ops_test: OpsTest, charm) -> None:
             ops_test.model.deploy(
                 charm,
                 application_name=MYSQL_ROUTER_APP_NAME,
-                base="ubuntu@22.04",
+                base="ubuntu@24.04",
                 resources=mysqlrouter_resources,
                 num_units=1,
                 trust=True,
@@ -71,7 +75,7 @@ async def test_deploy_and_relate(ops_test: OpsTest, charm) -> None:
                 TEST_APP_NAME,
                 application_name=TEST_APP_NAME,
                 channel="latest/edge",
-                base="ubuntu@22.04",
+                base="ubuntu@24.04",
             ),
         )
 

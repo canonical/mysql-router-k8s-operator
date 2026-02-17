@@ -57,7 +57,7 @@ package-mode = false
 requires-poetry = ">=2.0.0"
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.12"
 common = {path = "../common", develop = true}
 # breaking change in ops 2.10.0: https://github.com/canonical/operator/pull/1091#issuecomment-1888644075
 ops = "^2.9.0, <2.10"
@@ -88,7 +88,7 @@ log_cli_level = "INFO"
 [tool.ruff]
 # preview and explicit preview are enabled for CPY001
 preview = true
-target-version = "py310"
+target-version = "py312"
 src = ["src", "."]
 line-length = 99
 

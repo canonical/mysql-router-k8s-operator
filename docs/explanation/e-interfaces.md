@@ -9,7 +9,7 @@ Adding a relation is accomplished with `juju integrate` via endpoint `database`.
 ```shell
 # Deploy Charmed MySQL K8s and MySQL Router K8s clusters with 3 nodes each
 juju deploy mysql-k8s -n 3 --trust
-juju deploy mysql-router-k8s -n 3 --trust --channel 8.0
+juju deploy mysql-router-k8s -n 3 --trust --channel 8.4
 
 # Deploy the relevant charms, e.g. mysql-test-app
 juju deploy mysql-test-app
@@ -28,6 +28,6 @@ juju status --relations
 # > ...
 ```
 
-**Note:** In order to relate with Charmed MySQL K8s, every table created by the client application must have a primary key. This is required by the [group replication plugin](https://dev.mysql.com/doc/refman/8.0/en/group-replication-requirements.html) enabled in this charm.
+**Note:** In order to relate with Charmed MySQL K8s, every table created by the client application must have a primary key. This is required by the [group replication plugin](https://dev.mysql.com/doc/refman/8.4/en/group-replication-requirements.html) enabled in this charm.
 
 See all the charm interfaces [here](https://charmhub.io/mysql-router-k8s/integrations).

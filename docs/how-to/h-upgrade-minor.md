@@ -1,7 +1,7 @@
 # Minor Upgrade
 
-> :information_source: **Example**: MySQL Router 8.0.33 -> MySQL Router 8.0.34<br/>
-(including simple charm revision bump: from revision 99 to revision 102)
+> :information_source: **Example**: MySQL Router 8.4.7 -> MySQL Router 8.4.8<br/>
+(including simple charm revision bump: from revision XX to revision YY)
 
 We strongly recommend to **NOT** perform any other extraordinary operations on Charmed MySQL K8s cluster and/or MySQL Router K8s, while upgrading. Some examples would be:
 
@@ -37,10 +37,10 @@ The first step is to record the revision of the running application, as a safety
 Model    Controller  Cloud/Region        Version  SLA          Timestamp
 upgrade  microk8s    microk8s/localhost  3.1.6    unsupported  15:32:04+02:00
 
-App               Version                  Status  Scale  Charm             Channel     Rev  Address         Exposed  Message
-mysql-k8s         8.0.34-0ubuntu0.22.04.1  active      3  mysql-k8s         8.0/stable   99  10.152.183.238  no       
-mysql-router-k8s  8.0.34-0ubuntu0.22.04.1  active      3  mysql-router-k8s  8.0/stable   69  10.152.183.184  no       
-mysql-test-app    0.0.2                    active      1  mysql-test-app    stable       26  10.152.183.36   no       
+App               Version  Status  Scale  Charm             Channel     Rev  Address         Exposed  Message
+mysql-k8s         8.4.7    active      3  mysql-k8s         8.4/stable   99  10.152.183.238  no       
+mysql-router-k8s  8.4.7    active      3  mysql-router-k8s  8.4/stable   69  10.152.183.184  no       
+mysql-test-app    0.0.2    active      1  mysql-test-app    stable       26  10.152.183.36   no       
 
 Unit                 Workload  Agent  Address     Ports  Message
 mysql-k8s/0*         active    idle   10.1.12.24         Primary
@@ -83,7 +83,7 @@ Use the [`juju refresh`](https://juju.is/docs/juju/juju-refresh) command to trig
 
 ```shell
 # example with channel selection and juju 3.x
-juju refresh mysql-router-k8s --channel 8.0/edge --trust
+juju refresh mysql-router-k8s --channel 8.4/edge --trust
 
 # example with specific revision selection (do NOT miss OCI resource!)
 juju refresh mysql-router-k8s --revision=89 --resource mysql-router-image=...
@@ -92,7 +92,7 @@ juju refresh mysql-router-k8s --revision=89 --resource mysql-router-image=...
 After the Router upgrade is completed, upgrade the Server:
 ```shell
 # example with channel selection and juju 3.x
-juju refresh mysql-k8s --channel 8.0/edge --trust
+juju refresh mysql-k8s --channel 8.4/edge --trust
 
 # example with specific revision selection
 juju refresh mysql-k8s --revision=89
@@ -120,10 +120,10 @@ The `resume-upgrade` will roll out the Server upgrade for the following unit, al
 Model    Controller  Cloud/Region        Version  SLA          Timestamp
 upgrade  microk8s    microk8s/localhost  3.1.6    unsupported  15:56:25+02:00
 
-App               Version                  Status   Scale  Charm             Channel   Rev  Address         Exposed  Message
-mysql-k8s         8.0.34-0ubuntu0.22.04.1  waiting    3/4  mysql-k8s         8.0/edge  109  10.152.183.238  no       installing agent
-mysql-router-k8s  8.0.34-0ubuntu0.22.04.1  active       4  mysql-router-k8s  8.0/edge   69  10.152.183.184  no       
-mysql-test-app    0.0.2                    active       1  mysql-test-app    stable     26  10.152.183.36   no       
+App               Version  Status   Scale  Charm             Channel   Rev  Address         Exposed  Message
+mysql-k8s         8.4.7    waiting    3/4  mysql-k8s         8.4/edge  109  10.152.183.238  no       installing agent
+mysql-router-k8s  8.4.7    active       4  mysql-router-k8s  8.4/edge   69  10.152.183.184  no       
+mysql-test-app    0.0.2    active       1  mysql-test-app    stable     26  10.152.183.36   no       
 
 Unit                 Workload     Agent  Address     Ports  Message
 mysql-k8s/0*         waiting      idle   10.1.12.24         other units upgrading first...

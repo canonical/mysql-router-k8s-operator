@@ -6,8 +6,8 @@ This is part of the [MySQL Router K8s Tutorial](/t/12176). Please refer to this 
 To deploy Charmed MySQL K8s + MySQL Router K8s, all you need to do is run the following commands:
 
 ```shell
-juju deploy mysql-router-k8s --channel 8.0 --trust
-juju deploy mysql-k8s --channel 8.0 --trust
+juju deploy mysql-router-k8s --channel 8.4 --trust
+juju deploy mysql-k8s --channel 8.4 --trust
 ```
 Note: `--trust` is required to create some K8s resources.
 
@@ -21,9 +21,9 @@ This command is useful for checking the status of Juju applications and gatherin
 Model     Controller  Cloud/Region        Version  SLA          Timestamp
 tutorial  overlord    microk8s/localhost  3.4.3    unsupported  22:33:45+01:00
 
-App               Version                  Status   Scale  Charm             Channel   Rev  Address        Exposed  Message
-mysql-k8s         8.0.34-0ubuntu0.22.04.1  active       1  mysql-k8s         8.0/edge  109  10.152.183.68  no       
-mysql-router-k8s  8.0.34-0ubuntu0.22.04.1  blocked      1  mysql-router-k8s  8.0/edge   68  10.152.183.52  no       Missing relation: backend-database
+App               Version  Status   Scale  Charm             Channel   Rev  Address        Exposed  Message
+mysql-k8s         8.4.7    active       1  mysql-k8s         8.4/edge  109  10.152.183.68  no       
+mysql-router-k8s  8.4.7    blocked      1  mysql-router-k8s  8.4/edge   68  10.152.183.52  no       Missing relation: backend-database
 
 Unit                 Workload  Agent  Address     Ports  Message
 mysql-k8s/0*         active    idle   10.1.12.36         Primary
@@ -49,10 +49,10 @@ In a couple of seconds, the status will be happy for entire model:
 Model     Controller  Cloud/Region        Version  SLA          Timestamp
 tutorial  overlord    microk8s/localhost  3.4.3   unsupported  22:37:41+01:00
 
-App               Version                  Status  Scale  Charm             Channel   Rev  Address         Exposed  Message
-data-integrator                            active      1  data-integrator   stable     13  10.152.183.142  no       
-mysql-k8s         8.0.34-0ubuntu0.22.04.1  active      1  mysql-k8s         8.0/edge  109  10.152.183.68   no       
-mysql-router-k8s  8.0.34-0ubuntu0.22.04.1  active      1  mysql-router-k8s  8.0/edge   68  10.152.183.52   no       
+App               Version  Status  Scale  Charm             Channel   Rev  Address         Exposed  Message
+data-integrator            active      1  data-integrator   stable     13  10.152.183.142  no       
+mysql-k8s         8.4.7    active      1  mysql-k8s         8.4/edge  109  10.152.183.68   no       
+mysql-router-k8s  8.4.7    active      1  mysql-router-k8s  8.4/edge   68  10.152.183.52   no       
 
 Unit                 Workload  Agent  Address     Ports  Message
 data-integrator/0*   active    idle   10.1.12.3          
@@ -62,7 +62,7 @@ mysql-router-k8s/0*  active    idle   10.1.12.14
 
 ## Access database
 
-The first action most users take after installing MySQL is accessing MySQL. The easiest way to do this is via the [MySQL Command-Line Client](https://dev.mysql.com/doc/refman/8.0/en/mysql.html) `mysql`. Connecting to the database requires that you know the values for `host`, `username` and `password`. To retrieve the necessary fields please run data-integrator action `get-credentials`:
+The first action most users take after installing MySQL is accessing MySQL. The easiest way to do this is via the [MySQL Command-Line Client](https://dev.mysql.com/doc/refman/8.4/en/mysql.html) `mysql`. Connecting to the database requires that you know the values for `host`, `username` and `password`. To retrieve the necessary fields please run data-integrator action `get-credentials`:
 ```shell
 juju run data-integrator/leader get-credentials
 ```
@@ -79,8 +79,8 @@ mysql:
 The host’s IP address can be found with `juju status` (the application hosting the Router MySQL K8s application):
 ```shell
 ...
-App               Version                  Status   Scale  Charm             Channel   Rev  Address         Exposed  Message
-mysql-router-k8s  8.0.34-0ubuntu0.22.04.1  active       1  mysql-router-k8s  8.0/edge   68  10.152.183.52   no  
+App               Version  Status   Scale  Charm             Channel   Rev  Address         Exposed  Message
+mysql-router-k8s  8.4.7    active       1  mysql-router-k8s  8.4/edge   68  10.152.183.52   no  
 ...
 ```
 
@@ -104,14 +104,14 @@ mysql> show databases;
 ```
 > :tipping_hand_man: **Tip**: if at any point you'd like to leave the MySQL client, enter `Ctrl+d` or type `exit`.
 
-You can now interact with MySQL directly using any [MySQL Queries](https://dev.mysql.com/doc/refman/8.0/en/entering-queries.html). For example entering `SELECT VERSION(), CURRENT_DATE;` should output something like:
+You can now interact with MySQL directly using any [MySQL Queries](https://dev.mysql.com/doc/refman/8.4/en/entering-queries.html). For example entering `SELECT VERSION(), CURRENT_DATE;` should output something like:
 ```shell
 mysql> SELECT VERSION(), CURRENT_DATE;
-+-------------------------+--------------+
-| VERSION()               | CURRENT_DATE |
-+-------------------------+--------------+
-| 8.0.34-0ubuntu0.22.04.1 | 2023-10-17    |
-+-------------------------+--------------+
++------------------------+--------------+
+| VERSION()              | CURRENT_DATE |
++------------------------+--------------+
+| 8.4.7-0ubuntu0.24.04.1 | 2026-01-22   |
++------------------------+--------------+
 1 row in set (0.00 sec)
 ```
 

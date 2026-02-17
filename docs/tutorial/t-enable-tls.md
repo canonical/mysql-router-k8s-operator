@@ -29,17 +29,17 @@ Wait until `self-signed-certificates` is up and active with `juju status --watch
 Model 	Controller  Cloud/Region    	Version  SLA      	Timestamp
 database  k8s     	microk8s/localhost  3.1.8	unsupported  12:10:33Z
 
-App                   	Version              	Status  Scale  Charm                 	Channel 	Rev  Address     	Exposed  Message
-mysql-k8s             	8.0.35-0ubuntu0.22.04.1  active  	1  mysql-k8s             	8.0/stable  127  10.152.183.101  no  	 
-mysql-router-k8s      	8.0.36-0ubuntu0.22.04.1  active  	1  mysql-router-k8s      	8.0/edge	102  10.152.183.92   no  	 
-mysql-test-app        	0.0.2                	active  	1  mysql-test-app        	stable   	36  10.152.183.224  no  	 
-self-signed-certificates                       	active  	1  self-signed-certificates  stable   	72  10.152.183.114  no  	 
+App                   	Version  Status  Scale  Charm                 	 Channel 	 Rev  Address     	  Exposed  Message
+mysql-k8s             	8.4.7    active  	1  mysql-k8s             	 8.4/stable  127  10.152.183.101  no  	 
+mysql-router-k8s      	8.4.7    active  	1  mysql-router-k8s      	 8.4/edge	 102  10.152.183.92   no  	 
+mysql-test-app        	0.0.2    active  	1  mysql-test-app        	 stable   	  36  10.152.183.224  no  	 
+self-signed-certificates         active  	1  self-signed-certificates  stable   	  72  10.152.183.114  no  	 
 
-Unit                     	Workload  Agent  Address   	Ports  Message
-mysql-k8s/0*             	active	idle   10.1.241.252     	Primary
-mysql-router-k8s/0*      	active	idle   10.1.241.253    	 
-mysql-test-app/0*        	active	idle   10.1.241.254    	 
-self-signed-certificates/0*  active	idle   10.1.241.255  
+Unit                     	 Workload  Agent  Address   	Ports  Message
+mysql-k8s/0*             	 active    idle   10.1.241.252         Primary
+mysql-router-k8s/0*      	 active    idle   10.1.241.253    	 
+mysql-test-app/0*        	 active    idle   10.1.241.254    	 
+self-signed-certificates/0*  active    idle   10.1.241.255  
 ```
 
 To enable TLS on Charmed MySQLRouter K8s, integrate the two applications:

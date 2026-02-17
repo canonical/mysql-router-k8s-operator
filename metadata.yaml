@@ -7,7 +7,7 @@ summary: Charmed MySQL Router K8s operator
 description: |
   Enables effective access to a MySQL cluster with Group Replication.
 
-  This charm supports MySQL Router 8.0 in Kubernetes environments.
+  This charm supports MySQL Router 8.4 in Kubernetes environments.
 docs: https://discourse.charmhub.io/t/charmed-mysql-router-k8s-documentation/12130
 source: https://github.com/canonical/mysql-router-operators
 issues: https://github.com/canonical/mysql-router-operators/issues
@@ -64,7 +64,7 @@ resources:
   mysql-router-image:
     type: oci-image
     description: OCI image for mysql-router
-    upstream-source: ghcr.io/canonical/charmed-mysql@sha256:672f20830d66678a3ece7285048700d6e52a9393202eb51e9749eb35031559c4
+    upstream-source: ghcr.io/canonical/charmed-mysql@sha256:bbf00397478091961a5273b6d82566f03d413552e8b15b6d69b6c8e28b3fb984
 
 assumes:
   - k8s-api

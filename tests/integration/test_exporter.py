@@ -12,7 +12,6 @@ import tenacity
 import yaml
 from pytest_operator.plugin import OpsTest
 
-from . import markers
 from .helpers import (
     APPLICATION_DEFAULT_APP_NAME,
     MYSQL_DEFAULT_APP_NAME,
@@ -32,8 +31,6 @@ SLOW_TIMEOUT = 25 * 60
 RETRY_TIMEOUT = 3 * 60
 
 
-# TODO: remove after https://github.com/canonical/grafana-agent-k8s-operator/issues/309 fixed
-@markers.amd64_only
 @pytest.mark.abort_on_fail
 async def test_exporter_endpoint(ops_test: OpsTest, charm) -> None:
     """Test that exporter endpoint is functional."""
@@ -56,7 +53,7 @@ async def test_exporter_endpoint(ops_test: OpsTest, charm) -> None:
         ops_test.model.deploy(
             charm,
             application_name=MYSQL_ROUTER_APP_NAME,
-            base="ubuntu@22.04",
+            base="ubuntu@24.04",
             resources=mysqlrouter_resources,
             num_units=1,
             trust=True,
@@ -65,7 +62,7 @@ async def test_exporter_endpoint(ops_test: OpsTest, charm) -> None:
             APPLICATION_APP_NAME,
             channel="latest/edge",
             application_name=APPLICATION_APP_NAME,
-            base="ubuntu@22.04",
+            base="ubuntu@24.04",
             num_units=1,
         ),
         ops_test.model.deploy(

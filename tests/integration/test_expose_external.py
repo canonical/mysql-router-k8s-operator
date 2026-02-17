@@ -109,7 +109,7 @@ async def test_expose_external(ops_test, charm) -> None:
         ops_test.model.deploy(
             charm,
             application_name=MYSQL_ROUTER_APP_NAME,
-            base="ubuntu@22.04",
+            base="ubuntu@24.04",
             resources=mysql_router_resources,
             num_units=1,
             trust=True,

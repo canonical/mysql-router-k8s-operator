@@ -98,11 +98,11 @@ database  k8s         microk8s/localhost  3.5.4    unsupported  18:32:28Z
 SAAS   Status  Store       URL
 tempo  active  k8s         admin/cos.tempo
 
-App                Version                  Status  Scale  Charm              Channel        Rev  Address         Exposed  Message
-grafana-agent-k8s  0.40.4                   active      1  grafana-agent-k8s  1/stable       115  10.152.183.141  no       grafana-dashboards-provider: off, logging-consumer: off, send-remote-write: off
-mysql-k8s          8.0.37-0ubuntu0.22.04.3  active      1  mysql-k8s          8.0/edge       201  10.152.183.58   no       
-mysql-router-k8s   8.0.37-0ubuntu0.22.04.3  active      1  mysql-router-k8s                    1  10.152.183.50   no       
-mysql-test-app     0.0.2                    active      1  mysql-test-app     latest/stable   51  10.152.183.162  no       
+App                Version  Status  Scale  Charm              Channel        Rev  Address         Exposed  Message
+grafana-agent-k8s  0.40.4   active      1  grafana-agent-k8s  1/stable       115  10.152.183.141  no       grafana-dashboards-provider: off, logging-consumer: off, send-remote-write: off
+mysql-k8s          8.4.7    active      1  mysql-k8s          8.4/edge       201  10.152.183.58   no       
+mysql-router-k8s   8.4.7    active      1  mysql-router-k8s                    1  10.152.183.50   no       
+mysql-test-app     0.0.2    active      1  mysql-test-app     latest/stable   51  10.152.183.162  no       
 
 Unit                  Workload  Agent  Address       Ports  Message
 grafana-agent-k8s/0*  active    idle   10.1.241.221         grafana-dashboards-provider: off, logging-consumer: off, send-remote-write: off

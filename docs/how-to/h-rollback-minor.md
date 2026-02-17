@@ -1,7 +1,7 @@
 # Minor Rollback
 
-> :information_source: **Example**: MySQL Router 8.0.34 -> MySQL Router 8.0.33<br/>
-(including simple charm revision bump: from revision 43 to revision 42)
+> :information_source: **Example**: MySQL Router 8.4.8 -> MySQL Router 8.4.7<br/>
+(including simple charm revision bump: from revision YY to revision XX)
 
 > **:warning: WARNING**: do NOT trigger `rollback` during the **running** `upgrade` action! It may cause unpredictable MySQL Cluster and/or MySQL Router state!
 

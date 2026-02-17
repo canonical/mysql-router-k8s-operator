@@ -54,16 +54,12 @@ async def test_deploy_edge(ops_test: OpsTest) -> None:
             num_units=1,
             trust=True,  # Necessary after a6f1f01: Fix/endpoints as k8s services (#142)
         ),
-        ops_test.juju(
-            "deploy",
+        ops_test.model.deploy(
             MYSQL_ROUTER_APP_NAME,
-            "-n",
-            3,
-            "--channel",
-            "8.0/edge/test-refresh-v3-8.0.42",  # TODO remove after refresh v3 merged
-            "--trust",
-            "--series",  # For juju 2 compatibility
-            "jammy",
+            application_name=MYSQL_ROUTER_APP_NAME,
+            num_units=3,
+            channel="8.4/edge",
+            base="ubuntu@24.04",
         ),
         ops_test.model.deploy(
             APPLICATION_APP_NAME,
@@ -245,7 +241,7 @@ def create_invalid_upgrade_charm(charm_file: str | pathlib.Path) -> None:
 
     # "charm" is added during pack time using the charm refresh compatibility version stored as a git tag
     # so charm can be set after the release (when the version is determined) but before pack time
-    versions["charm"] = "8.0/0.0.0"
+    versions["charm"] = "8.4/0.0.0"
 
     with zipfile.ZipFile(charm_file, mode="a") as charm_zip:
         # an invalid charm version because the major workload_version is one less than the current workload_version

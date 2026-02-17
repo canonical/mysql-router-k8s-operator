@@ -18,8 +18,8 @@ There are [a lot of test types](https://en.wikipedia.org/wiki/Software_testing) 
 ```shell
 juju add-model smoke-test
 
-juju deploy mysql-k8s --trust --channel 8.0/edge --config profile=testing
-juju deploy mysql-router-k8s --trust --channel 8.0/edge
+juju deploy mysql-k8s --trust --channel 8.4/edge --config profile=testing
+juju deploy mysql-router-k8s --trust --channel 8.4/edge
 juju relate mysql-k8s mysql-router-k8s
 
 juju scale-application mysql-k8s 3 # (optional)

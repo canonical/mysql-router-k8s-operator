@@ -4,12 +4,12 @@
 
 To deploy a single unit of MySQL Router using its default configuration
 ```shell
-juju deploy mysql-router-k8s --channel 8.0 --trust
+juju deploy mysql-router-k8s --channel 8.4 --trust
 ```
 
 To deploy MySQL Router in high-availability mode, specify the number of desired units with the `-n` option.
 ```shell
-juju deploy mysql-router-k8s --channel 8.0 --trust -n <number_of_replicas>
+juju deploy mysql-router-k8s --channel 8.4 --trust -n <number_of_replicas>
 ```
 
 ## Scaling
