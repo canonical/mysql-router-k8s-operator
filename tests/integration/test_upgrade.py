@@ -65,7 +65,7 @@ async def test_deploy_edge(ops_test: OpsTest) -> None:
             APPLICATION_APP_NAME,
             channel="latest/edge",
             application_name=APPLICATION_APP_NAME,
-            base="ubuntu@22.04",
+            base="ubuntu@24.04",
             num_units=1,
         ),
     )
