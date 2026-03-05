@@ -43,10 +43,10 @@ async def test_exporter_endpoint(ops_test: OpsTest, charm) -> None:
     applications = await asyncio.gather(
         ops_test.model.deploy(
             MYSQL_APP_NAME,
-            channel="8.0/edge",
+            channel="8.4/edge",
             application_name=MYSQL_APP_NAME,
             config={"profile": "testing"},
-            base="ubuntu@22.04",
+            base="ubuntu@24.04",
             num_units=1,
             trust=True,
         ),

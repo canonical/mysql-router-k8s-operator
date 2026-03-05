@@ -99,10 +99,10 @@ async def test_expose_external(ops_test, charm) -> None:
     await asyncio.gather(
         ops_test.model.deploy(
             MYSQL_APP_NAME,
-            channel="8.0/edge",
+            channel="8.4/edge",
             application_name=MYSQL_APP_NAME,
             config={"profile": "testing"},
-            base="ubuntu@22.04",
+            base="ubuntu@24.04",
             num_units=1,
             trust=True,
         ),

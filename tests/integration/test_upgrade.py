@@ -47,10 +47,10 @@ async def test_deploy_edge(ops_test: OpsTest) -> None:
     await asyncio.gather(
         ops_test.model.deploy(
             MYSQL_APP_NAME,
-            channel="8.0/edge",
+            channel="8.4/edge",
             application_name=MYSQL_APP_NAME,
             config={"profile": "testing"},
-            base="ubuntu@22.04",
+            base="ubuntu@24.04",
             num_units=1,
             trust=True,  # Necessary after a6f1f01: Fix/endpoints as k8s services (#142)
         ),
@@ -96,6 +96,9 @@ async def test_upgrade_from_edge(ops_test: OpsTest, charm) -> None:
 
     logger.info("Refresh the charm")
     await mysql_router_application.refresh(path=charm, resources=RESOURCES)
+
+    # sleep to ensure that active status from before re-refresh does not affect below check
+    time.sleep(15)
 
     # Highest to lowest unit number
     refresh_order = sorted(
