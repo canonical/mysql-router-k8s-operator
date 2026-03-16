@@ -1,6 +1,7 @@
 resource "juju_application" "mysql_router" {
   model_uuid = var.model
   name       = var.app_name
+  trust      = true
 
   charm {
     name     = "mysql-router-k8s"
