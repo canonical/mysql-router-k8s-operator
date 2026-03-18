@@ -147,6 +147,13 @@ mysql-test-app/0*    active       idle   10.1.12.57
 
 If the upgrade was incompatible, it’s important to roll back the charm to a previous revision so that an update can be later attempted after a further inspection of the failure. See the [minor rollback](/t/12239) guide.
 
+[note type="caution"]
+**Warning:** Doing a rollback is only possible between revisions that implement the same refresh behavior.
+
+Refresh V2: revisions 069 - 813 
+Refresh V3: revisions 814+
+[/note]
+
 ## Step 7: Scale-back
 
 Case the application scale was changed for the upgrade procedure, it is now safe to scale it back to the desired unit count:

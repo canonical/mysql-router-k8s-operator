@@ -38,6 +38,7 @@ import tenacity
 from charms.tempo_coordinator_k8s.v0.charm_tracing import trace_charm
 
 import kubernetes_logrotate
+import migration_from_refresh_v2
 import relations.kubernetes_cos
 import rock
 
@@ -99,6 +100,7 @@ class KubernetesRouterCharm(common.abstract_charm.MySQLRouterCharm):
         self._peer_data = common.relations.secrets.RelationSecrets(self, self._PEER_RELATION_NAME)
 
         self.framework.observe(self.on.install, self._on_install)
+        migration_from_refresh_v2.main()
         try:
             self.refresh = charm_refresh.Kubernetes(
                 _KubernetesRouterRefresh(

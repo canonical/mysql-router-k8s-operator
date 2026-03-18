@@ -17,6 +17,13 @@ Although the underlying MySQL Cluster and MySQL Router continue to work, it’s 
 
 To execute a rollback we take the same procedure as the upgrade, the difference being the charm revision to upgrade to. In case of this tutorial example, one would refresh the charm back to revision `88`, the steps being:
 
+[note type="caution"]
+**Warning:** Doing a rollback is only possible between revisions that implement the same refresh behavior.
+
+Refresh V2: revisions 069 - 813 
+Refresh V3: revisions 814+
+[/note]
+
 ## Step 1: Rollback
 
 When using the charm from charmhub:

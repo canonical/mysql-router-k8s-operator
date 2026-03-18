@@ -58,6 +58,7 @@ def patch(monkeypatch):
         "common.mysql_shell.Shell.is_router_in_cluster_set", lambda *args, **kwargs: True
     )
     monkeypatch.setattr("charm_refresh.Kubernetes", _MockRefresh)
+    monkeypatch.setattr("migration_from_refresh_v2.main", lambda *args, **kwargs: None)
     monkeypatch.setattr(
         "charm_refresh.CharmSpecificCommon.__post_init__", lambda *args, **kwargs: None
     )

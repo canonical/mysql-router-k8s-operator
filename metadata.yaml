@@ -51,6 +51,10 @@ peers:
     interface: tls
   cos:
     interface: cos
+  # Not used; kept to avoid uncaught exception during stop event when refreshing from v2 charm
+  # See src/migration_from_refresh_v2.py
+  upgrade-version-a:
+    interface: upgrade
   refresh-v-three:
     interface: refresh
   mysql-router-peers:
