@@ -35,7 +35,7 @@ The first step is to record the revision of the running application, as a safety
 
 ```shell
 Model    Controller  Cloud/Region        Version  SLA          Timestamp
-upgrade  microk8s    microk8s/localhost  3.1.6    unsupported  15:32:04+02:00
+upgrade  microk8s    microk8s/localhost  3.6.19   unsupported  15:32:04+02:00
 
 App               Version  Status  Scale  Charm             Channel     Rev  Address         Exposed  Message
 mysql-k8s         8.4.7    active      3  mysql-k8s         8.4/stable   99  10.152.183.238  no       
@@ -118,7 +118,7 @@ The `resume-upgrade` will roll out the Server upgrade for the following unit, al
 
 ```shell
 Model    Controller  Cloud/Region        Version  SLA          Timestamp
-upgrade  microk8s    microk8s/localhost  3.1.6    unsupported  15:56:25+02:00
+upgrade  microk8s    microk8s/localhost  3.6.19   unsupported  15:56:25+02:00
 
 App               Version  Status   Scale  Charm             Channel   Rev  Address         Exposed  Message
 mysql-k8s         8.4.7    waiting    3/4  mysql-k8s         8.4/edge  109  10.152.183.238  no       installing agent

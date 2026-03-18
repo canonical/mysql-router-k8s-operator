@@ -89,7 +89,7 @@ An example of `juju status` on Charmed MySQL Router K8s model:
 ```shell
 ubuntu@localhost:~$ juju status
 Model 	  Controller  Cloud/Region    	  Version  SLA          Timestamp
-database  k8s     	  microk8s/localhost  3.1.8	   unsupported  13:27:08Z
+database  k8s     	  microk8s/localhost  3.6.19   unsupported  13:27:08Z
 
 SAAS    	Status  Store  URL
 grafana 	active  k8s	   admin/cos.grafana
@@ -114,7 +114,7 @@ An example of `juju status` on the COS K8s model:
 ```shell
 ubuntu@localhost:~$ juju status
 Model  Controller  Cloud/Region        Version  SLA          Timestamp
-cos	   k8s     	   microk8s/localhost  3.1.8    unsupported  13:28:02Z
+cos	   k8s     	   microk8s/localhost  3.6.19   unsupported  13:28:02Z
 
 App       	  Version  Status  Scale  Charm          Channel  Rev  Address     	   Exposed  Message
 alertmanager  0.27.0   active  	1  alertmanager-k8s  stable   106  10.152.183.197  no  	 

@@ -9,7 +9,7 @@ Below is a juju model where MySQL Router K8s is related to MySQL K8s and Data In
 ```shell
 $ juju status --relations
 Model     Controller  Cloud/Region        Version  SLA          Timestamp
-database  uk8s-3-6-1  microk8s/localhost  3.6.1    unsupported  14:39:08Z
+database  uk8s-3-6-1  microk8s/localhost  3.6.19   unsupported  14:39:08Z
 
 App               Version  Status  Scale  Charm             Channel        Rev  Address         Exposed  Message
 data-integrator            active      1  data-integrator   latest/stable   78  10.152.183.44   no       

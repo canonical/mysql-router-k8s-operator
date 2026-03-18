@@ -20,7 +20,7 @@ juju status --watch 1s
 The expected result:
 ```shell 
 Model           Controller  Cloud/Region        Version  SLA          Timestamp
-wordpress-demo  microk8s    microk8s/localhost  3.1.6    unsupported  14:39:27+02:00
+wordpress-demo  microk8s    microk8s/localhost  3.6.19   unsupported  14:39:27+02:00
 
 App               Version  Status   Scale  Charm             Channel     Rev  Address         Exposed  Message
 mysql-k8s         8.4.7    active       1  mysql-k8s         8.4/stable   99  10.152.183.189  no       

@@ -19,7 +19,7 @@ juju status --watch 1s
 This command is useful for checking the status of Juju applications and gathering information about the machines hosting them. Some of the helpful information it displays include IP addresses, ports, state, etc. The command updates the status of charms every second and as the application starts you can watch the status and messages of their change. Wait until the application is ready - when it is ready, `juju status` will show:
 ```shell
 Model     Controller  Cloud/Region        Version  SLA          Timestamp
-tutorial  overlord    microk8s/localhost  3.4.3    unsupported  22:33:45+01:00
+tutorial  overlord    microk8s/localhost  3.6.19   unsupported  22:33:45+01:00
 
 App               Version  Status   Scale  Charm             Channel   Rev  Address        Exposed  Message
 mysql-k8s         8.4.7    active       1  mysql-k8s         8.4/edge  109  10.152.183.68  no       
@@ -47,7 +47,7 @@ juju relate data-integrator mysql-router-k8s
 In a couple of seconds, the status will be happy for entire model:
 ```shell
 Model     Controller  Cloud/Region        Version  SLA          Timestamp
-tutorial  overlord    microk8s/localhost  3.4.3   unsupported  22:37:41+01:00
+tutorial  overlord    microk8s/localhost  3.6.19   unsupported  22:37:41+01:00
 
 App               Version  Status  Scale  Charm             Channel   Rev  Address         Exposed  Message
 data-integrator            active      1  data-integrator   stable     13  10.152.183.142  no       
